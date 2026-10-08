@@ -27,7 +27,12 @@ describe("dailyRate", () => {
     expect(rate).toBe(50);
   });
   it("비활성 목표(target 0)는 제외", () => {
-    expect(dailyRate([{ category: "word", actual: 25, target: 50 }, { category: "rc", actual: 0, target: 0 }])).toBe(50);
+    expect(
+      dailyRate([
+        { category: "word", actual: 25, target: 50 },
+        { category: "rc", actual: 0, target: 0 },
+      ]),
+    ).toBe(50);
   });
 });
 

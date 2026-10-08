@@ -18,7 +18,8 @@ function InviteBanner() {
     <div className="card elev-sm flex-row items-center gap-3 px-3.5 py-3">
       <EnvelopeSimpleOpen className="text-icon-md text-accent" />
       <span className="flex-1 text-meta">
-        <b className="font-medium">{ME.inviter}</b>님이 <b className="font-medium">{PARTY.name}</b>에 초대했어요
+        <b className="font-medium">{ME.inviter}</b>님이 <b className="font-medium">{PARTY.name}</b>
+        에 초대했어요
       </span>
     </div>
   );
@@ -36,7 +37,8 @@ function OrDivider({ label }: { label: string }) {
 
 export function AuthScreen({ mode }: { mode: AuthMode }) {
   const isSignup = mode === "signup";
-  const { invite, continueWithGoogle, submitEmail, resetPassword, switchMode } = useAuthActions(mode);
+  const { invite, continueWithGoogle, submitEmail, resetPassword, switchMode } =
+    useAuthActions(mode);
 
   const { register, handleSubmit, formState, setError, getValues } = useForm<AuthForm>({
     resolver: zodResolver(authSchema),
@@ -68,7 +70,12 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
           <div className="seg self-start" role="radiogroup" aria-label="로그인 또는 회원가입">
             {(["login", "signup"] as const).map((m) => (
               <label key={m} className="seg-opt">
-                <input type="radio" name="auth-mode" checked={mode === m} onChange={() => switchMode(m)} />
+                <input
+                  type="radio"
+                  name="auth-mode"
+                  checked={mode === m}
+                  onChange={() => switchMode(m)}
+                />
                 {m === "login" ? "로그인" : "회원가입"}
               </label>
             ))}
@@ -76,16 +83,39 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 
           <h2 className="m-0 text-h3">{isSignup ? "계정 만들고 파티 참가" : "다시 오셨네요"}</h2>
 
-          <Button variant="secondary" className="h-control-lg text-body" onClick={continueWithGoogle}>
+          <Button
+            variant="secondary"
+            className="h-control-lg text-body"
+            onClick={continueWithGoogle}
+          >
             <GoogleLogo className="text-icon" />
             Google로 계속하기
           </Button>
-          <span className="-mt-2.5 text-label text-muted">Google로 가입하면 인증 사진 저장용 드라이브 폴더가 바로 연결돼요</span>
+          <span className="-mt-2.5 text-label text-muted">
+            Google로 가입하면 인증 사진 저장용 드라이브 폴더가 바로 연결돼요
+          </span>
 
           <OrDivider label="또는 이메일" />
 
-          {isSignup && <TextField id="nickname" label="닉네임" placeholder="파티에서 보일 이름" autoComplete="nickname" error={errors.nickname?.message} {...register("nickname")} />}
-          <TextField id="email" label="이메일" type="email" placeholder="you@example.com" autoComplete="email" error={errors.email?.message} {...register("email")} />
+          {isSignup && (
+            <TextField
+              id="nickname"
+              label="닉네임"
+              placeholder="파티에서 보일 이름"
+              autoComplete="nickname"
+              error={errors.nickname?.message}
+              {...register("nickname")}
+            />
+          )}
+          <TextField
+            id="email"
+            label="이메일"
+            type="email"
+            placeholder="you@example.com"
+            autoComplete="email"
+            error={errors.email?.message}
+            {...register("email")}
+          />
           <TextField
             id="password"
             label="비밀번호"
@@ -119,7 +149,12 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
           )}
 
           <FieldError message={errors.root?.message} />
-          <Button type="submit" variant="primary" className="h-control-lg text-base" disabled={formState.isSubmitting}>
+          <Button
+            type="submit"
+            variant="primary"
+            className="h-control-lg text-base"
+            disabled={formState.isSubmitting}
+          >
             {isSignup ? "가입하고 파티 참가" : "로그인"}
           </Button>
 

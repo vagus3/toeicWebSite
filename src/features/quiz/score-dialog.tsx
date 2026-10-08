@@ -11,7 +11,11 @@ import { weekTestLabel } from "@/lib/utils";
 import { useModal, useStudyStore } from "@/stores/study-store";
 import { useToast } from "@/stores/toast-store";
 
-const sectionScore = z.coerce.number<string>().int("정수로 입력해 주세요").min(0, "0 이상").max(495, "495 이하");
+const sectionScore = z.coerce
+  .number<string>()
+  .int("정수로 입력해 주세요")
+  .min(0, "0 이상")
+  .max(495, "495 이하");
 const schema = z.object({ lc: sectionScore, rc: sectionScore });
 type ScoreForm = z.input<typeof schema>;
 
@@ -21,7 +25,11 @@ export function ScoreDialog() {
   const addScore = useStudyStore((s) => s.addScore);
   const flash = useToast((s) => s.flash);
 
-  const { register, handleSubmit, control, formState } = useForm<ScoreForm, unknown, z.output<typeof schema>>({
+  const { register, handleSubmit, control, formState } = useForm<
+    ScoreForm,
+    unknown,
+    z.output<typeof schema>
+  >({
     resolver: zodResolver(schema),
     defaultValues: { lc: "370", rc: "385" },
   });
@@ -40,8 +48,20 @@ export function ScoreDialog() {
         <DialogTitle>주간 테스트 점수</DialogTitle>
         <form onSubmit={onSave} className="flex flex-col gap-3" noValidate>
           <div className="grid grid-cols-2 gap-3">
-            <TextField id="score-lc" label="LC (0–495)" inputMode="numeric" error={formState.errors.lc?.message} {...register("lc")} />
-            <TextField id="score-rc" label="RC (0–495)" inputMode="numeric" error={formState.errors.rc?.message} {...register("rc")} />
+            <TextField
+              id="score-lc"
+              label="LC (0–495)"
+              inputMode="numeric"
+              error={formState.errors.lc?.message}
+              {...register("lc")}
+            />
+            <TextField
+              id="score-rc"
+              label="RC (0–495)"
+              inputMode="numeric"
+              error={formState.errors.rc?.message}
+              {...register("rc")}
+            />
           </div>
           <span className="text-meta text-muted">
             합계 <span className="text-title text-text">{total}</span>

@@ -12,12 +12,18 @@ import { google, type drive_v3 } from "googleapis";
  */
 export function isDriveConfigured() {
   return Boolean(
-    process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_DRIVE_REFRESH_TOKEN && process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID,
+    process.env.GOOGLE_CLIENT_ID &&
+      process.env.GOOGLE_CLIENT_SECRET &&
+      process.env.GOOGLE_DRIVE_REFRESH_TOKEN &&
+      process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID,
   );
 }
 
 function getDrive() {
-  const auth = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET);
+  const auth = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+  );
   auth.setCredentials({ refresh_token: process.env.GOOGLE_DRIVE_REFRESH_TOKEN });
   return google.drive({ version: "v3", auth });
 }
@@ -33,11 +39,21 @@ async function ensureFolder(drive: drive_v3.Drive, parentId: string, name: strin
   });
   const existing = found.data.files?.[0]?.id;
   if (existing) return existing;
-  const created = await drive.files.create({ requestBody: { name, mimeType: FOLDER_MIME, parents: [parentId] }, fields: "id" });
+  const created = await drive.files.create({
+    requestBody: { name, mimeType: FOLDER_MIME, parents: [parentId] },
+    fields: "id",
+  });
   return created.data.id!;
 }
 
-export async function uploadEvidence(params: { partyId: string; userFolder: string; studyDate: string; fileName: string; mimeType: string; data: Buffer }) {
+export async function uploadEvidence(params: {
+  partyId: string;
+  userFolder: string;
+  studyDate: string;
+  fileName: string;
+  mimeType: string;
+  data: Buffer;
+}) {
   const drive = getDrive();
   let parent = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID!;
   for (const segment of [params.partyId, params.userFolder, params.studyDate]) {

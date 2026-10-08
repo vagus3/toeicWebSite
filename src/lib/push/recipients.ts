@@ -10,11 +10,17 @@ export interface RoomMemberPrefs {
  */
 export function splitChatRecipients(members: RoomMemberPrefs[], now: number) {
   const targets = members.filter(
-    (m) => (!m.muted_until || Date.parse(m.muted_until) < now) && m.notification_preferences?.chat_enabled !== false,
+    (m) =>
+      (!m.muted_until || Date.parse(m.muted_until) < now) &&
+      m.notification_preferences?.chat_enabled !== false,
   );
   return {
-    withPreview: targets.filter((m) => m.notification_preferences?.preview_enabled !== false).map((m) => m.user_id),
-    withoutPreview: targets.filter((m) => m.notification_preferences?.preview_enabled === false).map((m) => m.user_id),
+    withPreview: targets
+      .filter((m) => m.notification_preferences?.preview_enabled !== false)
+      .map((m) => m.user_id),
+    withoutPreview: targets
+      .filter((m) => m.notification_preferences?.preview_enabled === false)
+      .map((m) => m.user_id),
   };
 }
 

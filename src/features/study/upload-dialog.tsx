@@ -55,7 +55,9 @@ export function UploadDialog() {
             );
           })}
         </div>
-        <p className="m-0 -mt-1.5 text-label text-muted">체크된 항목은 이미 인증돼서 다시 선택할 수 없어요</p>
+        <p className="m-0 -mt-1.5 text-label text-muted">
+          체크된 항목은 이미 인증돼서 다시 선택할 수 없어요
+        </p>
 
         <input {...photo.inputProps} />
         <button
@@ -67,8 +69,14 @@ export function UploadDialog() {
             photo.file ? "bg-accent-faint" : "bg-transparent",
           )}
         >
-          {photo.file ? <CheckCircle className="text-icon-2xl" /> : <ImageIcon className="text-icon-2xl" />}
-          <span className="text-meta">{photo.file ? photo.file.name : "사진을 끌어다 놓거나 클릭해서 선택"}</span>
+          {photo.file ? (
+            <CheckCircle className="text-icon-2xl" />
+          ) : (
+            <ImageIcon className="text-icon-2xl" />
+          )}
+          <span className="text-meta">
+            {photo.file ? photo.file.name : "사진을 끌어다 놓거나 클릭해서 선택"}
+          </span>
         </button>
 
         <DriveSaveHint />
@@ -77,7 +85,11 @@ export function UploadDialog() {
           <Button variant="secondary" onClick={close}>
             취소
           </Button>
-          <Button variant="primary" onClick={onSubmit} disabled={!photo.file || !selection || pending}>
+          <Button
+            variant="primary"
+            onClick={onSubmit}
+            disabled={!photo.file || !selection || pending}
+          >
             {pending ? "올리는 중…" : "인증 올리기"}
           </Button>
         </DialogActions>

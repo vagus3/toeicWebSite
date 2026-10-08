@@ -8,7 +8,17 @@ import { NudgeButton } from "@/features/party/party-buttons";
 import { bookPercent, isLazy, memberLabel, useMembers } from "@/features/party/use-party";
 import type { Member } from "@/types";
 
-function StatRow({ label, value, display, barClassName }: { label: string; value: number; display: string; barClassName?: string }) {
+function StatRow({
+  label,
+  value,
+  display,
+  barClassName,
+}: {
+  label: string;
+  value: number;
+  display: string;
+  barClassName?: string;
+}) {
   return (
     <>
       <span className="text-muted">{label}</span>
@@ -36,7 +46,12 @@ function MemberWeek({ member }: { member: Member }) {
       </div>
       <div className="grid grid-cols-[var(--spacing-stat-label)_1fr_var(--spacing-stat-value)] items-center gap-x-2.5 gap-y-1.5 text-caption">
         <StatRow label="할당량" value={member.quota} display={`${member.quota}%`} />
-        <StatRow label="교재" value={bookPercent(member)} display={`${member.book.done}/${member.book.total}`} barClassName="bg-accent-400" />
+        <StatRow
+          label="교재"
+          value={bookPercent(member)}
+          display={`${member.book.done}/${member.book.total}`}
+          barClassName="bg-accent-400"
+        />
       </div>
     </section>
   );

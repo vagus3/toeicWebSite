@@ -12,7 +12,12 @@ export function TextField({ id, label, error, className, ...inputProps }: TextFi
   return (
     <div className="field">
       <label htmlFor={id}>{label}</label>
-      <input id={id} className={cn("input", className)} aria-invalid={Boolean(error)} {...inputProps} />
+      <input
+        id={id}
+        className={cn("input", className)}
+        aria-invalid={Boolean(error)}
+        {...inputProps}
+      />
       <FieldError message={error} />
     </div>
   );

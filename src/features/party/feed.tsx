@@ -62,7 +62,8 @@ export function MobileSocialCards() {
         }
         title={
           <>
-            <b className="font-medium">{highlight.name}</b>님 주간 테스트 <span className="text-accent-300">+45점</span>
+            <b className="font-medium">{highlight.name}</b>님 주간 테스트{" "}
+            <span className="text-accent-300">+45점</span>
           </>
         }
         titleClassName="text-meta"

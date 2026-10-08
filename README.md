@@ -7,18 +7,18 @@
 
 ## 기술 스택
 
-| 영역 | 기술 |
-| --- | --- |
-| 프론트엔드 · API | Next.js 16 (App Router, Route Handlers) + TypeScript |
-| UI | Tailwind CSS v4 + Nocturne 디자인 토큰, shadcn 방식 컴포넌트(Radix · cva), Phosphor Icons |
-| 상태 · 데이터 | Zustand (UI 상태), TanStack Query (서버 데이터) |
-| 폼 검증 | React Hook Form + Zod |
-| 차트 | Recharts |
-| DB · 인증 · 실시간 | Supabase (PostgreSQL + RLS, Auth + Google OAuth, Realtime Broadcast) |
-| 사진 저장 | Google Drive API (`googleapis`, `drive.file`) + `browser-image-compression` |
-| AI | Gemini API (`@google/genai`) |
-| PWA · 알림 | Web App Manifest + Service Worker(`public/sw.js`) + Web Push(`web-push`) |
-| 테스트 | Vitest |
+| 영역               | 기술                                                                                      |
+| ------------------ | ----------------------------------------------------------------------------------------- |
+| 프론트엔드 · API   | Next.js 16 (App Router, Route Handlers) + TypeScript                                      |
+| UI                 | Tailwind CSS v4 + Nocturne 디자인 토큰, shadcn 방식 컴포넌트(Radix · cva), Phosphor Icons |
+| 상태 · 데이터      | Zustand (UI 상태), TanStack Query (서버 데이터)                                           |
+| 폼 검증            | React Hook Form + Zod                                                                     |
+| 차트               | Recharts                                                                                  |
+| DB · 인증 · 실시간 | Supabase (PostgreSQL + RLS, Auth + Google OAuth, Realtime Broadcast)                      |
+| 사진 저장          | Google Drive API (`googleapis`, `drive.file`) + `browser-image-compression`               |
+| AI                 | Gemini API (`@google/genai`)                                                              |
+| PWA · 알림         | Web App Manifest + Service Worker(`public/sw.js`) + Web Push(`web-push`)                  |
+| 테스트             | Vitest                                                                                    |
 
 ## 시작하기
 
@@ -28,12 +28,12 @@ cp .env.example .env.local   # 값은 비워 둬도 데모 모드로 실행됩�
 pnpm dev                     # http://localhost:3000
 ```
 
-| 명령 | 설명 |
-| --- | --- |
-| `pnpm dev` | 개발 서버 |
-| `pnpm build` / `pnpm start` | 프로덕션 빌드 / 실행 |
-| `pnpm lint` | ESLint |
-| `pnpm exec vitest run` | 단위 테스트 (진행률 계산 등) |
+| 명령                        | 설명                         |
+| --------------------------- | ---------------------------- |
+| `pnpm dev`                  | 개발 서버                    |
+| `pnpm build` / `pnpm start` | 프로덕션 빌드 / 실행         |
+| `pnpm lint`                 | ESLint                       |
+| `pnpm exec vitest run`      | 단위 테스트 (진행률 계산 등) |
 
 ### 데모 모드
 
@@ -53,10 +53,10 @@ pnpm dev                     # http://localhost:3000
 
 모바일에서 처음 들어오면 하단에 설치 안내가 뜹니다 (닫으면 다시 안 뜸, 이미 설치해 앱으로 열면 안 뜸).
 
-| 기기 | 안내 |
-| --- | --- |
-| iPhone · iPad (Safari) | 공유 버튼 → ‘홈 화면에 추가’ → 홈 화면 아이콘으로 열기. iOS 16.4+ 홈 화면 앱에서만 푸시 알림 가능 |
-| Android (Chrome) | Chrome이 설치 가능하다고 알려주면 **[앱 설치]** 버튼 한 번으로 설치, 아니면 메뉴(⋮) → ‘앱 설치’/‘홈 화면에 추가’ |
+| 기기                   | 안내                                                                                                             |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| iPhone · iPad (Safari) | 공유 버튼 → ‘홈 화면에 추가’ → 홈 화면 아이콘으로 열기. iOS 16.4+ 홈 화면 앱에서만 푸시 알림 가능                |
+| Android (Chrome)       | Chrome이 설치 가능하다고 알려주면 **[앱 설치]** 버튼 한 번으로 설치, 아니면 메뉴(⋮) → ‘앱 설치’/‘홈 화면에 추가’ |
 
 배포 빌드(`pnpm build && pnpm start`)에서 서비스 워커가 등록되어 방문한 화면을 캐시하고, 오프라인이면 마지막으로 본 화면을 보여줍니다.
 

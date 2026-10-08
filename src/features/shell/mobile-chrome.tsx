@@ -60,7 +60,10 @@ export function MobileTabBar() {
   const half = Math.ceil(TAB_ITEMS.length / 2);
 
   return (
-    <nav aria-label="하단 탭" className="rule-top pb-safe fixed inset-x-0 bottom-0 z-40 flex items-center justify-around px-2 pt-2.5 md:hidden">
+    <nav
+      aria-label="하단 탭"
+      className="rule-top pb-safe fixed inset-x-0 bottom-0 z-40 flex items-center justify-around px-2 pt-2.5 md:hidden"
+    >
       {TAB_ITEMS.slice(0, half).map((item) => (
         <TabLink key={item.href} item={item} active={isActive(pathname, item)} />
       ))}

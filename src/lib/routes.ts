@@ -9,5 +9,6 @@ export const ROUTES = {
   dailyQuiz: "/quizzes/daily",
   qna: "/qna",
   upload: "/study/upload",
-  chat: (partyId: string = PARTY.id, roomId: string = PARTY.defaultChatRoomId) => `/party/${partyId}/chat/${roomId}`,
+  chat: (partyId: string = PARTY.id, roomId: string = PARTY.defaultChatRoomId) =>
+    `/party/${partyId}/chat/${roomId}`,
 } as const;

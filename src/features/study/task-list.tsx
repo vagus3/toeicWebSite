@@ -23,9 +23,23 @@ function useTaskItems() {
   }));
 }
 
-function TaskCard({ task, done, buttonProps }: { task: StudyTask; done: boolean; buttonProps: React.ComponentProps<"button"> }) {
+function TaskCard({
+  task,
+  done,
+  buttonProps,
+}: {
+  task: StudyTask;
+  done: boolean;
+  buttonProps: React.ComponentProps<"button">;
+}) {
   return (
-    <button {...buttonProps} className={cn("card elev-sm gap-2 p-4 text-left", done ? "cursor-not-allowed opacity-45" : "cursor-pointer")}>
+    <button
+      {...buttonProps}
+      className={cn(
+        "card elev-sm gap-2 p-4 text-left",
+        done ? "cursor-not-allowed opacity-45" : "cursor-pointer",
+      )}
+    >
       <span className="flex items-center justify-between text-meta">
         <span>{task.short}</span>
         <TaskStatusIcon done={done} className="text-icon" todoClassName="text-muted" />
@@ -53,7 +67,13 @@ export function TaskChecklist() {
     <ul className="flex flex-col">
       {useTaskItems().map(({ task, done, buttonProps }) => (
         <li key={task.id}>
-          <button {...buttonProps} className={cn("flex w-full items-center gap-3 py-3 text-left", done ? "cursor-not-allowed" : "cursor-pointer")}>
+          <button
+            {...buttonProps}
+            className={cn(
+              "flex w-full items-center gap-3 py-3 text-left",
+              done ? "cursor-not-allowed" : "cursor-pointer",
+            )}
+          >
             <TaskStatusIcon done={done} className="text-icon-lg" />
             <span className="flex flex-1 flex-col">
               <span className={cn("text-body", done && "opacity-45")}>{task.label}</span>

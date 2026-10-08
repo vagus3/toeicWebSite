@@ -8,7 +8,8 @@ import { getSessionUser } from "@/lib/supabase/server";
 const DAILY_LIMIT = 20;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const FALLBACK = "AI 초안은 서버에 GEMINI_API_KEY를 설정하면 자동으로 만들어져요. 그동안 파티원들의 보충 답변을 기다려 주세요.";
+const FALLBACK =
+  "AI 초안은 서버에 GEMINI_API_KEY를 설정하면 자동으로 만들어져요. 그동안 파티원들의 보충 답변을 기다려 주세요.";
 
 export async function POST(request: Request) {
   const body = await parseJson(request, askRequestSchema);

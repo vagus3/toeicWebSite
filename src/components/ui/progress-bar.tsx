@@ -23,7 +23,14 @@ export function ProgressBar({ value, glow, className, barClassName, label }: Pro
       className={cn("h-1 rounded-xs bg-neutral-800", className)}
     >
       {/* 폭은 데이터 값이라 style로만 넘긴다 */}
-      <div className={cn("h-full rounded-xs bg-accent transition-[width] duration-400", glow && "shadow-glow", barClassName)} style={{ width: `${pct}%` }} />
+      <div
+        className={cn(
+          "h-full rounded-xs bg-accent transition-[width] duration-400",
+          glow && "shadow-glow",
+          barClassName,
+        )}
+        style={{ width: `${pct}%` }}
+      />
     </div>
   );
 }

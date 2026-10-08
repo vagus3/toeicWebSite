@@ -18,7 +18,15 @@ interface MessageRow {
 
 function toMessage(row: MessageRow): ChatMessage {
   const name = row.profiles?.nickname ?? "파티원";
-  return { id: row.id, roomId: row.room_id, senderId: row.sender_id, senderName: name, initial: name.slice(0, 1), content: row.content, createdAt: row.created_at };
+  return {
+    id: row.id,
+    roomId: row.room_id,
+    senderId: row.sender_id,
+    senderName: name,
+    initial: name.slice(0, 1),
+    content: row.content,
+    createdAt: row.created_at,
+  };
 }
 
 /**
@@ -56,7 +64,9 @@ export function useChatRoom(partyId: string, roomId: string) {
     if (!supabase) return;
     const channel = supabase
       .channel(`room:${roomId}:messages`, { config: { private: true } })
-      .on("broadcast", { event: "INSERT" }, () => queryClient.invalidateQueries({ queryKey: ["chat", roomId] }))
+      .on("broadcast", { event: "INSERT" }, () =>
+        queryClient.invalidateQueries({ queryKey: ["chat", roomId] }),
+      )
       .subscribe();
     void supabase.realtime.setAuth();
     return () => {
@@ -68,7 +78,15 @@ export function useChatRoom(partyId: string, roomId: string) {
     mutationFn: async (content: string) => {
       const clientId = crypto.randomUUID();
       if (!supabase) {
-        return { id: clientId, roomId, senderId: ME.id, senderName: ME.name, initial: ME.initial, content, createdAt: new Date().toISOString() } satisfies ChatMessage;
+        return {
+          id: clientId,
+          roomId,
+          senderId: ME.id,
+          senderName: ME.name,
+          initial: ME.initial,
+          content,
+          createdAt: new Date().toISOString(),
+        } satisfies ChatMessage;
       }
       await requestJson("/api/chat/messages", { partyId, roomId, content, clientId });
       return null;

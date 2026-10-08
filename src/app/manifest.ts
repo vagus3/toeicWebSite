@@ -20,8 +20,16 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/icons/icon.svg", sizes: "any", type: "image/svg+xml" },
     ],
     shortcuts: [
-      { name: "오늘 인증", url: "/study/upload", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
-      { name: "파티 채팅", url: "/party/dawn-4/chat/general", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      {
+        name: "오늘 인증",
+        url: "/study/upload",
+        icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }],
+      },
+      {
+        name: "파티 채팅",
+        url: "/party/dawn-4/chat/general",
+        icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }],
+      },
     ],
   };
 }

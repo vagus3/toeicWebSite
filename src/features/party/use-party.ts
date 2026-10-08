@@ -8,14 +8,20 @@ import type { Member } from "@/types";
 /** 파티 이름 · 시험까지 남은 날 · "4 / 6명 · D-17" */
 export function usePartySummary() {
   const days = dDay(DEMO_TODAY, PARTY.examDate);
-  return { name: PARTY.name, dDay: days, summary: `${MEMBERS.length} / ${PARTY.capacity}명 · D-${days}` };
+  return {
+    name: PARTY.name,
+    dDay: days,
+    summary: `${MEMBERS.length} / ${PARTY.capacity}명 · D-${days}`,
+  };
 }
 
 /** 내 행은 오늘 인증 수와 최근 점수에 따라 바뀐다 (시안: 78% 기준 인증 1건당 ±5%) */
 export function useMembers(): Member[] {
   const doneCount = useDoneCount();
   const latest = useLatestScore();
-  return MEMBERS.map((m) => (m.isMe ? { ...m, quota: 78 + (doneCount - 2) * 5, score: latest } : m));
+  return MEMBERS.map((m) =>
+    m.isMe ? { ...m, quota: 78 + (doneCount - 2) * 5, score: latest } : m,
+  );
 }
 
 /** 오늘 아직 시작 안 한(연속 0일) 멤버 — 콕 찌르기 대상 */

@@ -34,7 +34,12 @@ export async function POST(request: Request) {
   const supabase = await getSupabaseServerClient();
   if (supabase) {
     if (!user) return apiError(401, "unauthorized");
-    const { data: membership } = await supabase.from("party_members").select("user_id").eq("party_id", partyId).eq("user_id", user.id).maybeSingle();
+    const { data: membership } = await supabase
+      .from("party_members")
+      .select("user_id")
+      .eq("party_id", partyId)
+      .eq("user_id", user.id)
+      .maybeSingle();
     if (!membership) return apiError(403, "forbidden");
   }
 
@@ -56,7 +61,9 @@ export async function POST(request: Request) {
       .select("id")
       .single();
     if (error) return apiError(500, "db_failed", { fileId });
-    await supabase.from("study_evidences").insert({ study_log_id: log.id, drive_file_id: fileId, mime_type: mimeType });
+    await supabase
+      .from("study_evidences")
+      .insert({ study_log_id: log.id, drive_file_id: fileId, mime_type: mimeType });
   }
 
   return NextResponse.json({ fileId });

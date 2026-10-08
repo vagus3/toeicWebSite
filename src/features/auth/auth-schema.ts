@@ -15,8 +15,18 @@ export const authSchema = z
   })
   .superRefine((v, ctx) => {
     if (v.mode !== "signup") return;
-    if (v.nickname.length < 1) ctx.addIssue({ code: "custom", path: ["nickname"], message: "파티에서 보일 이름을 적어 주세요" });
-    if (!v.agree) ctx.addIssue({ code: "custom", path: ["agree"], message: "약관에 동의해야 가입할 수 있어요" });
+    if (v.nickname.length < 1)
+      ctx.addIssue({
+        code: "custom",
+        path: ["nickname"],
+        message: "파티에서 보일 이름을 적어 주세요",
+      });
+    if (!v.agree)
+      ctx.addIssue({
+        code: "custom",
+        path: ["agree"],
+        message: "약관에 동의해야 가입할 수 있어요",
+      });
   });
 
 export type AuthForm = z.infer<typeof authSchema>;

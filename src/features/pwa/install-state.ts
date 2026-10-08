@@ -52,7 +52,10 @@ function readDismissed() {
 }
 
 function isStandalone() {
-  return window.matchMedia(STANDALONE_QUERY).matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  return (
+    window.matchMedia(STANDALONE_QUERY).matches ||
+    (navigator as Navigator & { standalone?: boolean }).standalone === true
+  );
 }
 
 function getPlatform(): InstallPlatform | null {
@@ -87,6 +90,10 @@ export async function promptInstall() {
 /** 지금 보여줄 설치 안내 플랫폼과, 바로 설치 버튼을 쓸 수 있는지 */
 export function useInstallGuide() {
   const platform = useSyncExternalStore(subscribe, getPlatform, () => null);
-  const canPrompt = useSyncExternalStore(subscribe, () => deferredPrompt !== null, () => false);
+  const canPrompt = useSyncExternalStore(
+    subscribe,
+    () => deferredPrompt !== null,
+    () => false,
+  );
   return { platform, canPrompt };
 }

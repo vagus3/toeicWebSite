@@ -1,7 +1,13 @@
 import { DEMO_TODAY, demoLevel, MEMBERS, TRACKER_START } from "@/lib/demo-data";
 
 /** 할당량 달성 단계(0–4)별 칸 색 — 범례와 같은 순서 */
-export const LEVEL_CLASS = ["bg-neutral-800", "bg-accent-800", "bg-accent-700", "bg-accent-600", "bg-accent-500"] as const;
+export const LEVEL_CLASS = [
+  "bg-neutral-800",
+  "bg-accent-800",
+  "bg-accent-700",
+  "bg-accent-600",
+  "bg-accent-500",
+] as const;
 
 const DOW = ["일", "월", "화", "수", "목", "금", "토"];
 

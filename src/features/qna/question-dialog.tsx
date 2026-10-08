@@ -29,7 +29,14 @@ export function QuestionDialog() {
   const ask = useMutation({
     mutationFn: (input: QuestionForm) => requestJson<AskResponse>("/api/ai/ask", input),
     onSuccess: ({ answer }, input) => {
-      addThread({ id: crypto.randomUUID(), tag: input.tag, who: `${ME.name} · 방금`, title: input.title, ai: answer, replies: [] });
+      addThread({
+        id: crypto.randomUUID(),
+        tag: input.tag,
+        who: `${ME.name} · 방금`,
+        title: input.title,
+        ai: answer,
+        replies: [],
+      });
       reset();
       flash("질문을 올렸어요 · AI 초안 답변 완료");
     },
@@ -40,7 +47,11 @@ export function QuestionDialog() {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogTitle>질문하기</DialogTitle>
-        <form className="flex flex-col gap-3" onSubmit={handleSubmit((v) => ask.mutate(v))} noValidate>
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={handleSubmit((v) => ask.mutate(v))}
+          noValidate
+        >
           <div className="field">
             <label htmlFor="q-tag">영역</label>
             <select id="q-tag" className="input" {...register("tag")}>
@@ -53,7 +64,12 @@ export function QuestionDialog() {
           </div>
           <div className="field">
             <label htmlFor="q-title">질문</label>
-            <textarea id="q-title" className="input" placeholder="교재 쪽수·문항 번호를 같이 적으면 파티원이 보충하기 쉬워요" {...register("title")} />
+            <textarea
+              id="q-title"
+              className="input"
+              placeholder="교재 쪽수·문항 번호를 같이 적으면 파티원이 보충하기 쉬워요"
+              {...register("title")}
+            />
             <FieldError message={formState.errors.title?.message} />
           </div>
           <DialogActions>

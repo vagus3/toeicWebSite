@@ -14,7 +14,16 @@ export async function POST(request: Request) {
   const { endpoint, keys } = body.data;
   const { error } = await supabase
     .from("push_subscriptions")
-    .upsert({ user_id: user.id, endpoint, p256dh: keys.p256dh, auth: keys.auth, user_agent: request.headers.get("user-agent") }, { onConflict: "endpoint" });
+    .upsert(
+      {
+        user_id: user.id,
+        endpoint,
+        p256dh: keys.p256dh,
+        auth: keys.auth,
+        user_agent: request.headers.get("user-agent"),
+      },
+      { onConflict: "endpoint" },
+    );
   if (error) return apiError(500, "db_failed");
   return NextResponse.json({ ok: true });
 }
@@ -26,6 +35,10 @@ export async function DELETE(request: Request) {
   if (!body.ok) return body.response;
 
   const { supabase, user } = session.data;
-  await supabase.from("push_subscriptions").delete().eq("user_id", user.id).eq("endpoint", body.data.endpoint);
+  await supabase
+    .from("push_subscriptions")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("endpoint", body.data.endpoint);
   return NextResponse.json({ ok: true });
 }

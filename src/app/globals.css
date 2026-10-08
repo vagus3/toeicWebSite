@@ -60,19 +60,19 @@
 
   /* 글자 크기 — 시안에서 쓰는 단계만 정의 (text-meta, text-display …) */
   --text-*: initial;
-  --text-micro: 10px;       /* 탭 라벨, 카드 키커, 보충 배지 */
-  --text-caption: 11px;     /* 태그, 표 헤더, 범례 */
-  --text-label: 12px;       /* 보조 설명, 폼 라벨 */
-  --text-meta: 13px;        /* 메타 정보, 작은 버튼 */
-  --text-body: 14px;        /* 기본 UI 텍스트 */
-  --text-base: 15px;        /* 문서 본문, 큰 버튼 */
-  --text-title: 16px;       /* 섹션 제목 */
-  --text-heading: 20px;     /* 다이얼로그/스레드 제목, 모바일 퀴즈 문항 */
-  --text-stat: 22px;        /* 카드 수치, 점수 */
-  --text-question: 24px;    /* 데스크톱 퀴즈 문항 */
-  --text-h3: 25px;          /* 페이지 제목 */
-  --text-hero: 44px;        /* 로그인 헤드라인, 모바일 D-day */
-  --text-display: 60px;     /* 데스크톱 D-day */
+  --text-micro: 10px; /* 탭 라벨, 카드 키커, 보충 배지 */
+  --text-caption: 11px; /* 태그, 표 헤더, 범례 */
+  --text-label: 12px; /* 보조 설명, 폼 라벨 */
+  --text-meta: 13px; /* 메타 정보, 작은 버튼 */
+  --text-body: 14px; /* 기본 UI 텍스트 */
+  --text-base: 15px; /* 문서 본문, 큰 버튼 */
+  --text-title: 16px; /* 섹션 제목 */
+  --text-heading: 20px; /* 다이얼로그/스레드 제목, 모바일 퀴즈 문항 */
+  --text-stat: 22px; /* 카드 수치, 점수 */
+  --text-question: 24px; /* 데스크톱 퀴즈 문항 */
+  --text-h3: 25px; /* 페이지 제목 */
+  --text-hero: 44px; /* 로그인 헤드라인, 모바일 D-day */
+  --text-display: 60px; /* 데스크톱 D-day */
 
   /* 아이콘 크기 — Phosphor 아이콘은 1em이라 className="text-icon" 처럼 지정 */
   --text-icon-sm: 16px;
@@ -95,7 +95,7 @@
   --tracking-label: 0.08em;
 
   --radius-*: initial;
-  --radius-xs: 2px;         /* 진행 막대, 범례 칸 */
+  --radius-xs: 2px; /* 진행 막대, 범례 칸 */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 14px;
@@ -237,16 +237,39 @@
     letter-spacing: var(--tracking-heading);
     margin: 0 0 var(--space-2);
   }
-  h3 { font-size: var(--text-h3); }
-  h4 { font-size: var(--text-heading); }
-  h5 { font-size: var(--text-title); }
-  p { margin: 0 0 var(--space-3); }
-  a { color: var(--color-accent); text-underline-offset: 3px; }
-  a:hover { color: var(--color-accent-300); }
-  img { display: block; max-width: 100%; }
-  :focus { outline: none; }
-  :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-  ::selection { background: var(--color-selection); }
+  h3 {
+    font-size: var(--text-h3);
+  }
+  h4 {
+    font-size: var(--text-heading);
+  }
+  h5 {
+    font-size: var(--text-title);
+  }
+  p {
+    margin: 0 0 var(--space-3);
+  }
+  a {
+    color: var(--color-accent);
+    text-underline-offset: 3px;
+  }
+  a:hover {
+    color: var(--color-accent-300);
+  }
+  img {
+    display: block;
+    max-width: 100%;
+  }
+  :focus {
+    outline: none;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-selection);
+  }
 }
 
 @layer components {
@@ -255,13 +278,26 @@
     height: 1px;
     border: 0;
     margin: var(--space-4) 0;
-    background: linear-gradient(to right, transparent, var(--color-divider) var(--rule-fade), var(--color-divider) calc(100% - var(--rule-fade)), transparent);
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--color-divider) var(--rule-fade),
+      var(--color-divider) calc(100% - var(--rule-fade)),
+      transparent
+    );
   }
 
   /* 하단 탭바 위쪽 구분선 */
   .rule-top {
     background:
-      linear-gradient(to right, transparent, var(--color-divider) var(--rule-fade), var(--color-divider) calc(100% - var(--rule-fade)), transparent) no-repeat top / 100% 1px,
+      linear-gradient(
+          to right,
+          transparent,
+          var(--color-divider) var(--rule-fade),
+          var(--color-divider) calc(100% - var(--rule-fade)),
+          transparent
+        )
+        no-repeat top / 100% 1px,
       var(--color-bg);
   }
 
@@ -283,20 +319,47 @@
     padding: var(--space-2) calc(var(--space-3) * 1.2);
     border-radius: var(--radius-md);
   }
-  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
   .btn:not(.btn-primary):not(.btn-secondary):not(.btn-ghost):not(:disabled):hover {
     background: var(--color-hover);
   }
-  .btn-primary { color: var(--color-accent); border-color: var(--color-accent); }
-  .btn-primary:not(:disabled):hover { background: var(--color-accent-soft); }
-  .btn-primary:not(:disabled):active { background: var(--color-accent-strong); }
-  .btn-secondary { border-color: var(--color-divider); }
-  .btn-secondary:not(:disabled):hover { background: var(--color-hover); }
-  .btn-secondary:not(:disabled):active { background: var(--color-pressed); }
-  .btn-ghost { color: var(--color-accent); padding-inline: var(--space-1); }
-  .btn-ghost:not(:disabled):hover { background: var(--color-accent-faint); }
-  .btn-ghost:not(:disabled):active { background: var(--color-accent-soft); }
-  .btn-icon { width: 36px; height: 36px; padding: 0; }
+  .btn-primary {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .btn-primary:not(:disabled):hover {
+    background: var(--color-accent-soft);
+  }
+  .btn-primary:not(:disabled):active {
+    background: var(--color-accent-strong);
+  }
+  .btn-secondary {
+    border-color: var(--color-divider);
+  }
+  .btn-secondary:not(:disabled):hover {
+    background: var(--color-hover);
+  }
+  .btn-secondary:not(:disabled):active {
+    background: var(--color-pressed);
+  }
+  .btn-ghost {
+    color: var(--color-accent);
+    padding-inline: var(--space-1);
+  }
+  .btn-ghost:not(:disabled):hover {
+    background: var(--color-accent-faint);
+  }
+  .btn-ghost:not(:disabled):active {
+    background: var(--color-accent-soft);
+  }
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+  }
 
   /* — forms — */
   .field > label {
@@ -317,29 +380,84 @@
     border: 1px solid var(--color-divider);
     border-radius: var(--radius-md);
   }
-  .input::placeholder { color: var(--color-placeholder); }
-  .input:hover { border-color: var(--color-placeholder); }
-  .input:focus-visible { border-color: var(--color-accent); outline-offset: 0; }
-  textarea.input { min-height: 90px; resize: vertical; }
+  .input::placeholder {
+    color: var(--color-placeholder);
+  }
+  .input:hover {
+    border-color: var(--color-placeholder);
+  }
+  .input:focus-visible {
+    border-color: var(--color-accent);
+    outline-offset: 0;
+  }
+  textarea.input {
+    min-height: 90px;
+    resize: vertical;
+  }
 
-  .radio { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: var(--text-body); }
+  .radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: var(--text-body);
+  }
   .radio input,
-  .seg-opt input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
-  .radio .dot { width: 16px; height: 16px; flex: none; border-radius: 50%; border: 1.5px solid var(--color-divider); }
-  .radio:hover .dot { border-color: var(--color-accent); }
+  .seg-opt input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+  .radio .dot {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-divider);
+  }
+  .radio:hover .dot {
+    border-color: var(--color-accent);
+  }
   .radio input:checked + .dot {
     border-color: var(--color-accent);
     background: var(--color-accent);
     box-shadow: inset 0 0 0 4px var(--color-bg);
   }
-  .radio input:focus-visible + .dot { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .radio input:focus-visible + .dot {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
 
-  .seg { display: inline-flex; overflow: hidden; border: 1px solid var(--color-divider); border-radius: var(--radius-md); }
-  .seg-opt { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; font-size: var(--text-meta); cursor: pointer; }
-  .seg-opt + .seg-opt { border-left: 1px solid var(--color-divider); }
-  .seg-opt:has(input:checked) { color: var(--color-accent); box-shadow: inset 0 0 0 1px var(--color-accent); }
-  .seg-opt:not(:has(input:checked)):hover { background: var(--color-hover); }
-  .seg-opt:has(input:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+  .seg {
+    display: inline-flex;
+    overflow: hidden;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-md);
+  }
+  .seg-opt {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    font-size: var(--text-meta);
+    cursor: pointer;
+  }
+  .seg-opt + .seg-opt {
+    border-left: 1px solid var(--color-divider);
+  }
+  .seg-opt:has(input:checked) {
+    color: var(--color-accent);
+    box-shadow: inset 0 0 0 1px var(--color-accent);
+  }
+  .seg-opt:not(:has(input:checked)):hover {
+    background: var(--color-hover);
+  }
+  .seg-opt:has(input:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+  }
 
   /* — cards — */
   .card {
@@ -350,10 +468,21 @@
     border-radius: var(--radius-md);
     background: var(--color-surface);
   }
-  .card-kicker { font-size: var(--text-micro); letter-spacing: var(--tracking-kicker); text-transform: uppercase; color: var(--color-accent); }
-  .elev-sm { box-shadow: var(--shadow-sm); }
-  .elev-md { box-shadow: var(--shadow-md); }
-  .elev-lg { box-shadow: var(--shadow-lg); }
+  .card-kicker {
+    font-size: var(--text-micro);
+    letter-spacing: var(--tracking-kicker);
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+  .elev-sm {
+    box-shadow: var(--shadow-sm);
+  }
+  .elev-md {
+    box-shadow: var(--shadow-md);
+  }
+  .elev-lg {
+    box-shadow: var(--shadow-lg);
+  }
 
   /* — tags — */
   .tag {
@@ -365,12 +494,25 @@
     border-radius: calc(var(--radius-md) * 0.75);
     white-space: nowrap;
   }
-  .tag-accent { background: var(--color-accent-800); color: var(--color-accent-100); }
-  .tag-neutral { background: var(--color-neutral-800); color: var(--color-neutral-100); }
-  .tag-outline { border: 1px solid var(--color-accent); color: var(--color-accent); }
+  .tag-accent {
+    background: var(--color-accent-800);
+    color: var(--color-accent-100);
+  }
+  .tag-neutral {
+    background: var(--color-neutral-800);
+    color: var(--color-neutral-100);
+  }
+  .tag-outline {
+    border: 1px solid var(--color-accent);
+    color: var(--color-accent);
+  }
 
   /* — tables: 행 단위로 끝이 사라지는 구분선 — */
-  .ds-table { width: 100%; border-collapse: collapse; font-size: var(--text-body); }
+  .ds-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-body);
+  }
   .ds-table th {
     text-align: left;
     font-size: var(--text-caption);
@@ -380,9 +522,18 @@
     color: var(--color-subtle);
     padding: var(--space-2);
   }
-  .ds-table td { padding: var(--space-2); }
+  .ds-table td {
+    padding: var(--space-2);
+  }
   .ds-table thead tr {
-    background: linear-gradient(to right, transparent, var(--color-divider) var(--rule-fade), var(--color-divider) calc(100% - var(--rule-fade)), transparent) no-repeat bottom / 100% 1px;
+    background: linear-gradient(
+        to right,
+        transparent,
+        var(--color-divider) var(--rule-fade),
+        var(--color-divider) calc(100% - var(--rule-fade)),
+        transparent
+      )
+      no-repeat bottom / 100% 1px;
   }
   .ds-table tbody tr {
     background: linear-gradient(
@@ -432,17 +583,33 @@
     box-shadow: var(--shadow-lg);
     color: var(--color-text);
   }
-  .dialog-title { font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-size: var(--text-heading); }
-  .dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+  .dialog-title {
+    font-family: var(--font-heading);
+    font-weight: var(--font-heading-weight);
+    font-size: var(--text-heading);
+  }
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+  }
 
   /* 인증 사진 자리 표시 (빗금) */
   .photo-placeholder {
-    background: repeating-linear-gradient(135deg, var(--color-neutral-900) 0 8px, var(--color-surface) 8px 16px);
+    background: repeating-linear-gradient(
+      135deg,
+      var(--color-neutral-900) 0 8px,
+      var(--color-surface) 8px 16px
+    );
   }
   .photo-placeholder-sm {
-    background: repeating-linear-gradient(135deg, var(--color-neutral-900) 0 6px, var(--color-bg) 6px 12px);
+    background: repeating-linear-gradient(
+      135deg,
+      var(--color-neutral-900) 0 6px,
+      var(--color-bg) 6px 12px
+    );
   }
-
 }
 
 /* 화면 상단 좌측에서 번지는 accent 글로우 — md:glow-main 처럼 반응형으로 쓸 수 있게 utility로 */
@@ -454,5 +621,9 @@
 }
 
 /* iOS 홈 화면 PWA 안전 영역 */
-.pb-safe { padding-bottom: max(26px, env(safe-area-inset-bottom)); }
-.pt-safe { padding-top: env(safe-area-inset-top); }
+.pb-safe {
+  padding-bottom: max(26px, env(safe-area-inset-bottom));
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}

@@ -67,7 +67,11 @@ export function useSubmitEvidence() {
   const submit = async (category: StudyCategory, file: File) => {
     setPending(true);
     try {
-      const compressed = await imageCompression(file, { maxSizeMB: MAX_UPLOAD_MB, maxWidthOrHeight: 2048, useWebWorker: true });
+      const compressed = await imageCompression(file, {
+        maxSizeMB: MAX_UPLOAD_MB,
+        maxWidthOrHeight: 2048,
+        useWebWorker: true,
+      });
       const body = new FormData();
       body.append("file", compressed, file.name);
       body.append("category", category);
