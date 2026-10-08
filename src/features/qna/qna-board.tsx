@@ -33,7 +33,10 @@ export function QnaBoard() {
             type="button"
             onClick={() => setSelectedId(t.id)}
             aria-pressed={t.id === thread?.id}
-            className={cn("flex cursor-pointer flex-col gap-1 rounded-md p-3 text-left", t.id === thread?.id ? "bg-surface" : "bg-transparent")}
+            className={cn(
+              "flex cursor-pointer flex-col gap-1 rounded-md p-3 text-left",
+              t.id === thread?.id ? "bg-surface" : "bg-transparent",
+            )}
           >
             <span className="flex items-center gap-1.5">
               <span className="tag tag-neutral">{t.tag}</span>
@@ -52,7 +55,9 @@ export function QnaBoard() {
           <span className="text-label text-muted">
             {thread.tag} · {thread.who}
           </span>
-          <h2 className="m-0 text-title leading-question font-normal tracking-normal md:text-heading">{thread.title}</h2>
+          <h2 className="m-0 text-title leading-question font-normal tracking-normal md:text-heading">
+            {thread.title}
+          </h2>
           <div className="flex flex-col gap-2 rounded-md bg-accent-900 p-3.5 md:p-4">
             <span className="flex items-center gap-1.5 text-label text-accent-300">
               <Sparkle />
@@ -65,13 +70,19 @@ export function QnaBoard() {
               <Avatar initial={r.initial} size="sm" />
               <div className="flex flex-col gap-1">
                 <span className="text-label">
-                  <b className="font-medium">{r.name}</b> <span className="tag tag-accent px-1.5 py-px text-micro">보충</span>
+                  <b className="font-medium">{r.name}</b>{" "}
+                  <span className="tag tag-accent px-1.5 py-px text-micro">보충</span>
                 </span>
                 <span className="text-meta leading-normal md:text-body">{r.text}</span>
               </div>
             </div>
           ))}
-          <MessageComposer placeholder="보충 답변 달기 (Enter)" label="보충 답변" maxLength={1000} onSend={(text) => addReply(thread.id, text)} />
+          <MessageComposer
+            placeholder="보충 답변 달기 (Enter)"
+            label="보충 답변"
+            maxLength={1000}
+            onSend={(text) => addReply(thread.id, text)}
+          />
         </article>
       )}
     </div>

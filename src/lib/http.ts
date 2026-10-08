@@ -1,6 +1,14 @@
 /** 클라이언트 → Route Handler JSON 요청. 실패 응답이면 본문을 담아 throw */
-export async function requestJson<T = unknown>(url: string, body: unknown, method: "POST" | "DELETE" = "POST"): Promise<T> {
-  const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+export async function requestJson<T = unknown>(
+  url: string,
+  body: unknown,
+  method: "POST" | "DELETE" = "POST",
+): Promise<T> {
+  const res = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
   if (!res.ok) throw new HttpError(res.status, await res.text());
   return res.json() as Promise<T>;
 }

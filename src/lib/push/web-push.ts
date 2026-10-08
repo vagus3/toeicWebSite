@@ -14,12 +14,20 @@ export interface PushPayload {
 let configured = false;
 
 export function isPushConfigured() {
-  return Boolean(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_SUBJECT);
+  return Boolean(
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
+      process.env.VAPID_PRIVATE_KEY &&
+      process.env.VAPID_SUBJECT,
+  );
 }
 
 function ensureVapid() {
   if (configured) return;
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT!, process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!, process.env.VAPID_PRIVATE_KEY!);
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT!,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!,
+  );
   configured = true;
 }
 
@@ -32,16 +40,24 @@ export async function sendPushToUsers(userIds: string[], payload: PushPayload) {
   if (!isPushConfigured() || !admin || userIds.length === 0) return { sent: 0 };
   ensureVapid();
 
-  const { data: subs } = await admin.from("push_subscriptions").select("id, endpoint, p256dh, auth").in("user_id", userIds);
+  const { data: subs } = await admin
+    .from("push_subscriptions")
+    .select("id, endpoint, p256dh, auth")
+    .in("user_id", userIds);
   let sent = 0;
   await Promise.all(
     (subs ?? []).map(async (s) => {
       try {
-        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(payload), { TTL: 60 * 60 });
+        await webpush.sendNotification(
+          { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+          JSON.stringify(payload),
+          { TTL: 60 * 60 },
+        );
         sent += 1;
       } catch (error) {
         const status = (error as { statusCode?: number }).statusCode;
-        if (status === 404 || status === 410) await admin.from("push_subscriptions").delete().eq("id", s.id);
+        if (status === 404 || status === 410)
+          await admin.from("push_subscriptions").delete().eq("id", s.id);
       }
     }),
   );

@@ -6,8 +6,25 @@ import { extendTailwindMerge } from "tailwind-merge";
  * text-neutral-500 같은 색 클래스와 합칠 때 지워버리지 않도록 등록한다.
  */
 const FONT_SIZE_TOKENS = [
-  "micro", "caption", "label", "meta", "body", "base", "title", "heading", "stat", "question", "h3", "hero", "display",
-  "icon-sm", "icon", "icon-md", "icon-lg", "icon-xl", "icon-2xl",
+  "micro",
+  "caption",
+  "label",
+  "meta",
+  "body",
+  "base",
+  "title",
+  "heading",
+  "stat",
+  "question",
+  "h3",
+  "hero",
+  "display",
+  "icon-sm",
+  "icon",
+  "icon-md",
+  "icon-lg",
+  "icon-xl",
+  "icon-2xl",
 ];
 
 const twMerge = extendTailwindMerge({
@@ -36,7 +53,9 @@ export function toStudyDate(date: Date) {
 }
 
 export function dDay(today: Date, target: Date) {
-  const ms = Date.UTC(target.getFullYear(), target.getMonth(), target.getDate()) - Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  const ms =
+    Date.UTC(target.getFullYear(), target.getMonth(), target.getDate()) -
+    Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
   return Math.round(ms / 86_400_000);
 }
 

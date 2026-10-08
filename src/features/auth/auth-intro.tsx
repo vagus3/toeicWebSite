@@ -19,7 +19,8 @@ export function AuthIntro() {
       <div className="flex max-w-hero flex-col gap-3.5">
         <h1 className="m-0 text-hero text-pretty">같이 하면 끝까지 가는 토익 스터디</h1>
         <p className="m-0 text-base leading-reading text-pretty text-muted">
-          링크로 파티에 참가하고, 매일 할당량을 사진으로 인증하고, 서로의 진행률을 트래커로 확인해요.
+          링크로 파티에 참가하고, 매일 할당량을 사진으로 인증하고, 서로의 진행률을 트래커로
+          확인해요.
         </p>
       </div>
       <ul className="m-0 flex list-none flex-wrap gap-7 p-0 text-meta text-muted">

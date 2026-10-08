@@ -18,14 +18,23 @@ export function notConfigured(reason: string) {
 }
 
 /** JSON 본문을 zod로 검증 — 실패하면 400 */
-export async function parseJson<S extends z.ZodType>(request: Request, schema: S): Promise<Result<z.infer<S>>> {
+export async function parseJson<S extends z.ZodType>(
+  request: Request,
+  schema: S,
+): Promise<Result<z.infer<S>>> {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (parsed.success) return { ok: true, data: parsed.data };
   return { ok: false, response: apiError(400, "invalid_request", { issues: parsed.error.issues }) };
 }
 
 /** 사용자(없으면 IP) 기준 고정 창 Rate Limit — 넘으면 429 */
-export function limitRequest(request: Request, scope: string, userId: string | null | undefined, limit: number, windowMs: number) {
+export function limitRequest(
+  request: Request,
+  scope: string,
+  userId: string | null | undefined,
+  limit: number,
+  windowMs: number,
+) {
   const { ok } = rateLimit(`${scope}:${clientKey(request, userId)}`, limit, windowMs);
   return ok ? null : apiError(429, "rate_limited");
 }

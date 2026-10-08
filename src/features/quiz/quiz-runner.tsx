@@ -45,8 +45,18 @@ export function QuizRunner() {
   return (
     <div className="flex max-w-quiz flex-col gap-5 md:gap-5.5">
       <div className="flex items-center gap-2.5 md:gap-3">
-        <IconLink href={ROUTES.quizzes} label="테스트로 돌아가기" icon={X} iconClassName="text-icon-md md:text-icon" />
-        <ProgressBar value={((index + (answered ? 1 : 0)) / QUIZ.length) * 100} className="h-0.75 flex-1" barClassName="duration-300" label="문항 진행" />
+        <IconLink
+          href={ROUTES.quizzes}
+          label="테스트로 돌아가기"
+          icon={X}
+          iconClassName="text-icon-md md:text-icon"
+        />
+        <ProgressBar
+          value={((index + (answered ? 1 : 0)) / QUIZ.length) * 100}
+          className="h-0.75 flex-1"
+          barClassName="duration-300"
+          label="문항 진행"
+        />
         <span className="text-label text-muted md:text-meta">
           {index + 1}/{QUIZ.length}
         </span>
@@ -67,7 +77,11 @@ export function QuizRunner() {
               aria-pressed={pick === i}
               className={cn(
                 "flex cursor-pointer gap-3 rounded-md px-4 py-3.5 text-left text-base md:p-4 md:text-title",
-                correct ? "bg-accent-soft shadow-ring-accent" : wrong ? "bg-neutral-900 shadow-ring-muted" : "bg-transparent shadow-sm",
+                correct
+                  ? "bg-accent-soft shadow-ring-accent"
+                  : wrong
+                    ? "bg-neutral-900 shadow-ring-muted"
+                    : "bg-transparent shadow-sm",
               )}
             >
               <span className="text-muted">{"ABCD"[i]}</span>

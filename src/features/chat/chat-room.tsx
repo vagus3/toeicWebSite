@@ -18,7 +18,14 @@ function MessageItem({ message, mine }: { message: ChatMessage; mine: boolean })
       <div className={cn("flex max-w-4/5 flex-col gap-1", mine && "items-end")}>
         {!mine && <span className="text-label font-medium">{message.senderName}</span>}
         <div className={cn("flex items-end gap-1.5", mine && "flex-row-reverse")}>
-          <p className={cn("m-0 rounded-md px-3.5 py-2.5 text-body leading-normal", mine ? "bg-accent-900" : "bg-surface shadow-sm")}>{message.content}</p>
+          <p
+            className={cn(
+              "m-0 rounded-md px-3.5 py-2.5 text-body leading-normal",
+              mine ? "bg-accent-900" : "bg-surface shadow-sm",
+            )}
+          >
+            {message.content}
+          </p>
           <time dateTime={message.createdAt} className="shrink-0 text-caption text-muted">
             {format(new Date(message.createdAt), "HH:mm")}
           </time>
@@ -51,7 +58,11 @@ export function ChatRoom({ partyId, roomId }: { partyId: string; roomId: string 
 
       <div className="hr my-0" />
 
-      <ol aria-live="polite" aria-busy={isLoading} className="m-0 flex list-none flex-col gap-4 p-0">
+      <ol
+        aria-live="polite"
+        aria-busy={isLoading}
+        className="m-0 flex list-none flex-col gap-4 p-0"
+      >
         {messages.map((m) => (
           <MessageItem key={m.id} message={m} mine={m.senderId === myId} />
         ))}

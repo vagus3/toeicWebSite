@@ -25,7 +25,12 @@ interface InstallGuideInput {
 }
 
 /** 아직 홈 화면에 설치하지 않은 iOS·Android에서, 닫지 않았을 때 보여줄 안내 */
-export function installGuidePlatform({ userAgent, maxTouchPoints, standalone, dismissed }: InstallGuideInput): InstallPlatform | null {
+export function installGuidePlatform({
+  userAgent,
+  maxTouchPoints,
+  standalone,
+  dismissed,
+}: InstallGuideInput): InstallPlatform | null {
   if (standalone || dismissed) return null;
   const platform = detectInstallPlatform(userAgent, maxTouchPoints);
   return platform === "other" ? null : platform;

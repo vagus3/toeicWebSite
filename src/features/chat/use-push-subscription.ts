@@ -45,16 +45,23 @@ export function usePushSubscription() {
 
   const subscribe = async () => {
     const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-    if (!supported) return flash("이 브라우저는 알림을 지원하지 않아요 · iPhone은 홈 화면에 추가 후 사용");
+    if (!supported)
+      return flash("이 브라우저는 알림을 지원하지 않아요 · iPhone은 홈 화면에 추가 후 사용");
     if (!vapid) return flash("서버에 VAPID 키를 설정하면 알림을 켤 수 있어요");
     if ((await Notification.requestPermission()) !== "granted") {
       setStatus("denied");
       return flash("브라우저 설정에서 알림을 허용해 주세요");
     }
     try {
-      const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" });
+      const reg = await navigator.serviceWorker.register("/sw.js", {
+        scope: "/",
+        updateViaCache: "none",
+      });
       await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(vapid) });
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapid),
+      });
       await saveOnServer("/api/push/subscribe", sub.toJSON(), "POST");
       setStatus("subscribed");
       flash("새 메시지 알림을 켰어요");
@@ -67,7 +74,9 @@ export function usePushSubscription() {
     const reg = await navigator.serviceWorker.getRegistration();
     const sub = await reg?.pushManager.getSubscription();
     if (sub) {
-      await saveOnServer("/api/push/subscribe", { endpoint: sub.endpoint }, "DELETE").catch(() => {});
+      await saveOnServer("/api/push/subscribe", { endpoint: sub.endpoint }, "DELETE").catch(
+        () => {},
+      );
       await sub.unsubscribe();
     }
     setStatus("idle");

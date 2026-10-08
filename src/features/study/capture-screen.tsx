@@ -16,9 +16,12 @@ import { evidenceTitle, usePhotoPicker, useSubmitEvidence } from "./use-evidence
 
 function usePreviewUrl(file: File | null) {
   const url = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
-  useEffect(() => () => {
-    if (url) URL.revokeObjectURL(url);
-  }, [url]);
+  useEffect(
+    () => () => {
+      if (url) URL.revokeObjectURL(url);
+    },
+    [url],
+  );
   return url;
 }
 
@@ -30,7 +33,9 @@ export function CaptureScreen() {
   const doneCount = useDoneCount();
   const requested = params.get("task") as StudyCategory | null;
   const firstTodo = TASKS.find((t) => !done[t.id])?.id ?? null;
-  const [selection, setSelection] = useState<StudyCategory | null>(requested && !done[requested] ? requested : firstTodo);
+  const [selection, setSelection] = useState<StudyCategory | null>(
+    requested && !done[requested] ? requested : firstTodo,
+  );
   const photo = usePhotoPicker();
   const preview = usePreviewUrl(photo.file);
   const { submit, pending } = useSubmitEvidence();
@@ -97,7 +102,11 @@ export function CaptureScreen() {
                 </button>
                 {preview && (
                   // eslint-disable-next-line @next/next/no-img-element -- 로컬 blob 미리보기
-                  <img src={preview} alt="촬영한 인증 사진" className="size-thumb rounded-sm object-cover" />
+                  <img
+                    src={preview}
+                    alt="촬영한 인증 사진"
+                    className="size-thumb rounded-sm object-cover"
+                  />
                 )}
               </div>
             )}
@@ -107,7 +116,12 @@ export function CaptureScreen() {
 
       <div className="min-h-4 flex-1" />
       <DriveSaveHint />
-      <Button variant="primary" className="h-control-xl w-full text-base" onClick={onSubmit} disabled={!photo.file || !selection || pending}>
+      <Button
+        variant="primary"
+        className="h-control-xl w-full text-base"
+        onClick={onSubmit}
+        disabled={!photo.file || !selection || pending}
+      >
         {pending ? "올리는 중…" : "인증 올리기"}
       </Button>
     </div>

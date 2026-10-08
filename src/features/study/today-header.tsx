@@ -39,7 +39,8 @@ export function TodayHeaderDesktop() {
       <div className="flex flex-col gap-1 pb-1.5">
         <span className="text-meta text-muted">최근 점수 → 목표</span>
         <span className="text-stat">
-          {latest} <span className="text-muted">→</span> <span className="text-accent-300">{ME.target}</span>
+          {latest} <span className="text-muted">→</span>{" "}
+          <span className="text-accent-300">{ME.target}</span>
         </span>
       </div>
       <TodayProgress className="flex max-w-progress-max min-w-progress-min flex-1 flex-col gap-1.5 pb-2.5" />

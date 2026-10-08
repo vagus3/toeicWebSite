@@ -15,7 +15,12 @@ interface NudgeButtonProps {
 }
 
 /** 콕 찌르기 — 멤버별 하루 한 번, 보내면 "보냄"으로 바뀐다 (nudges 테이블 + 푸시로 확장) */
-export function NudgeButton({ member, variant = "ghost", withIcon = true, className }: NudgeButtonProps) {
+export function NudgeButton({
+  member,
+  variant = "ghost",
+  withIcon = true,
+  className,
+}: NudgeButtonProps) {
   const nudged = useStudyStore((s) => s.nudgedIds.includes(member.id));
   const nudge = useStudyStore((s) => s.nudge);
   const flash = useToast((s) => s.flash);

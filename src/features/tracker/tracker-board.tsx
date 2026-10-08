@@ -1,6 +1,13 @@
 "use client";
 
-import { BookmarkSimple, BookOpen, CaretLeft, CaretRight, Headphones, TextAa } from "@phosphor-icons/react";
+import {
+  BookmarkSimple,
+  BookOpen,
+  CaretLeft,
+  CaretRight,
+  Headphones,
+  TextAa,
+} from "@phosphor-icons/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DEMO_TODAY } from "@/lib/demo-data";
@@ -10,7 +17,10 @@ import { buildMonth, dayDetail, LEVEL_CLASS, shiftMonth, type TrackerMonth } fro
 
 /** 데스크톱 트래커 — 멤버 × 날짜 히트맵 + 칸 상세 (웹 시안) */
 export function TrackerBoard() {
-  const [ym, setYm] = useState<TrackerMonth>({ year: DEMO_TODAY.getFullYear(), month: DEMO_TODAY.getMonth() });
+  const [ym, setYm] = useState<TrackerMonth>({
+    year: DEMO_TODAY.getFullYear(),
+    month: DEMO_TODAY.getMonth(),
+  });
   const [cell, setCell] = useState<[number, number]>([1, DEMO_TODAY.getDate() - 1]);
   const month = buildMonth(ym);
   const dayIndex = Math.min(cell[1], month.lastDay - 1);
@@ -25,29 +35,53 @@ export function TrackerBoard() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Button variant="secondary" size="icon" onClick={() => move(-1)} disabled={!month.canPrev} title="이전 달" aria-label="이전 달">
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={() => move(-1)}
+            disabled={!month.canPrev}
+            title="이전 달"
+            aria-label="이전 달"
+          >
             <CaretLeft />
           </Button>
           <h1 className="m-0 min-w-month-label text-center text-h3">
             트래커 · {ym.year}년 {ym.month + 1}월
           </h1>
-          <Button variant="secondary" size="icon" onClick={() => move(1)} disabled={!month.canNext} title="다음 달" aria-label="다음 달">
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={() => move(1)}
+            disabled={!month.canNext}
+            title="다음 달"
+            aria-label="다음 달"
+          >
             <CaretRight />
           </Button>
           {!month.isCurrent && <span className="tag tag-neutral">지난 기록</span>}
         </div>
-        <span className="text-meta text-muted">칸을 누르면 그날 뭐 했는지 보여요 · 이번 달 평균 {month.average}</span>
+        <span className="text-meta text-muted">
+          칸을 누르면 그날 뭐 했는지 보여요 · 이번 달 평균 {month.average}
+        </span>
       </div>
 
       <div className="flex flex-wrap items-start gap-8">
         <div className="min-w-0 flex-1 basis-col-tracker overflow-x-auto">
           <div
             className="grid min-w-grid-min items-center gap-1 text-label"
-            style={{ gridTemplateColumns: `var(--spacing-tracker-name) repeat(${month.nDays}, minmax(var(--spacing-tracker-cell), 1fr))` }}
+            style={{
+              gridTemplateColumns: `var(--spacing-tracker-name) repeat(${month.nDays}, minmax(var(--spacing-tracker-cell), 1fr))`,
+            }}
           >
             <span />
             {month.rows[0].cells.map((c) => (
-              <span key={c.day} className={cn("text-center text-micro", c.day === month.todayDay ? "text-accent" : "text-neutral-500")}>
+              <span
+                key={c.day}
+                className={cn(
+                  "text-center text-micro",
+                  c.day === month.todayDay ? "text-accent" : "text-neutral-500",
+                )}
+              >
                 {c.day}
               </span>
             ))}
@@ -67,7 +101,9 @@ export function TrackerBoard() {
                       aria-pressed={selected}
                       className={cn(
                         "aspect-square rounded-sm p-0",
-                        c.future ? "cursor-default bg-transparent shadow-ring-divider" : cn("cursor-pointer", LEVEL_CLASS[c.level]),
+                        c.future
+                          ? "cursor-default bg-transparent shadow-ring-divider"
+                          : cn("cursor-pointer", LEVEL_CLASS[c.level]),
                         selected && "shadow-ring-selected",
                       )}
                     />

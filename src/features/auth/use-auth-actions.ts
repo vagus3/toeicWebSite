@@ -38,7 +38,11 @@ export function useAuthActions(mode: AuthMode) {
     if (!supabase) return enterApp();
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: authCallbackUrl({ next, invite }), scopes: GOOGLE_SCOPES, queryParams: { access_type: "offline", prompt: "consent" } },
+      options: {
+        redirectTo: authCallbackUrl({ next, invite }),
+        scopes: GOOGLE_SCOPES,
+        queryParams: { access_type: "offline", prompt: "consent" },
+      },
     });
   };
 
@@ -55,14 +59,19 @@ export function useAuthActions(mode: AuthMode) {
             password: values.password,
             options: { data: { nickname: values.nickname, track: values.track, invite } },
           })
-        : await supabase.auth.signInWithPassword({ email: values.email, password: values.password });
+        : await supabase.auth.signInWithPassword({
+            email: values.email,
+            password: values.password,
+          });
     if (error) return error.message;
     enterApp();
     return null;
   };
 
   const resetPassword = async (email: string) => {
-    await getSupabaseBrowserClient()?.auth.resetPasswordForEmail(email, { redirectTo: authCallbackUrl({ next: ROUTES.dashboard }) });
+    await getSupabaseBrowserClient()?.auth.resetPasswordForEmail(email, {
+      redirectTo: authCallbackUrl({ next: ROUTES.dashboard }),
+    });
     flash("비밀번호 재설정 메일을 보냈어요");
   };
 

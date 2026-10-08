@@ -17,7 +17,12 @@ export function Avatar({ initial, size = "md", me, className }: AvatarProps) {
   return (
     <span
       aria-hidden
-      className={cn("grid flex-none place-items-center rounded-full", SIZE[size], me ? "bg-accent-800 text-accent-100" : "bg-neutral-800", className)}
+      className={cn(
+        "grid flex-none place-items-center rounded-full",
+        SIZE[size],
+        me ? "bg-accent-800 text-accent-100" : "bg-neutral-800",
+        className,
+      )}
     >
       {initial}
     </span>

@@ -61,15 +61,23 @@ export const useStudyStore = create<StudyState>((set, get) => ({
   closeModal: () => set({ modal: null }),
 
   completeTask: (category) => set((s) => ({ done: { ...s.done, [category]: true } })),
-  addScore: (total, label) => set((s) => ({ scores: [...s.scores, { label, value: total }], modal: null })),
-  cheerFeed: (index) => set((s) => ({ feedCheers: s.feedCheers.map((c, i) => (i === index ? c + 1 : c)) })),
-  nudge: (memberId) => set((s) => (s.nudgedIds.includes(memberId) ? s : { nudgedIds: [...s.nudgedIds, memberId] })),
+  addScore: (total, label) =>
+    set((s) => ({ scores: [...s.scores, { label, value: total }], modal: null })),
+  cheerFeed: (index) =>
+    set((s) => ({ feedCheers: s.feedCheers.map((c, i) => (i === index ? c + 1 : c)) })),
+  nudge: (memberId) =>
+    set((s) => (s.nudgedIds.includes(memberId) ? s : { nudgedIds: [...s.nudgedIds, memberId] })),
   finishQuiz: (score) => set((s) => ({ quizScore: score, done: { ...s.done, word: true } })),
   addReply: (threadId, text) =>
     set((s) => ({
-      threads: s.threads.map((t) => (t.id === threadId ? { ...t, replies: [...t.replies, { initial: ME.initial, name: ME.name, text }] } : t)),
+      threads: s.threads.map((t) =>
+        t.id === threadId
+          ? { ...t, replies: [...t.replies, { initial: ME.initial, name: ME.name, text }] }
+          : t,
+      ),
     })),
-  addThread: (thread) => set((s) => ({ threads: [thread, ...s.threads], activeThreadId: thread.id, modal: null })),
+  addThread: (thread) =>
+    set((s) => ({ threads: [thread, ...s.threads], activeThreadId: thread.id, modal: null })),
   setActiveThread: (id) => set({ activeThreadId: id }),
 }));
 

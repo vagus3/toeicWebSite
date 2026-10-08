@@ -6,7 +6,10 @@ export function BrandMark({ size = "md" }: { size?: "sm" | "md" }) {
   return (
     <span
       aria-hidden
-      className={cn("grid flex-none place-items-center rounded-md border border-accent text-accent", size === "md" ? "size-8 text-icon" : "size-7 text-icon-sm")}
+      className={cn(
+        "grid flex-none place-items-center rounded-md border border-accent text-accent",
+        size === "md" ? "size-8 text-icon" : "size-7 text-icon-sm",
+      )}
     >
       <SunHorizon />
     </span>
