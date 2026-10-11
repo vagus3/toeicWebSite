@@ -77,3 +77,13 @@ Production 대상에 `SUPABASE_SECRET_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_S
 - https://support.google.com/cloud/answer/15549945
 - https://developers.google.com/workspace/drive/api/guides/api-specific-auth
 - https://vercel.com/docs/cron-jobs/manage-cron-jobs
+
+## 일일 RC 테스트
+
+- 테스트 또는 홈의 **Part 5·6·7 · 총 3문항**에서 시작한다. 기존 단어 연습은 별도다.
+- Groq가 실제 기출을 복제하지 않은 새 연습 문제를 만든다. Part 6은 한 지문·빈칸 1개, Part 7은 지문·질문 1개로 축소한다.
+- 파티별 한국 날짜당 한 세트를 저장·재사용한다. 동시 생성에는 DB 생성권을 사용하며, 실패하면 다시 시도할 수 있다.
+- 생성 요청에는 날짜와 출제 지침만 보낸다. 계정 정보, 선택한 답, 파티원 데이터는 Groq에 보내지 않는다.
+- 보기 4개, 중복 보기, 파트 구성, 지문 및 빈칸 수를 검사한다. AI가 작성한 문제의 의미와 정답 정확성을 완전히 보증하지는 않는다.
+- 제출 전 정답·해설은 서버에 보관한다. 제출 시 DB 정답으로 채점하고 결과와 RC 학습 기록을 한 트랜잭션으로 저장한다. 첫 제출 결과를 유지하며 재접속 시 다시 볼 수 있다.
+- 날짜가 지난 미제출 문제는 새로 제출할 수 없다. 저장된 문제와 결과는 세트 생성일부터 1년 후 일일 정리 작업에서 함께 삭제한다.

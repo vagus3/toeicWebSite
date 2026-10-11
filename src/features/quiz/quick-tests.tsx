@@ -13,13 +13,18 @@ export function QuickTests() {
   return (
     <div className="grid grid-cols-[repeat(auto-fit,minmax(var(--spacing-card-min),1fr))] gap-3">
       <ActionCard
-        kicker="일일 테스트 · AI 출제"
+        kicker="일일 테스트 · 단어 연습"
         title={`단어 Day 12 · ${QUIZ.length}문항`}
         action={
           <Button asChild variant="primary" className="text-meta">
             <Link href={ROUTES.dailyQuiz}>시작</Link>
           </Button>
         }
+      />
+      <ActionCard
+        kicker="일일 RC · Groq AI 출제"
+        title="Part 5·6·7 · 총 3문항"
+        action={<Button asChild variant="primary" className="text-meta"><Link href={ROUTES.dailyRc}>시작 / 결과</Link></Button>}
       />
       <ActionCard
         kicker="주간 테스트 · 토"

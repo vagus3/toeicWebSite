@@ -41,6 +41,14 @@ export function TestOverview() {
         <ActionCard
           className={CARD}
           titleClassName={TITLE}
+          kicker="일일 · Groq AI 출제"
+          title="RC · Part 5·6·7 각 1문항"
+          description="하루 3문항 · 지문·해설 제공 · RC 자동 인증"
+          action={<Button asChild variant="primary"><Link href={ROUTES.dailyRc}>시작 / 결과</Link></Button>}
+        />
+        <ActionCard
+          className={CARD}
+          titleClassName={TITLE}
           kicker="주간 · 토요일"
           title="LC/RC 하프 모의고사"
           description="교재 풀고 점수만 입력"
