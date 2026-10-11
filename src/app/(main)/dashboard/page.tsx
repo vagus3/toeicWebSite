@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DetailGate } from "@/features/party/detail-gate";
 import { Feed, MobileSocialCards } from "@/features/party/feed";
 import { MembersTable } from "@/features/party/members-table";
 import { QuickTests } from "@/features/quiz/quick-tests";
@@ -18,18 +19,26 @@ export default function DashboardPage() {
         <div className="flex min-w-0 flex-1 basis-col-main flex-col gap-8">
           <TodayHeaderDesktop />
           <TaskCards />
-          <MembersTable />
+          <DetailGate>
+            <MembersTable />
+          </DetailGate>
           <QuickTests />
         </div>
-        <Feed />
+        <DetailGate>
+          <Feed />
+        </DetailGate>
       </div>
 
       {/* 모바일 (프로토타입 시안) */}
       <div className="flex flex-col gap-4.5 md:hidden">
         <TodayHeaderMobile />
         <TaskChecklist />
-        <MobileSocialCards />
-        <Feed className="min-w-0 basis-auto" />
+        <DetailGate>
+          <MobileSocialCards />
+        </DetailGate>
+        <DetailGate>
+          <Feed className="min-w-0 basis-auto" />
+        </DetailGate>
       </div>
     </>
   );

@@ -8,7 +8,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { StudyProvider } from "@/features/party/study-provider";
 import { PartyControls, PartySetup } from "@/features/party/party-setup";
-import { demoSnapshot, loadStudySnapshot } from "@/lib/study-server";
+import { demoSnapshot, loadStudyCore } from "@/lib/study-server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { DriveControls } from "@/features/study/drive-controls";
 
@@ -25,11 +25,15 @@ export default async function MainLayout({
     } = await supabase.auth.getUser();
     if (!user) redirect("/login");
     try {
-      initial = await loadStudySnapshot(
-        supabase,
-        user.id,
-        (await cookies()).get("study-party")?.value,
-      );
+      // 상세 기록은 StudyProvider가 마운트된 뒤 클라이언트에서 따로 불러온다
+      initial = {
+        ...(await loadStudyCore(
+          supabase,
+          user.id,
+          (await cookies()).get("study-party")?.value,
+        )),
+        detail: null,
+      };
     } catch {
       return (
         <main className="p-8">

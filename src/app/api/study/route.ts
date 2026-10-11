@@ -4,7 +4,7 @@ import { gradeQuiz, studyActionSchema } from "@/features/study/study-schema";
 import { answerTutorConversation, answerInitialQuestion, isAiConfigured } from "@/lib/ai/groq";
 import { apiError, limitRequest, parseJson, requireSession } from "@/lib/api";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
-import { loadStudySnapshot } from "@/lib/study-server";
+import { loadStudyCore } from "@/lib/study-server";
 
 export const maxDuration = 60;
 
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     (await cookies()).get("study-party")?.value;
   try {
     return NextResponse.json(
-      await loadStudySnapshot(
+      await loadStudyCore(
         session.data.supabase,
         session.data.user.id,
         preferred,

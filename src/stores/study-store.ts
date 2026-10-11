@@ -5,17 +5,26 @@ import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import { TASKS } from "@/lib/demo-data";
 import { HttpError, requestJson } from "@/lib/http";
-import type { StudySnapshot } from "@/lib/study-model";
+import {
+  EMPTY_MEMBER_STATS,
+  type MemberStats,
+  type StudyCore,
+  type StudyDetail,
+  type StudySnapshot,
+} from "@/lib/study-model";
 import type { StudyAction } from "@/features/study/study-schema";
 import { useToast } from "./toast-store";
-import type { QnaThread, StudyCategory } from "@/types";
+import type { Member, QnaThread, StudyCategory } from "@/types";
 
 type StudyInput<T = StudyAction> = T extends StudyAction
   ? Omit<T, "partyId">
   : never;
 
 export type Modal = "upload" | "score" | "question" | null;
-interface StudyState extends StudySnapshot {
+interface StudyState extends StudyCore, StudyDetail {
+  /** 상세 기록이 한 번이라도 도착했는지. false인 동안 상세를 쓰는 화면은 로딩 상태를 보인다. */
+  detailReady: boolean;
+  detailError: boolean;
   modal: Modal;
   uploadSelection: StudyCategory | null;
   activeThreadId: string;
@@ -40,12 +49,37 @@ interface StudyState extends StudySnapshot {
   ) => Promise<boolean>;
   setActiveThread: (id: string) => void;
   refresh: () => Promise<void>;
+  loadDetail: () => Promise<void>;
+}
+
+const EMPTY_DETAIL: StudyDetail = {
+  memberStats: {},
+  logs: [],
+  scores: [],
+  feed: [],
+  feedCheers: [],
+  threads: [],
+  quizScore: null,
+};
+
+/** 코어 갱신 때 상세 통계를 잃지 않도록 멤버에 다시 붙인다. */
+function withStats(
+  members: Member[],
+  stats: Record<string, MemberStats>,
+): Member[] {
+  return members.map((m) => ({ ...m, ...(stats[m.id] ?? EMPTY_MEMBER_STATS) }));
 }
 
 // 요청마다 새 스토어를 만든다. 서버 렌더링 중 사용자의 상태가 서로 섞이지 않는다.
 export function createStudyStore(initial: StudySnapshot) {
+  const { detail, ...core } = initial;
+  const data = detail ?? EMPTY_DETAIL;
   return createStore<StudyState>()((set, get) => {
     let refreshVersion = 0;
+    let detailVersion = 0;
+
+    // 코어와 상세를 함께 다시 읽는다. 상세는 준비 전이어도 요청해서
+    // 저장 직후의 갱신이 빠지지 않고, 실패한 상세도 다음 갱신에서 재시도되게 한다.
     const refresh = async () => {
       if (get().mode === "demo") return;
       const version = ++refreshVersion;
@@ -54,9 +88,39 @@ export function createStudyStore(initial: StudySnapshot) {
         { cache: "no-store" },
       );
       if (!response.ok) throw new Error("study_load_failed");
-      const snapshot = (await response.json()) as StudySnapshot;
-      if (version === refreshVersion) set(snapshot);
+      const nextCore = (await response.json()) as StudyCore;
+      if (version === refreshVersion)
+        set({ ...nextCore, members: withStats(nextCore.members, get().memberStats) });
+      await refreshDetail();
     };
+
+    // 요청마다 버전을 올리고 가장 최근 요청의 응답만 반영한다.
+    // 먼저 보낸 요청이 나중에 도착해도 새 저장 결과를 덮어쓰지 않는다.
+    const refreshDetail = async () => {
+      const partyId = get().party?.id;
+      if (!partyId || get().mode === "demo") return;
+      const version = ++detailVersion;
+      try {
+        const response = await fetch(
+          `/api/study/detail?partyId=${encodeURIComponent(partyId)}`,
+          { cache: "no-store" },
+        );
+        if (!response.ok) throw new Error("study_detail_failed");
+        const next = (await response.json()) as StudyDetail;
+        if (version !== detailVersion) return;
+        set({
+          ...next,
+          members: withStats(get().members, next.memberStats),
+          detailReady: true,
+          detailError: false,
+          activeThreadId: get().activeThreadId || next.threads[0]?.id || "",
+        });
+      } catch (error) {
+        if (version === detailVersion) set({ detailError: true });
+        throw error;
+      }
+    };
+
     const save = async (input: StudyInput) => {
       const partyId = get().party?.id;
       if (!partyId || get().saving) return false;
@@ -87,12 +151,21 @@ export function createStudyStore(initial: StudySnapshot) {
       return true;
     };
     return {
-      ...initial,
+      ...core,
+      ...data,
+      members: withStats(core.members, data.memberStats),
+      detailReady: detail !== null,
+      detailError: false,
       modal: null,
-      uploadSelection: TASKS.find((t) => !initial.done[t.id])?.id ?? TASKS[0].id,
-      activeThreadId: initial.threads[0]?.id ?? "",
+      uploadSelection: TASKS.find((t) => !core.done[t.id])?.id ?? TASKS[0].id,
+      activeThreadId: data.threads[0]?.id ?? "",
       saving: false,
       refresh,
+      loadDetail: async () => {
+        if (get().detailReady) return;
+        // 실패 상태는 refreshDetail이 기록하고, 다음 30초 갱신이 다시 시도한다
+        await refreshDetail().catch(() => {});
+      },
       openUpload: (category) => {
         set({
           modal: "upload",

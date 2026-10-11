@@ -14,6 +14,8 @@ export function StudyProvider({
   const [store] = useState(() => createStudyStore(initial));
   useEffect(() => {
     if (initial.mode !== "live") return;
+    // 첫 화면은 이미 그려졌으므로 상세 기록은 뒤에서 불러오고, 해당 화면만 기다린다.
+    void store.getState().loadDetail();
     const refresh = () => {
       if (document.visibilityState === "visible")
         void store

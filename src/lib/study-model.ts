@@ -17,7 +17,20 @@ export interface StudyLog {
   study_evidences?: { id: string }[];
 }
 
-export interface StudySnapshot {
+/** 멤버별 이력 통계. 전체 기록을 읽어야 계산되므로 상세 응답에만 들어 있다. */
+export type MemberStats = Pick<Member, "book" | "score" | "streak">;
+
+export const EMPTY_MEMBER_STATS: MemberStats = {
+  book: { done: 0, total: 0 },
+  score: null,
+  streak: 0,
+};
+
+/**
+ * 레이아웃이 첫 화면을 그리기 위해 blocking으로 읽는 가벼운 데이터.
+ * members의 통계 필드는 상세가 도착하기 전까지 EMPTY_MEMBER_STATS 값이다.
+ */
+export interface StudyCore {
   mode: "demo" | "live";
   studyDate: string;
   me: {
@@ -32,14 +45,24 @@ export interface StudySnapshot {
     | null;
   parties: { id: string; name: string }[];
   members: Member[];
-  logs: StudyLog[];
   done: Record<StudyCategory, boolean>;
+  nudgedIds: string[];
+}
+
+/** 페이지가 필요할 때 따로 읽는 전체 파티 기록 */
+export interface StudyDetail {
+  memberStats: Record<string, MemberStats>;
+  logs: StudyLog[];
   scores: ScoreEntry[];
   feed: FeedItem[];
   feedCheers: number[];
-  nudgedIds: string[];
   threads: QnaThread[];
   quizScore: number | null;
+}
+
+export interface StudySnapshot extends StudyCore {
+  /** 데모 모드는 처음부터 채워 두고, 실제 파티는 null로 시작해 클라이언트에서 불러온다 */
+  detail: StudyDetail | null;
 }
 
 /** UTC 서버와 해외 기기에서도 동일한 한국 학습일을 사용한다. */

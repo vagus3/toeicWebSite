@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DetailGate } from "@/features/party/detail-gate";
 import { TrackerBoard } from "@/features/tracker/tracker-board";
 import { TrackerWeek } from "@/features/tracker/tracker-week";
 
@@ -8,10 +9,14 @@ export default function TrackerPage() {
   return (
     <>
       <div className="hidden md:block">
-        <TrackerBoard />
+        <DetailGate>
+          <TrackerBoard />
+        </DetailGate>
       </div>
       <div className="md:hidden">
-        <TrackerWeek />
+        <DetailGate>
+          <TrackerWeek />
+        </DetailGate>
       </div>
     </>
   );

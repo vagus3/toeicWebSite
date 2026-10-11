@@ -19,7 +19,7 @@ vi.mock("@/lib/ai/groq", () => ({
 vi.mock("@/lib/supabase/server", () => ({
   getSupabaseAdminClient: () => ({ from: () => ({ insert: mocks.insert }) }),
 }));
-vi.mock("@/lib/study-server", () => ({ loadStudySnapshot: vi.fn() }));
+vi.mock("@/lib/study-server", () => ({ loadStudyCore: vi.fn() }));
 import { POST } from "./route";
 const partyId = "11111111-1111-4111-8111-111111111111";
 const threadId = "22222222-2222-4222-8222-222222222222";
