@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { LegalDocument, LegalSection } from "@/features/legal/legal-document";
 
+const retentionConfigured = Boolean(process.env.CRON_SECRET && process.env.SUPABASE_SECRET_KEY);
+const recordRetention =
+  "학습·소통 기록은 생성일부터 달력상 1년이 지난 후 다음 일일 정리 작업에서 삭제합니다. 질문·학습 기록을 삭제할 때 연결된 답글·반응·사진 연결 정보도 함께 삭제하므로 하위 기록은 1년보다 일찍 삭제될 수 있습니다.";
+
 const overseasServices = [
   {
     name: "Supabase Pte. Ltd.",
@@ -12,7 +16,7 @@ const overseasServices = [
     purpose: "회원 인증, 파티 접근 권한 관리, 학습·소통 기록과 사진 연결 정보 저장.",
     timing: "가입·로그인, 기록 작성·조회 및 Drive 연결·해제 시 암호화된 네트워크 통신으로 전송합니다.",
     retention:
-      "학습·소통 기록은 생성일부터 1년 보관을 운영 기준으로 정했으며 삭제 절차는 준비 중입니다. 계정·인증 정보와 연결 토큰의 보관 기준, 이용 중인 요금제의 백업·로그 보관기간은 최종 확인 중입니다. Drive 연결 해제 시 앱에 저장된 연결 토큰을 삭제합니다.",
+      "학습·소통 기록은 생성일부터 1년 경과 후 다음 일일 정리 작업에서 삭제하는 기준입니다. 계정·파티 설정은 계정 이용 종료 요청 처리 시까지 보관합니다. Drive 연결 토큰은 연결 해제 시 삭제합니다. 백업·로그에는 별도의 제공업체 보관 조건이 적용되며 구체적인 기간은 확인 중입니다.",
     source: "https://supabase.com/legal/privacy-resources/data-residency-and-transfers-faq",
     sourceLabel: "Supabase 처리 위치·보관 안내",
   },
@@ -56,8 +60,8 @@ export default function PrivacyPage() {
     <LegalDocument title="개인정보처리방침">
       <p>
         새벽 토익은 계정 관리와 파티 기반 학습 서비스를 위해 아래 정보를
-        처리합니다. 이 문서는 현재 구현을 바탕으로 작성한 초안이며, 기록의
-        보관·삭제 절차와 외부 서비스 처리 조건은 확인 후 확정합니다.
+        처리합니다. 아래 기록 보관·삭제 기준은 운영 정책으로 정했으며, 일부
+        외부 서비스의 세부 국외 처리 및 백업·로그 조건은 확인 중입니다.
       </p>
       <LegalSection title="1. 처리하는 정보와 목적">
         <ul className="list-disc space-y-2 pl-5">
@@ -102,8 +106,8 @@ export default function PrivacyPage() {
           로그인과 개인 Drive 사진 저장에는 Google을 사용합니다. 이들 서비스의
           서버에서 정보가 처리될 수 있습니다. 아래는 2026년 10월 11일에 확인한
           설정과 제공업체 공개 안내를 바탕으로 작성한 내용입니다. 확인 중인
-          국가·보관기간, 계약 조건과 국외 이전의 법적 근거는 최종 게시 전에
-          확정할 예정입니다.
+          국가·보관기간, 계약 조건과 국외 이전의 법적 근거는 추가 확인 후
+          갱신할 예정입니다.
         </p>
         {overseasServices.map((service) => (
           <section key={service.name} className="card space-y-3 p-5">
@@ -197,17 +201,39 @@ export default function PrivacyPage() {
         </p>
       </LegalSection>
       <LegalSection title="4. 보관 및 삭제">
-        <p>
-          학습·소통 기록의 보관기간은 1년을 기준으로 정했습니다. 이 초안에서는
-          각 기록의 생성일부터 계산하며, 기간이 지난 기록의 삭제 절차는 현재
-          준비 중입니다. 자동 삭제 기능은 아직 적용되지 않았습니다.
+        <p>{recordRetention}</p>
+        <ul className="list-disc space-y-2 pl-5">
+          <li>
+            정리 대상: 학습 기록과 사진 연결 정보, 점수·퀴즈 응시 및 답안,
+            질문·답글, 채팅, 반응·독려, 개인 단어 기록과 활동 알림.
+          </li>
+          <li>
+            유지 대상: 계정·파티 참가 및 설정, 학습 목표, 공용 학습 자료.
+            계정 정보는 계정 이용 종료 요청 처리 시까지 보관합니다.
+          </li>
+          <li>
+            Drive 연결 토큰은 연결 해제 시 삭제합니다. 재연결 확인에 사용하는
+            Google 계정 식별 정보와 폴더 정보는 계정 이용 종료 요청 처리 시까지
+            보관합니다. 개인 Drive의 원본 사진은 자동 삭제하지 않으며,
+            이용자가 본인의 Drive에서 직접 삭제할 수 있습니다.
+          </li>
+          <li>
+            기존 Supabase 저장소 사진은 앱 기록 삭제 후 파일 정리를 진행하며,
+            실패한 파일 정리는 다음 일일 작업에서 다시 시도합니다. 제공업체
+            백업·로그의 보관과 삭제 시점은 원본 DB의 삭제 시점과 다를 수 있습니다.
+          </li>
+        </ul>
+        <p role="note" className="text-meta text-muted">
+          {retentionConfigured
+            ? "일일 자동 정리를 운영하도록 설정했습니다. 장애 시 재시도하며, 삭제를 원하는 이용자는 아래 문의처로 요청할 수 있습니다."
+            : "일일 자동 정리 기능은 운영 활성화 준비 중입니다. 활성화 전에는 만료 기록이 남아 있을 수 있으며, 삭제를 원하는 이용자는 아래 문의처로 요청해 주세요."}
         </p>
         <p>
-          계정 정보, 연결 인증 정보와 백업의 보관기간 및 탈퇴 시 삭제 범위는
-          별도로 확정할 예정입니다. 개인 Google Drive의 원본 사진은 앱에서
-          자동 삭제하지 않으며, 이용자가 본인의 Drive에서 삭제할 수 있습니다.
           개인정보 열람·정정·삭제와 계정 이용 종료는 아래 운영자 이메일로
-          요청할 수 있습니다.
+          요청할 수 있습니다. 본인 확인 후 계정에 연결된 개인정보와 학습·소통
+          기록을 정리하며, 파티 운영자라면 파티 소유권 정리도 함께 처리합니다.
+          앱에서 삭제한 기록은 일반 화면에서 복구할 수 없습니다. 개인 Drive
+          원본과 제공업체 백업·로그는 위에 안내한 별도 기준을 따릅니다.
         </p>
       </LegalSection>
       <LegalSection title="5. 이용자의 요청 및 보호 조치">

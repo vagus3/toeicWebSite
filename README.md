@@ -90,6 +90,15 @@ Google Drive API를 활성화하고 OAuth의 Data Access에 `https://www.googlea
 
 개인 Drive 전환 이전에 저장한 Supabase 사진은 계속 조회할 수 있습니다. 기존 운영자 Drive 사진은 기존 환경변수로 읽기만 지원합니다.
 
+### 친구용 운영과 기록 보관
+
+기존 무료 주소를 유지하며 Google 브랜딩 재인증은 보류합니다. Google 게시 설정,
+콜백 URL, 환경변수와 확인 순서는 [친구용 운영 안내](docs/friends-operation.md)를 참고하세요.
+학습·소통 기록은 생성일부터 1년 경과 후 일일 Cron에서 삭제하고, 개인 Drive 원본과
+계정·파티 설정은 유지합니다. `SUPABASE_SECRET_KEY`와 `CRON_SECRET` 등록 및 운영 배포가
+완료되어야 자동 삭제가 동작합니다. 삭제 대상은 `public.purge_expired_records()`로
+미리보기할 수 있으며 기본 호출은 데이터를 변경하지 않습니다.
+
 ### 홈 화면 설치 (PWA)
 
 모바일에서 처음 들어오면 하단에 설치 안내가 뜹니다 (닫으면 다시 안 뜸, 이미 설치해 앱으로 열면 안 뜸).

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-// 국외 처리 조건과 보관·삭제 절차를 확정하기 전에는 초안으로 유지한다.
+// 일부 국외 처리 및 제공업체 백업·로그 조건이 미확정이므로 초안을 유지한다.
 const LEGAL_POLICY_DRAFT = true;
 export const LEGAL_CONTACT: { operator: string | null; email: string | null } =
   {
@@ -27,8 +27,8 @@ export function LegalDocument({
           <p className="text-meta text-muted">작성일: 2026년 10월 11일</p>
           {LEGAL_POLICY_DRAFT && (
             <p role="note" className="card p-4 text-meta">
-              문서 초안입니다. 국외 처리 조건과 보관·삭제 절차를 확인한 뒤
-              최종 게시할 예정입니다.
+              문서 초안입니다. 기록 보관·삭제 기준은 아래와 같으며, 일부 국외
+              처리와 제공업체 백업·로그 조건은 확인 중입니다.
             </p>
           )}
         </header>
