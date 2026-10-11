@@ -16,6 +16,12 @@ insert into public.study_logs(party_id,user_id,category,created_at,note) values
 insert into public.study_evidences(study_log_id,storage_path,mime_type)
 select id,:'storage_path','image/png' from public.study_logs where note='expired';
 insert into storage.objects(bucket_id,name) values('study-evidence', :'storage_path');
+-- 과거 잘못된 메타데이터를 운영자 권한으로 재현한다. 파일 정리에는 포함되면 안 된다.
+insert into public.study_evidences(study_log_id,storage_path,mime_type)
+select id,:'party_id' || '/22222222-2222-4222-8222-222222222222/foreign.png','image/png'
+from public.study_logs where note='expired';
+insert into storage.objects(bucket_id,name)
+values('study-evidence', :'party_id' || '/22222222-2222-4222-8222-222222222222/foreign.png');
 insert into public.study_evidences(study_log_id,drive_file_id,drive_owner_id,mime_type)
 select id,'keep-drive-original','11111111-1111-4111-8111-111111111111','image/png'
 from public.study_logs where note='boundary';
@@ -52,6 +58,14 @@ select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111'
 do $$ begin
   if (select count(*) from storage.objects where name=current_setting('test.retention_path')) <> 1 then
     raise exception 'live Storage photo unreadable'; end if;
+  if exists(select from storage.objects where name like '%/foreign.png') then
+    raise exception 'forged legacy path exposed foreign photo'; end if;
+  begin
+    insert into public.study_evidences(study_log_id,storage_path,mime_type)
+      select id,current_setting('test.retention_party') || '/22222222-2222-4222-8222-222222222222/forged.png','image/png'
+      from public.study_logs where note='expired';
+    raise exception 'user can forge a Storage owner';
+  exception when insufficient_privilege then null; end;
   begin perform public.purge_expired_records(false); raise exception 'user can purge';
   exception when insufficient_privilege then null; end;
   begin perform public.claim_retention_files(); raise exception 'user can claim';
