@@ -34,6 +34,14 @@ const NOTICES: Record<string, string> = {
   cancelled: "Drive 연결을 취소했어요. 다시 연결할 수 있어요.",
   invalid_state: "연결 요청이 만료됐어요. 내 Drive 연결을 다시 눌러 주세요.",
   failed: "Drive를 연결하지 못했어요. 권한을 허용하고 다시 시도해 주세요.",
+  api_disabled: "Google Drive API가 활성화되지 않아 연결하지 못했어요. 운영자가 API를 활성화해야 합니다.",
+  client_invalid: "Google 연결 설정을 확인해야 해요. 운영자에게 알려 주세요.",
+  redirect_mismatch: "Google에 등록된 Drive 연결 복귀 주소를 확인해야 해요. 운영자에게 알려 주세요.",
+  code_expired: "Google 연결 요청이 만료되었거나 이미 사용됐어요. 내 Drive 연결을 다시 눌러 주세요.",
+  permission_missing: "Drive 파일 접근 권한이 허용되지 않았어요. 다시 연결하면서 파일 권한을 허용해 주세요.",
+  refresh_token_missing: "Drive 연결 유지 권한을 받지 못했어요. 내 Drive 연결을 다시 눌러 주세요.",
+  storage_failed: "Drive 연결 정보를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.",
+  not_configured: "서버의 Drive 연결 설정이 준비되지 않았어요. 운영자에게 알려 주세요.",
   account_mismatch:
     "기존 사진을 확인하려면 처음 연결했던 Google 계정으로 다시 연결해 주세요.",
 };

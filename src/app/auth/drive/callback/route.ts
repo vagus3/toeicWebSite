@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { connectPersonalDrive } from "@/lib/google-drive/personal-drive";
+import { driveConnectionFailure } from "@/lib/google-drive/connection-error";
 import {
   DRIVE_STATE_COOKIE,
   validDriveState,
@@ -39,9 +40,8 @@ export async function GET(request: NextRequest) {
     await connectPersonalDrive(user.id, code, `${origin}/auth/drive/callback`);
     return finish("connected");
   } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    return finish(
-      message === "drive_account_mismatch" ? "account_mismatch" : "failed",
-    );
+    const reason = driveConnectionFailure(error);
+    console.error("drive_connection_failed", { reason });
+    return finish(reason);
   }
 }
