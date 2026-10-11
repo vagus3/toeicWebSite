@@ -8,8 +8,8 @@ const PUBLIC_PATHS = ["/login", "/signup", "/invite", "/auth"];
  * Supabase 키가 없으면(데모 모드) 아무것도 하지 않는다.
  */
 export async function proxy(request: NextRequest) {
-  // 약관 문서는 로그인 여부와 인증 서비스 상태에 관계없이 열 수 있어야 한다.
-  if (["/privacy", "/terms"].includes(request.nextUrl.pathname))
+  // 홈페이지와 정책 문서는 인증 서비스 상태에 관계없이 공개한다.
+  if (["/", "/privacy", "/terms"].includes(request.nextUrl.pathname))
     return NextResponse.next();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
