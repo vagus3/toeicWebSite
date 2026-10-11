@@ -58,9 +58,8 @@ export function UploadDialog() {
                 role="radio"
                 aria-checked={selected}
                 variant={selected ? "primary" : "secondary"}
-                className={cn("text-meta", isDone && "line-through")}
-                disabled={isDone}
-                title={isDone ? "이미 인증 완료" : "인증하기"}
+                className="text-meta"
+                title={isDone ? "인증 사진 추가하기" : "인증하기"}
                 onClick={() => select(t.id)}
               >
                 {isDone && <Check />}
@@ -70,7 +69,7 @@ export function UploadDialog() {
           })}
         </div>
         <p className="m-0 -mt-1.5 text-label text-muted">
-          체크된 항목은 이미 인증돼서 다시 선택할 수 없어요
+          사진을 하나 이상 올리면 해당 항목이 인증돼요. 인증 후에도 추가할 수 있어요.
         </p>
 
         <input {...photo.inputProps} />

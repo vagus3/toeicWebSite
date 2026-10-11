@@ -16,8 +16,7 @@ function useTaskItems() {
     done: done[task.id],
     buttonProps: {
       type: "button" as const,
-      disabled: done[task.id],
-      title: done[task.id] ? "이미 인증 완료" : "인증하기",
+      title: done[task.id] ? "인증 사진 추가하기" : "인증하기",
       onClick: () => startUpload(task.id),
     },
   }));
@@ -36,8 +35,7 @@ function TaskCard({
     <button
       {...buttonProps}
       className={cn(
-        "card elev-sm gap-2 p-4 text-left",
-        done ? "cursor-not-allowed opacity-45" : "cursor-pointer",
+        "card elev-sm cursor-pointer gap-2 p-4 text-left",
       )}
     >
       <span className="flex items-center justify-between text-meta">
@@ -70,16 +68,15 @@ export function TaskChecklist() {
           <button
             {...buttonProps}
             className={cn(
-              "flex w-full items-center gap-3 py-3 text-left",
-              done ? "cursor-not-allowed" : "cursor-pointer",
+              "flex w-full cursor-pointer items-center gap-3 py-3 text-left",
             )}
           >
             <TaskStatusIcon done={done} className="text-icon-lg" />
             <span className="flex flex-1 flex-col">
-              <span className={cn("text-body", done && "opacity-45")}>{task.label}</span>
+              <span className="text-body">{task.label}</span>
               <span className="text-label text-muted">{task.mobileSub}</span>
             </span>
-            {!done && <span className="tag tag-neutral">인증</span>}
+            <span className="tag tag-neutral">{done ? "추가 업로드" : "인증"}</span>
           </button>
         </li>
       ))}

@@ -36,17 +36,17 @@ export function CaptureScreen() {
   const params = useSearchParams();
   const done = useStudyStore((s) => s.done);
   const doneCount = useDoneCount();
-  const requested = params.get("task") as StudyCategory | null;
-  const firstTodo = TASKS.find((t) => !done[t.id])?.id ?? null;
+  const requested = TASKS.find((t) => t.id === params.get("task"))?.id;
+  const firstTodo = TASKS.find((t) => !done[t.id])?.id ?? TASKS[0].id;
   const [selection, setSelection] = useState<StudyCategory | null>(
-    requested && !done[requested] ? requested : firstTodo,
+    requested ?? firstTodo,
   );
   const photo = usePhotoPicker();
   const preview = usePreviewUrl(photo.file);
   const { submit, pending } = useSubmitEvidence();
 
   const choose = (id: StudyCategory) => {
-    if (done[id] || selection === id) return;
+    if (selection === id) return;
     setSelection(id);
     photo.reset();
   };
@@ -68,28 +68,27 @@ export function CaptureScreen() {
         </span>
       </div>
       <span className="text-label text-muted">
-        인증할 항목을 고르고 사진을 찍어요
+        사진을 하나 이상 올리면 해당 항목이 인증돼요. 인증 후에도 추가할 수 있어요.
       </span>
 
       <input {...photo.inputProps} />
       {TASKS.map((t) => {
         const isDone = done[t.id];
-        const selected = selection === t.id && !isDone;
+        const selected = selection === t.id;
         return (
           <div
             key={t.id}
             role="button"
-            tabIndex={isDone ? -1 : 0}
-            aria-disabled={isDone}
+            tabIndex={0}
             aria-pressed={selected}
-            title={isDone ? "이미 인증 완료" : "인증하기"}
+            title={isDone ? "인증 사진 추가하기" : "인증하기"}
             onClick={() => choose(t.id)}
             onKeyDown={(e) =>
               (e.key === "Enter" || e.key === " ") && choose(t.id)
             }
             className={cn(
               "card gap-2.5 p-3.5",
-              isDone ? "cursor-not-allowed opacity-45" : "cursor-pointer",
+              "cursor-pointer",
               selected ? "shadow-ring-accent" : "shadow-sm",
             )}
           >

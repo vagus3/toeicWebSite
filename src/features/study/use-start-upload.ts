@@ -13,10 +13,8 @@ export function useStartUpload() {
   const router = useRouter();
   const isMobile = useIsMobile();
   const openUpload = useStudyStore((s) => s.openUpload);
-  const done = useStudyStore((s) => s.done);
 
   return (category?: StudyCategory) => {
-    if (category && done[category]) return;
     if (isMobile) {
       router.push(category ? `${ROUTES.upload}?task=${category}` : ROUTES.upload);
     } else {

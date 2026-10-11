@@ -39,6 +39,26 @@ function snapshot(): StudySnapshot {
 }
 afterEach(() => vi.unstubAllGlobals());
 describe("DB 저장과 화면 상태", () => {
+  it("인증 완료 항목도 다시 열고 다른 완료 항목으로 변경할 수 있다", () => {
+    const initial = snapshot();
+    initial.done = { word: true, lc: true, rc: false, book: false };
+    const store = createStudyStore(initial);
+    store.getState().openUpload("word");
+    expect(store.getState().modal).toBe("upload");
+    expect(store.getState().uploadSelection).toBe("word");
+    store.getState().selectUpload("lc");
+    expect(store.getState().uploadSelection).toBe("lc");
+    expect(store.getState().done).toEqual(initial.done);
+  });
+  it("모든 항목이 인증돼도 추가 업로드할 기본 항목을 선택한다", () => {
+    const initial = snapshot();
+    initial.done = { word: true, lc: true, rc: true, book: true };
+    const store = createStudyStore(initial);
+    expect(store.getState().uploadSelection).not.toBeNull();
+    store.getState().openUpload();
+    expect(store.getState().modal).toBe("upload");
+    expect(store.getState().uploadSelection).not.toBeNull();
+  });
   it("서버 저장 실패 시 점수와 모달을 성공 상태로 바꾸지 않는다", async () => {
     vi.stubGlobal(
       "fetch",

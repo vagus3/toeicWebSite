@@ -89,20 +89,19 @@ export function createStudyStore(initial: StudySnapshot) {
     return {
       ...initial,
       modal: null,
-      uploadSelection: TASKS.find((t) => !initial.done[t.id])?.id ?? null,
+      uploadSelection: TASKS.find((t) => !initial.done[t.id])?.id ?? TASKS[0].id,
       activeThreadId: initial.threads[0]?.id ?? "",
       saving: false,
       refresh,
       openUpload: (category) => {
-        if (category && get().done[category]) return;
         set({
           modal: "upload",
           uploadSelection:
-            category ?? TASKS.find((t) => !get().done[t.id])?.id ?? null,
+            category ?? TASKS.find((t) => !get().done[t.id])?.id ?? TASKS[0].id,
         });
       },
       selectUpload: (category) => {
-        if (!get().done[category]) set({ uploadSelection: category });
+        set({ uploadSelection: category });
       },
       openScore: () => set({ modal: "score" }),
       openQuestion: () => set({ modal: "question" }),
