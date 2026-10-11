@@ -9,6 +9,8 @@ import { requestJson } from "@/lib/http";
 import { useStudyStore } from "@/stores/study-store";
 import { useCopyInvite, useLogout } from "@/features/shell/shell-actions";
 import { DriveControls } from "@/features/study/drive-controls";
+import { Select } from "radix-ui";
+import { CaretDown, Check } from "@phosphor-icons/react";
 
 function CreatePartyForm() {
   const router = useRouter();
@@ -106,17 +108,15 @@ export function PartyControls() {
       <label htmlFor="active-party" className="sr-only">
         현재 파티
       </label>
-      <select
-        id="active-party"
-        className="input w-auto"
+      <Select.Root
         value={party?.id ?? ""}
         disabled={pending}
-        onChange={async (event) => {
+        onValueChange={async (partyId) => {
           setPending(true);
           setError("");
           try {
             await requestJson("/api/parties/select", {
-              partyId: event.target.value,
+              partyId,
             });
             router.replace("/dashboard");
             router.refresh();
@@ -127,12 +127,23 @@ export function PartyControls() {
           }
         }}
       >
-        {parties.map((p) => (
-          <option value={p.id} key={p.id}>
-            {p.name}
-          </option>
-        ))}
-      </select>
+        <Select.Trigger id="active-party" className="input flex w-auto items-center gap-2" aria-label="현재 파티">
+          <Select.Value />
+          <Select.Icon><CaretDown aria-hidden /></Select.Icon>
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Content position="popper" side="bottom" align="start" sideOffset={6} avoidCollisions={false} className="z-50 min-w-[var(--radix-select-trigger-width)] rounded-md border border-divider bg-surface p-1 shadow-lg">
+            <Select.Viewport className="max-h-[min(18rem,var(--radix-select-content-available-height))] overflow-y-auto">
+              {parties.map((p) => (
+                <Select.Item key={p.id} value={p.id} className="relative cursor-pointer rounded-sm py-2 pr-8 pl-3 text-meta outline-none data-[highlighted]:bg-accent-900">
+                  <Select.ItemText>{p.name}</Select.ItemText>
+                  <Select.ItemIndicator className="absolute right-2 top-1/2 -translate-y-1/2"><Check aria-hidden /></Select.ItemIndicator>
+                </Select.Item>
+              ))}
+            </Select.Viewport>
+          </Select.Content>
+        </Select.Portal>
+      </Select.Root>
       <Button variant="secondary" onClick={copyInvite}>
         초대 링크 복사
       </Button>

@@ -5,6 +5,7 @@ import { Sparkle } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { useStudyStore } from "@/stores/study-store";
 import type { QnaThread } from "@/types";
+import { plainTutorText } from "@/lib/ai/tutor-text";
 
 export function AiConversation({ thread }: { thread: QnaThread }) {
   const askAi = useStudyStore((s) => s.askAi);
@@ -35,7 +36,7 @@ export function AiConversation({ thread }: { thread: QnaThread }) {
       {thread.ai ? (
         <div className="flex flex-col gap-1">
           <span className="text-label text-accent-300">AI 답변</span>
-          <p className="m-0 whitespace-pre-wrap break-words text-meta leading-reading md:text-body">{thread.ai}</p>
+          <p className="m-0 whitespace-pre-wrap break-words text-meta leading-reading md:text-body">{plainTutorText(thread.ai)}</p>
         </div>
       ) : (
         <p className="m-0 text-meta text-muted">아직 AI 답변이 없어요. 아래에 궁금한 내용을 입력해 주세요.</p>
@@ -48,7 +49,7 @@ export function AiConversation({ thread }: { thread: QnaThread }) {
           </div>
           <div>
             <span className="text-label text-accent-300">AI 답변</span>
-            <p className="m-0 whitespace-pre-wrap break-words text-meta leading-reading md:text-body">{turn.answer}</p>
+            <p className="m-0 whitespace-pre-wrap break-words text-meta leading-reading md:text-body">{plainTutorText(turn.answer)}</p>
           </div>
         </div>
       ))}

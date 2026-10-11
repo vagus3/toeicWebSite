@@ -11,6 +11,19 @@ beforeEach(() => {
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 describe("Groq AI 대화", () => {
+  it("영어 표현의 내부 띄어쓰기를 원문 그대로 전송한다", async () => {
+    const prompt = "take a way를 활용한 예문을 만들어줘";
+    await answerTutorConversation("단어", "표현 질문", null, [], prompt);
+    const messages = JSON.parse(fetchMock.mock.calls[0][1].body).messages;
+    expect(messages.at(-1)).toEqual({ role: "user", content: prompt });
+    expect(messages[0].content).toContain("공백을 임의로 제거하거나");
+    expect(messages[0].content).toContain("어떤 뜻인지 먼저 확인해");
+  });
+  it("신규 AI 답변의 강조 표시는 저장 전에 제거하고 질문은 변경하지 않는다", async () => {
+    fetchMock.mockResolvedValue(Response.json({ choices: [{ message: { content: "  **take away**는 __가져가다__라는 뜻입니다.  " } }] }));
+    expect(await answerInitialQuestion("단어", "**take away**를 설명해 줘")).toBe("take away는 가져가다라는 뜻입니다.");
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).messages[1].content).toBe("[단어] **take away**를 설명해 줘");
+  });
   it("운영 환경에 등록된 GROQ_KEY도 인식한다", async () => {
     vi.stubEnv("GROQ_API_KEY", "");
     vi.stubEnv("GROQ_KEY", "legacy-test-key");
