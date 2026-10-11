@@ -21,6 +21,12 @@ Google 브랜딩 재인증은 보류한다. 개인용 앱 예외를 이용하더
 5. Supabase Auth의 Google 공급자에 Client ID/Secret을 직접 등록한다. Supabase의
    Site URL은 운영 주소, Redirect URLs에는 운영 `/auth/callback`과 초대 연결에
    필요한 해당 콜백의 쿼리 허용 패턴을 등록한다.
+6. (선택) 저장 폴더 직접 선택: 같은 프로젝트에서 Google Picker API를 활성화하고,
+   사용자 인증 정보에서 API 키를 만든다. 애플리케이션 제한은 HTTP 리퍼러
+   `https://toeicwebsite-src.vercel.app/*`(로컬은 `http://localhost:3000/*`),
+   API 제한은 Google Picker API만 허용한다. 이 값을 Vercel의
+   `NEXT_PUBLIC_GOOGLE_PICKER_API_KEY`에 넣고 재배포한다. 브라우저에 공개되는 키이므로
+   반드시 제한을 건다.
 
 Testing에서는 Drive 권한 승인/refresh token이 7일 후 만료된다. In production이라도
 사용자가 권한을 철회하거나 Google의 다른 만료 조건에 해당하면 재연결이 필요하다.

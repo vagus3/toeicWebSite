@@ -5,6 +5,9 @@ import { getSupabaseAdminClient } from "@/lib/supabase/server";
 import { decryptDriveToken, encryptDriveToken } from "./token-crypto";
 
 export const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+export const DEFAULT_FOLDER_NAME = "새벽 토익 인증";
+const FOLDER_MIME = "application/vnd.google-apps.folder";
+type DriveApi = ReturnType<typeof google.drive>;
 export class DriveConnectionError extends Error {
   constructor() {
     super("drive_connection_required");
@@ -60,7 +63,123 @@ export async function personalDrive(ownerId: string) {
       process.env.DRIVE_TOKEN_ENCRYPTION_KEY!,
     ),
   });
-  return { api: google.drive({ version: "v3", auth }), connection };
+  return { api: google.drive({ version: "v3", auth }), auth, connection };
+}
+
+function driveErrorCode(error: unknown) {
+  return Number((error as { code?: number }).code);
+}
+
+/** Drive 검색어 문자열 안의 따옴표·역슬래시를 이스케이프한다 */
+function quoteDrive(value: string) {
+  return `'${value.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
+}
+
+/** 폴더가 남아 있고 쓸 수 있는지. 지워졌거나 권한이 없으면 false */
+async function isUsableFolder(api: DriveApi, folderId: string | null) {
+  if (!folderId) return false;
+  try {
+    const { data } = await api.files.get({
+      fileId: folderId,
+      fields: "id,mimeType,trashed,capabilities(canAddChildren)",
+    });
+    return (
+      data.mimeType === FOLDER_MIME &&
+      !data.trashed &&
+      data.capabilities?.canAddChildren !== false
+    );
+  } catch (error) {
+    if ([403, 404].includes(driveErrorCode(error))) return false;
+    throw error;
+  }
+}
+
+async function createFolder(api: DriveApi, name: string, parent?: string) {
+  const id = (
+    await api.files.create({
+      requestBody: {
+        name,
+        mimeType: FOLDER_MIME,
+        ...(parent ? { parents: [parent] } : {}),
+      },
+      fields: "id",
+    })
+  ).data.id;
+  if (!id) throw new Error("drive_folder_create_failed");
+  return id;
+}
+
+/** drive.file 권한이라 앱이 만든 하위 폴더만 검색된다. 없으면 만든다. */
+async function childFolder(api: DriveApi, parent: string, name: string) {
+  const { data } = await api.files.list({
+    q: `${quoteDrive(parent)} in parents and name = ${quoteDrive(name)} and mimeType = '${FOLDER_MIME}' and trashed = false`,
+    fields: "files(id)",
+    pageSize: 1,
+    spaces: "drive",
+  });
+  return data.files?.[0]?.id ?? createFolder(api, name, parent);
+}
+
+async function saveRootFolder(ownerId: string, folderId: string) {
+  const { error } = await adminClient()
+    .from("drive_connections")
+    .update({ folder_id: folderId, updated_at: new Date().toISOString() })
+    .eq("owner_id", ownerId);
+  if (error) throw new Error("drive_connection_save_failed");
+}
+
+/** 사용자가 루트 폴더를 휴지통에 버렸으면 기본 폴더를 새로 만들어 이어서 저장한다 */
+async function ensureRootFolder(
+  api: DriveApi,
+  ownerId: string,
+  folderId: string | null,
+) {
+  if (await isUsableFolder(api, folderId)) return folderId!;
+  const created = await createFolder(api, DEFAULT_FOLDER_NAME);
+  await saveRootFolder(ownerId, created);
+  return created;
+}
+
+async function partyFolderName(partyId: string) {
+  const { data } = await adminClient()
+    .from("parties")
+    .select("name")
+    .eq("id", partyId)
+    .maybeSingle();
+  return data?.name?.trim() || "파티";
+}
+
+/** Picker 설정. API 키가 없거나 Client ID에서 프로젝트 번호를 못 얻으면 null */
+export function pickerConfig() {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PICKER_API_KEY;
+  // 웹 OAuth Client ID의 앞 숫자가 Picker의 App ID(프로젝트 번호)다
+  const appId = process.env.GOOGLE_CLIENT_ID?.match(/^(\d+)-/)?.[1];
+  return apiKey && appId ? { apiKey, appId } : null;
+}
+
+/**
+ * 브라우저 Picker용 단기 액세스 토큰. drive.file 범위라 앱이 만든 파일과
+ * 사용자가 Picker에서 고른 항목에만 접근할 수 있다.
+ */
+export async function pickerAccessToken(ownerId: string) {
+  const { auth } = await personalDrive(ownerId);
+  const { token } = await auth.getAccessToken();
+  if (!token) throw new DriveConnectionError();
+  return token;
+}
+
+export class DriveFolderError extends Error {
+  constructor() {
+    super("drive_folder_invalid");
+  }
+}
+
+/** Picker에서 고른 폴더를 저장 위치로 지정한다. 쓸 수 있는 폴더인지 서버에서 다시 확인한다. */
+export async function setPersonalDriveFolder(ownerId: string, folderId: string) {
+  if (!/^[\w-]{10,200}$/.test(folderId)) throw new DriveFolderError();
+  const { api } = await personalDrive(ownerId);
+  if (!(await isUsableFolder(api, folderId))) throw new DriveFolderError();
+  await saveRootFolder(ownerId, folderId);
 }
 
 /** 연결할 Google 계정은 토큰의 서명과 Client ID까지 확인한다. */
@@ -96,31 +215,10 @@ export async function connectPersonalDrive(
   if (!refreshToken) throw new Error("drive_refresh_token_missing");
   auth.setCredentials({ ...tokens, refresh_token: refreshToken });
   const drive = google.drive({ version: "v3", auth });
-  let folderId: string | null = existing?.folder_id ?? null;
-  if (folderId) {
-    try {
-      const folder = await drive.files.get({
-        fileId: folderId,
-        fields: "id,trashed",
-      });
-      if (folder.data.trashed) folderId = null;
-    } catch (error) {
-      if ([403, 404].includes(Number((error as { code?: number }).code)))
-        folderId = null;
-      else throw error;
-    }
-  }
-  if (!folderId) {
-    folderId = (
-      await drive.files.create({
-        requestBody: {
-          name: "새벽 토익 인증",
-          mimeType: "application/vnd.google-apps.folder",
-        },
-        fields: "id",
-      })
-    ).data.id!;
-  }
+  // 재연결 시 사용자가 지정했거나 옮긴 폴더를 그대로 쓴다
+  const folderId = (await isUsableFolder(drive, existing?.folder_id ?? null))
+    ? existing!.folder_id
+    : await createFolder(drive, DEFAULT_FOLDER_NAME);
   const { error } = await adminClient()
     .from("drive_connections")
     .upsert({
@@ -160,11 +258,14 @@ export async function uploadPersonalEvidence(params: {
   data: Buffer;
 }) {
   const { api, connection } = await personalDrive(params.ownerId);
-  // 폴더는 연결 시 한 번 만들고, 파일에는 파티와 날짜를 표시한다.
+  // 저장 위치/파티 이름/연-월 폴더로 정리한다. 루트는 ID로 추적하므로 옮기거나 이름을 바꿔도 된다.
+  const root = await ensureRootFolder(api, params.ownerId, connection.folder_id);
+  const party = await childFolder(api, root, await partyFolderName(params.partyId));
+  const month = await childFolder(api, party, params.studyDate.slice(0, 7));
   const file = await api.files.create({
     requestBody: {
-      name: `${params.studyDate}-${params.partyId}-${params.fileName}`,
-      parents: [connection.folder_id],
+      name: `${params.studyDate}-${params.fileName}`,
+      parents: [month],
     },
     media: { mimeType: params.mimeType, body: Readable.from(params.data) },
     fields: "id",

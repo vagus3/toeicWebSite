@@ -4,7 +4,8 @@ import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { requestJson } from "@/lib/http";
+import { HttpError, requestJson } from "@/lib/http";
+import { pickDriveFolder } from "./drive-folder-picker";
 import { useStudyStore } from "@/stores/study-store";
 
 export type DriveStatus = {
@@ -12,6 +13,7 @@ export type DriveStatus = {
   connected: boolean;
   email?: string | null;
   folderUrl?: string | null;
+  pickerEnabled?: boolean;
 };
 
 export function useDriveStatus() {
@@ -55,6 +57,31 @@ function DriveControlsContent() {
   const [message, setMessage] = useState("");
   if (mode === "demo") return null;
   const connected = status.data?.connected;
+  async function changeFolder() {
+    setPending(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/drive/folder", { cache: "no-store" });
+      if (!response.ok) throw new HttpError(response.status, await response.text());
+      const folder = await pickDriveFolder(await response.json());
+      if (!folder) return;
+      await requestJson("/api/drive/folder", { folderId: folder.id }, "PUT");
+      await queryClient.invalidateQueries({ queryKey: ["personal-drive"] });
+      setMessage(
+        `이제 '${folder.name}' 폴더에 저장돼요. 기존 사진은 원래 위치에 그대로 남아요.`,
+      );
+    } catch (error) {
+      setMessage(
+        error instanceof HttpError && error.status === 400
+          ? "이 폴더에는 저장할 수 없어요. 내가 파일을 추가할 수 있는 폴더를 골라 주세요."
+          : error instanceof HttpError && error.status === 409
+            ? "Drive 연결이 만료됐어요. 다시 연결한 뒤 폴더를 골라 주세요."
+            : "폴더를 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.",
+      );
+    } finally {
+      setPending(false);
+    }
+  }
   return (
     <section
       aria-label="개인 Google Drive 연결"
@@ -95,6 +122,11 @@ function DriveControlsContent() {
             내 Drive 폴더 열기
           </a>
         )}
+        {connected && status.data?.pickerEnabled && (
+          <Button variant="ghost" disabled={pending} onClick={changeFolder}>
+            저장 폴더 변경
+          </Button>
+        )}
         {connected && (
           <Button
             variant="ghost"
@@ -124,6 +156,13 @@ function DriveControlsContent() {
         사진은 내 Drive에 저장되고 같은 파티원은 이 웹사이트에서 볼 수 있어요.
         연결 해제 시 앱에서 사진 조회가 중단됩니다.
       </p>
+      {connected && (
+        <p className="text-muted">
+          저장 폴더 안에 &lsquo;파티 이름/연-월&rsquo; 폴더가 자동으로 만들어져요.
+          저장 폴더는 Drive에서 다른 곳으로 옮기거나 이름을 바꿔도 계속 그
+          폴더에 저장돼요.
+        </p>
+      )}
       {(status.isError || (status.data && !status.data.configured)) && (
         <p role="status">
           현재 Drive 연결을 사용할 수 없어요. 연결 준비가 끝나면 이용할 수

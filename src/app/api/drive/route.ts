@@ -4,6 +4,7 @@ import {
   disconnectPersonalDrive,
   getDriveConnection,
   isPersonalDriveConfigured,
+  pickerConfig,
 } from "@/lib/google-drive/personal-drive";
 
 export async function GET() {
@@ -24,6 +25,7 @@ export async function GET() {
         configured: true,
         connected,
         email: connection?.connected_email ?? null,
+        pickerEnabled: connected && pickerConfig() !== null,
         folderUrl: connected
           ? `https://drive.google.com/drive/folders/${encodeURIComponent(connection!.folder_id)}`
           : null,

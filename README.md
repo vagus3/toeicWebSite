@@ -85,8 +85,11 @@ Google Drive API를 활성화하고 OAuth의 Data Access에 `https://www.googlea
 | `GOOGLE_CLIENT_SECRET` | 위 클라이언트의 Secret |
 | `SUPABASE_SECRET_KEY` | 서버 전용 Supabase Secret 또는 service_role 키. 로그인·파일 RLS 검증 후 연결 자격증명에만 접근 |
 | `DRIVE_TOKEN_ENCRYPTION_KEY` | 32바이트 난수의 base64 값. 사용자 ID에 바인딩한 AES-256-GCM 토큰 암호화 |
+| `NEXT_PUBLIC_GOOGLE_PICKER_API_KEY` | (선택) 저장 폴더 직접 선택용 브라우저 API 키. Google Picker API와 운영·로컬 HTTP 리퍼러로 제한. 비어 있으면 기본 폴더만 사용 |
 
 이 값들은 Git에 넣지 않고 Vercel 환경변수 또는 `.env.local`에 등록합니다. 암호화 키는 기존 연결이 있는 동안 유지해야 합니다. 계정 토큰과 암호화 키는 클라이언트에 전달하지 않습니다. Drive 연결 해제는 서버에 저장한 토큰을 삭제하며 Drive 원본 파일은 남깁니다. 앱의 기존 사진 조회는 재연결 전까지 중단됩니다. Google 계정의 앱 권한 자체를 철회하려면 Google 계정 보안 설정을 사용합니다. 재연결은 기존 사진을 보존하기 위해 같은 Google 계정으로 제한됩니다.
+
+사진은 저장 폴더(기본 `새벽 토익 인증`) 아래 `파티 이름/연-월` 폴더에 정리됩니다. 앱은 저장 폴더를 ID로 추적하므로 사용자가 Drive에서 옮기거나 이름을 바꿔도 계속 저장되며, 휴지통에 버리면 다음 업로드 때 기본 폴더를 새로 만듭니다. Picker 키를 설정하면 사용자가 "저장 폴더 변경"으로 기존 폴더를 고를 수 있습니다. `drive.file` 권한이라 Picker에서 고른 폴더에만 접근하며, 서버가 쓰기 가능한 폴더인지 다시 확인합니다. 기존 사진은 원래 위치에 남습니다.
 
 개인 Drive 전환 이전에 저장한 Supabase 사진은 계속 조회할 수 있습니다. 기존 운영자 Drive 사진은 기존 환경변수로 읽기만 지원합니다.
 
