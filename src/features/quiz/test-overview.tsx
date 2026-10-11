@@ -10,6 +10,7 @@ import { QUIZ } from "@/lib/demo-data";
 import { ROUTES } from "@/lib/routes";
 import { useStudyStore } from "@/stores/study-store";
 import { ScoreChart } from "./score-chart";
+import { useReviewItems } from "@/features/review/use-review";
 
 const CARD = "md:p-4";
 const TITLE = "text-body md:text-base";
@@ -20,6 +21,7 @@ export function TestOverview() {
   const openScore = useStudyStore((s) => s.openScore);
   const scores = useStudyStore((s) => s.scores);
   const quizScore = useStudyStore((s) => s.quizScore);
+  const review = useReviewItems();
 
   return (
     <div className="flex flex-wrap items-start gap-10">
@@ -62,6 +64,18 @@ export function TestOverview() {
           title="RC · Part 5·6·7 각 1문항"
           description="하루 3문항 · 지문·해설 제공 · RC 자동 인증"
           action={<Button asChild variant="primary"><Link href={ROUTES.dailyRc}>시작 / 결과</Link></Button>}
+        />
+        <ActionCard
+          className={CARD}
+          titleClassName={TITLE}
+          kicker="복습 · 나만 보기"
+          title="오답노트"
+          description={
+            review.data
+              ? `복습할 문제 ${review.data.items.filter((i) => !i.reviewed).length}개 · 일일 RC·단어·해커스 오답`
+              : "일일 RC·단어·해커스에서 틀린 문제를 모아 다시 풀어요"
+          }
+          action={<Button asChild variant="secondary"><Link href={ROUTES.review}>복습하기</Link></Button>}
         />
         <ActionCard
           className={CARD}

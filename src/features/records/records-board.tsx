@@ -2,6 +2,7 @@
 
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { PageTitle } from "@/components/shared/page-title";
@@ -11,6 +12,7 @@ import { ReportRowsTable } from "@/features/quiz/report-rows-table";
 import { EvidenceFull, EvidenceThumb, evidenceUrl } from "@/features/study/evidence-photo";
 import { TASKS } from "@/lib/demo-data";
 import { useIsMobile } from "@/lib/hooks/use-media-query";
+import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useStudyStore } from "@/stores/study-store";
 import { STUDY_CATEGORIES, type Member, type StudyCategory } from "@/types";
@@ -58,7 +60,7 @@ function demoRecords(members: Member[], studyDate: string): RecordItem[] {
   }));
 }
 
-function RecordDetail({ item, name, demo }: { item: RecordItem; name: string; demo: boolean }) {
+function RecordDetail({ item, name, demo, mine }: { item: RecordItem; name: string; demo: boolean; mine: boolean }) {
   const label = categoryLabel(item.category);
   return (
     <div className="flex flex-col gap-3">
@@ -85,6 +87,12 @@ function RecordDetail({ item, name, demo }: { item: RecordItem; name: string; de
             <span className="text-muted">문제 날짜 {item.report.testDate}</span>
           </div>
           <ReportRowsTable rows={item.report.rows} />
+          {/* 오답노트는 본인만 볼 수 있어 내 기록에서만 연결한다 */}
+          {mine && !demo && item.report.rows.some((r) => r.result === "incorrect") && (
+            <Link href={ROUTES.review} className="text-meta text-accent underline">
+              틀린 문제 오답노트에서 복습
+            </Link>
+          )}
         </section>
       )}
     </div>
@@ -97,6 +105,7 @@ function RecordsBoardContent() {
   const party = useStudyStore((s) => s.party);
   const members = useStudyStore((s) => s.members);
   const studyDate = useStudyStore((s) => s.studyDate);
+  const meId = useStudyStore((s) => s.me.id);
   const isMobile = useIsMobile();
   const thisMonth = studyDate.slice(0, 7);
   const firstMonth = (party?.createdAt ?? studyDate).slice(0, 7);
@@ -270,7 +279,7 @@ function RecordsBoardContent() {
             className="card elev-sm sticky top-8 min-w-col-aside-min shrink basis-col-detail gap-3 p-4"
           >
             {selected ? (
-              <RecordDetail item={selected} name={nameOf(selected.userId)} demo={!live} />
+              <RecordDetail item={selected} name={nameOf(selected.userId)} demo={!live} mine={selected.userId === meId} />
             ) : (
               <p className="text-meta text-muted">사진을 고르면 크게 보고 채점 결과도 확인할 수 있어요.</p>
             )}
@@ -283,7 +292,7 @@ function RecordsBoardContent() {
           <DialogContent className="w-full max-w-3xl">
             <DialogTitle className="sr-only">선택한 인증 상세</DialogTitle>
             {selected && (
-              <RecordDetail item={selected} name={nameOf(selected.userId)} demo={!live} />
+              <RecordDetail item={selected} name={nameOf(selected.userId)} demo={!live} mine={selected.userId === meId} />
             )}
           </DialogContent>
         </Dialog>

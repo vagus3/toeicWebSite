@@ -2,7 +2,7 @@
 export async function requestJson<T = unknown>(
   url: string,
   body: unknown,
-  method: "POST" | "PUT" | "DELETE" = "POST",
+  method: "POST" | "PUT" | "PATCH" | "DELETE" = "POST",
 ): Promise<T> {
   const res = await fetch(url, {
     method,

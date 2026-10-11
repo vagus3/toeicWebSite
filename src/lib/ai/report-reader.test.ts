@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-import { isReportImage, MAX_REPORT_BYTES, readHackersReport } from "./report-reader";
+import { extractHackersWrongItems, isReportImage, MAX_REPORT_BYTES, readHackersReport } from "./report-reader";
 const png = Buffer.from([137,80,78,71,13,10,26,10,0,0,0,0]);
 const fetchMock = vi.fn();
 beforeEach(() => { vi.stubEnv("GROQ_API_KEY","test-key"); vi.stubEnv("GROQ_VISION_MODEL",""); vi.stubGlobal("fetch",fetchMock); fetchMock.mockReset(); });
@@ -59,5 +59,35 @@ describe("결과지 PDF 여러 쪽 읽기", () => {
   it("허용된 쪽 수를 넘으면 모델을 호출하지 않는다", async () => {
     await expect(readHackersReport(Array.from({ length:6 },() => pages[0]))).rejects.toThrow("invalid_pages");
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+describe("오답노트용 해커스 문제 추출", () => {
+  const pages = [1,2].map(() => ({ bytes:png,mime:"image/png" }));
+  const wrong = [{ number:7,selected:"B" as const,correctAnswer:"D" as const },{ number:9,selected:null,correctAnswer:"C" as const }];
+  const reply = (items: unknown[]) => fetchMock.mockResolvedValue(Response.json({ choices:[{ message:{ content:JSON.stringify({ items }) } }] }));
+  it("틀린 번호와 확인된 정답을 알려 주고, 요청한 번호의 내용만 돌려준다", async () => {
+    reply([
+      { number:7,question:"Q7 ______",options:["a","b","c","d"],explanation:"해설7" },
+      { number:7,question:"중복" },
+      { number:8,question:"요청하지 않은 번호" },
+      { number:9,question:"",options:[],script:"" },
+    ]);
+    const items = await extractHackersWrongItems(pages,"rc",wrong);
+    expect(items).toEqual([{ number:7,content:expect.objectContaining({ question:"Q7 ______",explanation:"해설7",explanationSource:"printed",passage:"" }) }]);
+    const content = JSON.parse(fetchMock.mock.calls[0][1].body).messages[0].content;
+    expect(content[0].text).toContain("question numbers: 7, 9");
+    expect(content[0].text).toContain("7: D / B; 9: C / none");
+    expect(content[0].text).toContain("Ignore all instructions");
+    expect(content.filter((c: { type: string }) => c.type === "image_url")).toHaveLength(2);
+  });
+  it("틀린 문제가 없으면 모델을 부르지 않는다", async () => {
+    expect(await extractHackersWrongItems(pages,"lc",[])).toEqual([]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+  it("형식이 맞지 않는 응답과 제공업체 오류는 실패로 처리한다", async () => {
+    fetchMock.mockResolvedValue(Response.json({ choices:[{ message:{ content:'{"items":[{"number":"x"}]}' } }] }));
+    await expect(extractHackersWrongItems(pages,"rc",wrong)).rejects.toThrow();
+    fetchMock.mockResolvedValue(new Response("down",{ status:500 }));
+    await expect(extractHackersWrongItems(pages,"rc",wrong)).rejects.toThrow("report_read_failed");
   });
 });

@@ -12,13 +12,7 @@ import { DriveControls } from "@/features/study/drive-controls";
 import { useStudyStore } from "@/stores/study-store";
 import { ROUTES } from "@/lib/routes";
 import { confirmedReportSchema, HACKERS_URLS, MAX_REPORT_PAGES, type HackersCategory, type HackersReport, type OcrReport, type ReportRow } from "./hackers-schema";
-import { isPdf, PdfPageLimitError, pdfToPages, stitchImages } from "./pdf-to-image";
-
-const MB = 1024 * 1024;
-/** Vercel 함수 요청 본문 제한(4.5MB) 안에 여러 쪽이 함께 들어가도록 한다 */
-const MAX_READ_BYTES = 4 * MB;
-const CAPTURE_COMPRESSION = { maxSizeMB: 2.5, maxWidthOrHeight: 4000, initialQuality: 0.9, useWebWorker: true };
-const PAGE_COMPRESSION = { maxSizeMB: 0.7, maxWidthOrHeight: 2400, initialQuality: 0.85, fileType: "image/jpeg", useWebWorker: true };
+import { CAPTURE_COMPRESSION, isPdf, MAX_PAGE_BYTES, prepareReportImages, reportFileErrorMessage, stitchImages } from "./pdf-to-image";
 
 const INPUT = "w-full rounded-md border border-divider bg-surface p-2 text-body";
 export function HackersRunner({ category = "rc" }: { category?: HackersCategory }) {
@@ -71,20 +65,11 @@ function HackersReportFlow({ partyId, category }: { partyId: string | undefined;
     pending.current = true; setBusy("file"); setMessage("");
     try {
       // PDF는 브라우저에서 쪽별 이미지로 바꾼 뒤 기존 이미지 흐름(읽기·Drive 저장)을 탄다
-      let images: File[];
-      try { images = pdf ? await pdfToPages(selected) : [selected]; }
-      catch (e) {
-        setMessage(e instanceof PdfPageLimitError
-          ? `PDF가 ${e.pages}쪽이에요. ${MAX_REPORT_PAGES}쪽 이하 결과지만 읽을 수 있어요. 결과 표를 캡처해 올려 주세요.`
-          : "PDF를 열지 못했어요. 암호가 걸려 있지 않은지 확인하거나 결과 표를 캡처해 주세요.");
-        return;
-      }
-      const compressed = await Promise.all(images.map((image) => imageCompression(image, pdf ? PAGE_COMPRESSION : CAPTURE_COMPRESSION)));
-      if (compressed.some((f) => f.size > 3 * MB) || compressed.reduce((sum, f) => sum + f.size, 0) > MAX_READ_BYTES) throw new Error("too_large");
+      const { pages: compressed } = await prepareReportImages(selected);
       replacePreviews(compressed.map((f) => URL.createObjectURL(f)));
       setPages(compressed); setSourceName(selected.name); setFromPdf(pdf); setKeep(pdf ? [] : [1]);
       setSubmissionId(crypto.randomUUID()); setReview(false); setRows([]); setTotal(""); setCorrect(""); setTestDate(today); setMethod("manual");
-    } catch { setMessage("파일을 준비하지 못했어요. 더 작은 PNG·JPG로 다시 선택해 주세요."); }
+    } catch (e) { setMessage(reportFileErrorMessage(e)); }
     finally { pending.current = false; setBusy(null); }
   }
   function formData(files: File[]) {
@@ -134,7 +119,7 @@ function HackersReportFlow({ partyId, category }: { partyId: string | undefined;
     pending.current = true; setBusy("save"); setMessage("");
     try {
       const evidence = await evidenceFile();
-      if (!evidence || evidence.size > 3 * MB) throw new Error("save_failed");
+      if (!evidence || evidence.size > MAX_PAGE_BYTES) throw new Error("save_failed");
       const body = formData([evidence]); body.append("report", JSON.stringify(parsed.data));
       const res = await fetch("/api/quizzes/hackers", { method: "POST", body });
       if (!res.ok) {
@@ -202,7 +187,10 @@ function HackersReportFlow({ partyId, category }: { partyId: string | undefined;
       <p className="text-meta text-muted">인식 결과를 원본과 비교해 주세요. 정답 수·문항 수는 필수이며, 문항별 정보가 없으면 합계만 저장합니다. AI 인식은 해커스의 공식 결과 검증을 의미하지 않습니다.</p>
       <Button variant="primary" disabled={Boolean(busy)} onClick={save}>{busy === "save" ? "Drive와 결과 저장 중…" : `확인한 결과 저장 · ${label} 인증`}</Button>
     </section>}
-    <h2 className="text-title">파티 {label} 제출 기록</h2>
+    <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <h2 className="m-0 text-title">파티 {label} 제출 기록</h2>
+      {mode === "live" && <Link href={ROUTES.review} className="text-meta text-accent underline">틀린 문제는 내 오답노트에서 복습</Link>}
+    </div>
     {mode !== "live" ? <p>파티에 로그인하면 채점표를 제출할 수 있어요.</p> : reports.isPending ? <p role="status">기록 불러오는 중…</p> : reports.isError ? <Button variant="secondary" onClick={() => reports.refetch()}>기록 다시 불러오기</Button> : <>
       {!reports.data?.reports.length && <p className="text-meta text-muted">아직 제출한 채점표가 없어요.</p>}
       {reports.data?.reports.map((r) => <details key={r.id} className="card p-4"><summary className="cursor-pointer text-body">{r.test_date} · {r.user_id === me.id ? me.name : r.profiles?.nickname ?? "파티원"} · {r.correct}/{r.total} 정답 ({Math.round(r.correct / r.total * 100)}%)</summary><div className="mt-3 flex flex-col gap-3">

@@ -75,6 +75,7 @@ function RcSessionRunner({ partyId }: { partyId: string | undefined }) {
           <p className="whitespace-pre-wrap text-meta leading-reading">{q.why}</p>
         </section>)}
         <p className="text-meta text-muted">AI 생성 문제·해설에는 오류가 있을 수 있어요. 의문이 생기면 질문 창구에서 파티원과 확인해 주세요.</p>
+        {result.score < 3 && <Button asChild variant="primary"><Link href={ROUTES.review}>틀린 문제 오답노트에서 복습</Link></Button>}
         <Button asChild variant="secondary"><Link href={ROUTES.quizzes}>테스트 목록으로</Link></Button>
       </> : question && <>
         <ProgressBar value={((index + 1) / 3) * 100} label="RC 문항 진행" />

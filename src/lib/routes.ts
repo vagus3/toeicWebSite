@@ -11,6 +11,7 @@ export const ROUTES = {
   hackersRc: "/quizzes/hackers",
   dailyRc: "/quizzes/rc",
   dailyQuiz: "/quizzes/daily",
+  review: "/quizzes/review",
   qna: "/qna",
   upload: "/study/upload",
   chat: (partyId: string = PARTY.id, roomId: string = PARTY.defaultChatRoomId) =>
