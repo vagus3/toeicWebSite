@@ -1,70 +1,96 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { apiError, limitRequest, notConfigured } from "@/lib/api";
-import { isDriveConfigured, uploadEvidence } from "@/lib/google-drive/drive";
-import { getSessionUser, getSupabaseServerClient } from "@/lib/supabase/server";
+import { apiError, limitRequest, requireSession } from "@/lib/api";
+import {
+  isDriveConfigured,
+  removeUploadedEvidence,
+  uploadEvidence,
+} from "@/lib/google-drive/drive";
+import { koreaStudyDate } from "@/lib/study-model";
 import { STUDY_CATEGORIES } from "@/types";
 
-const MAX_BYTES = 8 * 1024 * 1024;
-const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
-
+const MAX_BYTES = 4 * 1024 * 1024;
+const ALLOWED = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+];
 const fieldsSchema = z.object({
   category: z.enum(STUDY_CATEGORIES),
-  partyId: z.string().min(1),
-  studyDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  partyId: z.uuid(),
 });
 
-/**
- * 학습 인증 사진 업로드
- * 1) 파일 검증 2) 로그인·파티 권한 확인 3) 운영자 Drive에 저장 4) study_logs / study_evidences 기록
- * Drive가 아직 연결되지 않았으면 501 + skipped — 클라이언트는 진행률만 반영한다.
- */
+/** 학습 로그와 사진 메타데이터는 record_study_evidence에서 원자적으로 저장한다. */
 export async function POST(request: Request) {
-  const user = await getSessionUser();
-  const limited = limitRequest(request, "upload", user?.id, 30, 60 * 60 * 1000);
+  const session = await requireSession();
+  if (!session.ok) return session.response;
+  const { supabase, user } = session.data;
+  const limited = limitRequest(request, "upload", user.id, 30, 60 * 60 * 1000);
   if (limited) return limited;
-
-  const form = await request.formData();
+  let form: FormData;
+  try {
+    form = await request.formData();
+  } catch {
+    return apiError(400, "invalid_request");
+  }
   const file = form.get("file");
   const fields = fieldsSchema.safeParse(Object.fromEntries(form));
-  if (!(file instanceof File) || !fields.success) return apiError(400, "invalid_request");
-  if (!ALLOWED.includes(file.type) || file.size > MAX_BYTES) return apiError(415, "invalid_file");
-  const { partyId, category, studyDate } = fields.data;
-
-  const supabase = await getSupabaseServerClient();
-  if (supabase) {
-    if (!user) return apiError(401, "unauthorized");
-    const { data: membership } = await supabase
-      .from("party_members")
-      .select("user_id")
-      .eq("party_id", partyId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (!membership) return apiError(403, "forbidden");
+  if (!(file instanceof File) || !fields.success)
+    return apiError(400, "invalid_request");
+  if (!ALLOWED.includes(file.type) || !file.size || file.size > MAX_BYTES)
+    return apiError(415, "invalid_file");
+  const { partyId, category } = fields.data;
+  const { data: membership, error } = await supabase
+    .from("party_members")
+    .select("user_id")
+    .eq("party_id", partyId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (error || !membership) return apiError(403, "forbidden");
+  try {
+    const date = koreaStudyDate();
+    const fileName = `${category}-${crypto.randomUUID()}.${file.type.split("/")[1]}`;
+    let fileId: string | null = null;
+    let storagePath: string | null = null;
+    if (isDriveConfigured()) {
+      fileId = (
+        await uploadEvidence({
+          partyId,
+          userFolder: user.id,
+          studyDate: date,
+          fileName,
+          mimeType: file.type,
+          data: Buffer.from(await file.arrayBuffer()),
+        })
+      ).fileId;
+    } else {
+      storagePath = `${partyId}/${user.id}/${date}/${fileName}`;
+      const uploaded = await supabase.storage
+        .from("study-evidence")
+        .upload(storagePath, file, { contentType: file.type, upsert: false });
+      if (uploaded.error) return apiError(502, "upload_failed");
+    }
+    const saved = await supabase.rpc("record_study_evidence", {
+      p_party: partyId,
+      p_category: category,
+      p_file_id: fileId,
+      p_mime_type: file.type,
+      p_storage_path: storagePath,
+    });
+    if (saved.error) {
+      try {
+        if (storagePath)
+          await supabase.storage.from("study-evidence").remove([storagePath]);
+        if (fileId) await removeUploadedEvidence(fileId);
+      } catch {
+        console.error("[upload] Failed to clean up an unrecorded photo");
+      }
+      return apiError(500, "db_failed");
+    }
+    return NextResponse.json({ fileId, storagePath });
+  } catch {
+    return apiError(502, "upload_failed");
   }
-
-  if (!isDriveConfigured()) return notConfigured("drive_not_configured");
-
-  const { fileId, mimeType } = await uploadEvidence({
-    partyId,
-    userFolder: user?.id ?? "demo",
-    studyDate,
-    fileName: `${category}-${Date.now()}.${file.type.split("/")[1]}`,
-    mimeType: file.type,
-    data: Buffer.from(await file.arrayBuffer()),
-  });
-
-  if (supabase && user) {
-    const { data: log, error } = await supabase
-      .from("study_logs")
-      .insert({ party_id: partyId, user_id: user.id, category, study_date: studyDate, amount: 1 })
-      .select("id")
-      .single();
-    if (error) return apiError(500, "db_failed", { fileId });
-    await supabase
-      .from("study_evidences")
-      .insert({ study_log_id: log.id, drive_file_id: fileId, mime_type: mimeType });
-  }
-
-  return NextResponse.json({ fileId });
 }

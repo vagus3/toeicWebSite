@@ -49,6 +49,7 @@ export interface FeedItem {
   name: string;
   what: string;
   photo: boolean;
+  photoUrl?: string;
   body: string;
 }
 

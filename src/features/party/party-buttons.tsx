@@ -24,14 +24,15 @@ export function NudgeButton({
   const nudged = useStudyStore((s) => s.nudgedIds.includes(member.id));
   const nudge = useStudyStore((s) => s.nudge);
   const flash = useToast((s) => s.flash);
+  const saving = useStudyStore((s) => s.saving);
 
   return (
     <Button
       variant={variant}
       className={cn("text-label", className)}
-      disabled={nudged}
-      onClick={() => {
-        nudge(member.id);
+      disabled={nudged || saving}
+      onClick={async () => {
+        if (!(await nudge(member.id))) return;
         flash(`${member.name}님에게 콕 찔렀어요`);
       }}
     >
@@ -47,20 +48,36 @@ interface CheerButtonProps {
   feedIndex?: number;
   label?: string;
   className?: string;
+  logId?: string;
 }
 
 /** 축하 — 피드면 축하 수 증가, 트래커면 축하만 */
-export function CheerButton({ name, feedIndex, label, className }: CheerButtonProps) {
-  const count = useStudyStore((s) => (feedIndex === undefined ? null : s.feedCheers[feedIndex]));
+export function CheerButton({
+  name,
+  feedIndex,
+  label,
+  className,
+  logId,
+}: CheerButtonProps) {
+  const count = useStudyStore((s) =>
+    feedIndex === undefined ? null : s.feedCheers[feedIndex],
+  );
   const cheerFeed = useStudyStore((s) => s.cheerFeed);
+  const cheerLog = useStudyStore((s) => s.cheerLog);
+  const saving = useStudyStore((s) => s.saving);
+  const mode = useStudyStore((s) => s.mode);
   const flash = useToast((s) => s.flash);
 
   return (
     <Button
       variant="secondary"
       className={cn("text-label", className)}
-      onClick={() => {
-        if (feedIndex !== undefined) cheerFeed(feedIndex);
+      disabled={
+        saving || (mode === "live" && feedIndex === undefined && !logId)
+      }
+      onClick={async () => {
+        if (feedIndex !== undefined && !(await cheerFeed(feedIndex))) return;
+        if (logId && !(await cheerLog(logId))) return;
         flash(`${name}님을 축하했어요`);
       }}
     >

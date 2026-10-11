@@ -2,22 +2,23 @@
 
 import imageCompression from "browser-image-compression";
 import { useCallback, useRef, useState } from "react";
-import { DEMO_TODAY, ME, PARTY } from "@/lib/demo-data";
-import { formatMonthDay, toStudyDate } from "@/lib/utils";
+
+import { formatMonthDay } from "@/lib/utils";
 import { useStudyStore } from "@/stores/study-store";
 import { useToast } from "@/stores/toast-store";
 import type { StudyCategory } from "@/types";
 
 const MAX_UPLOAD_MB = 1;
 
-/** 인증 화면 제목: "10월 8일 인증" */
-export function evidenceTitle() {
-  return `${formatMonthDay(DEMO_TODAY)} 인증`;
-}
-
-/** 드라이브 저장 경로: 새벽토익/형규/2026-10-08 */
-export function evidenceFolderLabel() {
-  return `${PARTY.driveRoot}/${ME.name}/${toStudyDate(DEMO_TODAY)}`;
+/** 서버에서 받은 한국 학습일로 제목과 저장 경로를 만든다. */
+export function useEvidenceLabels() {
+  const date = useStudyStore((s) => s.studyDate);
+  const party = useStudyStore((s) => s.party);
+  const me = useStudyStore((s) => s.me);
+  return {
+    title: `${formatMonthDay(new Date(`${date}T12:00:00`))} 인증`,
+    folder: `${party?.id}/${me.id}/${date}`,
+  };
 }
 
 /** 사진 선택(촬영)·드래그 앤 드롭 상태 */
@@ -61,12 +62,21 @@ export function usePhotoPicker() {
  */
 export function useSubmitEvidence() {
   const completeTask = useStudyStore((s) => s.completeTask);
+  const party = useStudyStore((s) => s.party);
+  const mode = useStudyStore((s) => s.mode);
+  const refresh = useStudyStore((s) => s.refresh);
   const flash = useToast((s) => s.flash);
   const [pending, setPending] = useState(false);
 
   const submit = async (category: StudyCategory, file: File) => {
+    if (pending || !party) return false;
     setPending(true);
     try {
+      if (mode === "demo") {
+        completeTask(category);
+        flash("데모 인증을 반영했어요. 사진은 저장되지 않아요");
+        return true;
+      }
       const compressed = await imageCompression(file, {
         maxSizeMB: MAX_UPLOAD_MB,
         maxWidthOrHeight: 2048,
@@ -75,12 +85,16 @@ export function useSubmitEvidence() {
       const body = new FormData();
       body.append("file", compressed, file.name);
       body.append("category", category);
-      body.append("partyId", PARTY.id);
-      body.append("studyDate", toStudyDate(DEMO_TODAY));
+      body.append("partyId", party.id);
       const res = await fetch("/api/upload", { method: "POST", body });
-      if (!res.ok && res.status !== 501) throw new Error(await res.text());
+      if (!res.ok) throw new Error(await res.text());
       completeTask(category);
-      flash("드라이브에 저장하고 파티에 공유했어요");
+      try {
+        await refresh();
+      } catch {
+        /* DB 저장은 성공했으므로 업로드를 재시도하지 않는다. */
+      }
+      flash("인증 사진과 학습 기록을 저장했어요");
       return true;
     } catch {
       flash("업로드에 실패했어요. 잠시 후 다시 시도해 주세요");

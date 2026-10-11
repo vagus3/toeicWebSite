@@ -22,7 +22,11 @@ export function QnaBoard() {
       <div className="flex min-w-col-min flex-1 flex-col gap-1 md:flex-none md:shrink md:basis-col-threads">
         <div className="mb-2 flex items-center justify-between">
           <PageTitle>질문 창구</PageTitle>
-          <Button variant="primary" className="text-meta" onClick={openQuestion}>
+          <Button
+            variant="primary"
+            className="text-meta"
+            onClick={openQuestion}
+          >
             <Plus />
             질문
           </Button>
@@ -63,7 +67,9 @@ export function QnaBoard() {
               <Sparkle />
               AI 초안 답변
             </span>
-            <p className="m-0 text-meta leading-reading md:text-body">{thread.ai}</p>
+            <p className="m-0 text-meta leading-reading md:text-body">
+              {thread.ai}
+            </p>
           </div>
           {thread.replies.map((r, i) => (
             <div key={i} className="flex gap-2.5">
@@ -71,9 +77,13 @@ export function QnaBoard() {
               <div className="flex flex-col gap-1">
                 <span className="text-label">
                   <b className="font-medium">{r.name}</b>{" "}
-                  <span className="tag tag-accent px-1.5 py-px text-micro">보충</span>
+                  <span className="tag tag-accent px-1.5 py-px text-micro">
+                    보충
+                  </span>
                 </span>
-                <span className="text-meta leading-normal md:text-body">{r.text}</span>
+                <span className="text-meta leading-normal md:text-body">
+                  {r.text}
+                </span>
               </div>
             </div>
           ))}
@@ -81,7 +91,9 @@ export function QnaBoard() {
             placeholder="보충 답변 달기 (Enter)"
             label="보충 답변"
             maxLength={1000}
-            onSend={(text) => addReply(thread.id, text)}
+            onSend={async (text) => {
+              if (!(await addReply(thread.id, text))) return false;
+            }}
           />
         </article>
       )}

@@ -1,95 +1,181 @@
-import { create } from "zustand";
-import { FEED_CHEERS, ME, SCORES, TASKS, THREADS } from "@/lib/demo-data";
-import type { QnaThread, ScoreEntry, StudyCategory } from "@/types";
+"use client";
+
+import { createContext, useContext } from "react";
+import { useStore } from "zustand";
+import { createStore } from "zustand/vanilla";
+import { TASKS } from "@/lib/demo-data";
+import { requestJson } from "@/lib/http";
+import type { StudySnapshot } from "@/lib/study-model";
+import type { StudyAction } from "@/features/study/study-schema";
+import { useToast } from "./toast-store";
+import type { QnaThread, StudyCategory } from "@/types";
+
+type StudyInput<T = StudyAction> = T extends StudyAction
+  ? Omit<T, "partyId">
+  : never;
 
 export type Modal = "upload" | "score" | "question" | null;
-
-interface StudyState {
-  done: Record<StudyCategory, boolean>;
-  scores: ScoreEntry[];
-  feedCheers: number[];
-  /** 오늘 콕 찌른 멤버 */
-  nudgedIds: string[];
-  threads: QnaThread[];
-  activeThreadId: string;
-  quizScore: number | null;
-
+interface StudyState extends StudySnapshot {
   modal: Modal;
   uploadSelection: StudyCategory | null;
-
-  /** 인증 모달 열기 — 항목을 안 주면 아직 안 한 첫 항목을 고른다 */
+  activeThreadId: string;
+  saving: boolean;
   openUpload: (category?: StudyCategory) => void;
   selectUpload: (category: StudyCategory) => void;
   openScore: () => void;
   openQuestion: () => void;
   closeModal: () => void;
-
   completeTask: (category: StudyCategory) => void;
-  addScore: (total: number, label: string) => void;
-  cheerFeed: (index: number) => void;
-  nudge: (memberId: string) => void;
-  finishQuiz: (score: number) => void;
-  addReply: (threadId: string, text: string) => void;
+  addScore: (lc: number, rc: number, label: string) => Promise<boolean>;
+  cheerFeed: (index: number) => Promise<boolean>;
+  cheerLog: (logId: string) => Promise<boolean>;
+  nudge: (memberId: string) => Promise<boolean>;
+  finishQuiz: (score: number, answers: number[]) => Promise<boolean>;
+  addReply: (threadId: string, text: string) => Promise<boolean>;
   addThread: (thread: QnaThread) => void;
+  saveQuestion: (
+    tag: Extract<StudyAction, { action: "question" }>["tag"],
+    title: string,
+  ) => Promise<boolean>;
   setActiveThread: (id: string) => void;
+  refresh: () => Promise<void>;
 }
 
-export const useStudyStore = create<StudyState>((set, get) => ({
-  done: { word: true, lc: true, rc: false, book: false },
-  scores: SCORES,
-  feedCheers: FEED_CHEERS,
-  nudgedIds: [],
-  threads: THREADS,
-  activeThreadId: THREADS[0].id,
-  quizScore: null,
-
-  modal: null,
-  uploadSelection: "rc",
-
-  openUpload: (category) => {
-    const { done } = get();
-    if (category && done[category]) return;
-    const next = category ?? TASKS.find((t) => !done[t.id])?.id ?? null;
-    set({ modal: "upload", uploadSelection: next });
-  },
-  selectUpload: (category) => {
-    if (get().done[category]) return;
-    set({ uploadSelection: category });
-  },
-  openScore: () => set({ modal: "score" }),
-  openQuestion: () => set({ modal: "question" }),
-  closeModal: () => set({ modal: null }),
-
-  completeTask: (category) => set((s) => ({ done: { ...s.done, [category]: true } })),
-  addScore: (total, label) =>
-    set((s) => ({ scores: [...s.scores, { label, value: total }], modal: null })),
-  cheerFeed: (index) =>
-    set((s) => ({ feedCheers: s.feedCheers.map((c, i) => (i === index ? c + 1 : c)) })),
-  nudge: (memberId) =>
-    set((s) => (s.nudgedIds.includes(memberId) ? s : { nudgedIds: [...s.nudgedIds, memberId] })),
-  finishQuiz: (score) => set((s) => ({ quizScore: score, done: { ...s.done, word: true } })),
-  addReply: (threadId, text) =>
-    set((s) => ({
-      threads: s.threads.map((t) =>
-        t.id === threadId
-          ? { ...t, replies: [...t.replies, { initial: ME.initial, name: ME.name, text }] }
-          : t,
-      ),
-    })),
-  addThread: (thread) =>
-    set((s) => ({ threads: [thread, ...s.threads], activeThreadId: thread.id, modal: null })),
-  setActiveThread: (id) => set({ activeThreadId: id }),
-}));
-
+// 요청마다 새 스토어를 만든다. 서버 렌더링 중 사용자의 상태가 서로 섞이지 않는다.
+export function createStudyStore(initial: StudySnapshot) {
+  return createStore<StudyState>()((set, get) => {
+    let refreshVersion = 0;
+    const refresh = async () => {
+      if (get().mode === "demo") return;
+      const version = ++refreshVersion;
+      const response = await fetch(
+        `/api/study?partyId=${encodeURIComponent(get().party?.id ?? "")}`,
+        { cache: "no-store" },
+      );
+      if (!response.ok) throw new Error("study_load_failed");
+      const snapshot = (await response.json()) as StudySnapshot;
+      if (version === refreshVersion) set(snapshot);
+    };
+    const save = async (input: StudyInput) => {
+      const partyId = get().party?.id;
+      if (!partyId || get().saving) return false;
+      set({ saving: true });
+      try {
+        await requestJson("/api/study", { ...input, partyId });
+      } catch {
+        useToast
+          .getState()
+          .flash("저장하지 못했어요. 잠시 후 다시 시도해 주세요");
+        set({ saving: false });
+        return false;
+      }
+      // 저장과 조회 실패는 구분한다. 조회만 실패했을 때 중복 저장을 유도하지 않는다.
+      try {
+        await refresh();
+      } catch {
+        useToast
+          .getState()
+          .flash("저장됐지만 화면을 갱신하지 못했어요. 새로고침해 주세요");
+      }
+      set({ saving: false });
+      return true;
+    };
+    return {
+      ...initial,
+      modal: null,
+      uploadSelection: TASKS.find((t) => !initial.done[t.id])?.id ?? null,
+      activeThreadId: initial.threads[0]?.id ?? "",
+      saving: false,
+      refresh,
+      openUpload: (category) => {
+        if (category && get().done[category]) return;
+        set({
+          modal: "upload",
+          uploadSelection:
+            category ?? TASKS.find((t) => !get().done[t.id])?.id ?? null,
+        });
+      },
+      selectUpload: (category) => {
+        if (!get().done[category]) set({ uploadSelection: category });
+      },
+      openScore: () => set({ modal: "score" }),
+      openQuestion: () => set({ modal: "question" }),
+      closeModal: () => set({ modal: null }),
+      setActiveThread: (activeThreadId) => set({ activeThreadId }),
+      completeTask: (category) =>
+        set((s) => ({ done: { ...s.done, [category]: true } })),
+      addScore: async (lc, rc, label) => {
+        if (get().mode === "live") {
+          if (!(await save({ action: "score", lc, rc }))) return false;
+        } else
+          set((s) => ({ scores: [...s.scores, { label, value: lc + rc }] }));
+        set({ modal: null });
+        return true;
+      },
+      cheerLog: async (logId) => save({ action: "cheer", logId }),
+      cheerFeed: async (index) => {
+        if (get().mode === "live") return get().cheerLog(get().feed[index].id);
+        set((s) => ({
+          feedCheers: s.feedCheers.map((c, i) => (i === index ? c + 1 : c)),
+        }));
+        return true;
+      },
+      nudge: async (memberId) => {
+        if (get().mode === "live") return save({ action: "nudge", memberId });
+        set((s) => ({ nudgedIds: [...new Set([...s.nudgedIds, memberId])] }));
+        return true;
+      },
+      finishQuiz: async (score, answers) => {
+        if (get().mode === "live") return save({ action: "quiz", answers });
+        set((s) => ({ quizScore: score, done: { ...s.done, word: true } }));
+        return true;
+      },
+      addReply: async (threadId, text) => {
+        if (get().mode === "live")
+          return save({ action: "reply", threadId, text });
+        const me = get().me;
+        set((s) => ({
+          threads: s.threads.map((t) =>
+            t.id === threadId
+              ? {
+                  ...t,
+                  replies: [
+                    ...t.replies,
+                    { initial: me.initial, name: me.name, text },
+                  ],
+                }
+              : t,
+          ),
+        }));
+        return true;
+      },
+      saveQuestion: async (tag, title) => {
+        if (!(await save({ action: "question", tag, title }))) return false;
+        set({ modal: null, activeThreadId: get().threads[0]?.id ?? "" });
+        return true;
+      },
+      addThread: (thread) =>
+        set((s) => ({
+          threads: [thread, ...s.threads],
+          activeThreadId: thread.id,
+          modal: null,
+        })),
+    };
+  });
+}
+export type StudyStore = ReturnType<typeof createStudyStore>;
+export const StudyStoreContext = createContext<StudyStore | null>(null);
+export function useStudyStore<T>(selector: (state: StudyState) => T): T {
+  const store = useContext(StudyStoreContext);
+  if (!store) throw new Error("StudyProvider is missing");
+  return useStore(store, selector);
+}
 export function useDoneCount() {
   return useStudyStore((s) => Object.values(s.done).filter(Boolean).length);
 }
-
 export function useLatestScore() {
-  return useStudyStore((s) => s.scores[s.scores.length - 1]?.value ?? null);
+  return useStudyStore((s) => s.scores.at(-1)?.value ?? null);
 }
-
-/** 다이얼로그 열림 상태 + Radix onOpenChange 연결 */
 export function useModal(name: Exclude<Modal, null>) {
   const open = useStudyStore((s) => s.modal === name);
   const close = useStudyStore((s) => s.closeModal);

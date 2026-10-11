@@ -24,13 +24,32 @@ function getDrive() {
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
   );
-  auth.setCredentials({ refresh_token: process.env.GOOGLE_DRIVE_REFRESH_TOKEN });
+  auth.setCredentials({
+    refresh_token: process.env.GOOGLE_DRIVE_REFRESH_TOKEN,
+  });
   return google.drive({ version: "v3", auth });
+}
+
+/** 이 요청에서 만든 파일의 DB 기록이 실패했을 때만 호출한다. */
+export async function removeUploadedEvidence(fileId: string) {
+  await getDrive().files.delete({ fileId });
+}
+
+export async function readEvidence(fileId: string) {
+  const result = await getDrive().files.get(
+    { fileId, alt: "media" },
+    { responseType: "arraybuffer" },
+  );
+  return result.data as unknown as ArrayBuffer;
 }
 
 const FOLDER_MIME = "application/vnd.google-apps.folder";
 
-async function ensureFolder(drive: drive_v3.Drive, parentId: string, name: string) {
+async function ensureFolder(
+  drive: drive_v3.Drive,
+  parentId: string,
+  name: string,
+) {
   const escaped = name.replace(/'/g, "\\'");
   const found = await drive.files.list({
     q: `'${parentId}' in parents and name = '${escaped}' and mimeType = '${FOLDER_MIME}' and trashed = false`,
@@ -64,5 +83,8 @@ export async function uploadEvidence(params: {
     media: { mimeType: params.mimeType, body: Readable.from(params.data) },
     fields: "id, mimeType",
   });
-  return { fileId: file.data.id!, mimeType: file.data.mimeType ?? params.mimeType };
+  return {
+    fileId: file.data.id!,
+    mimeType: file.data.mimeType ?? params.mimeType,
+  };
 }

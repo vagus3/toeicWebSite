@@ -6,7 +6,7 @@ import { ActionCard } from "@/components/shared/action-card";
 import { PageTitle } from "@/components/shared/page-title";
 import { SectionTitle } from "@/components/shared/section-title";
 import { Button } from "@/components/ui/button";
-import { ME, QUIZ } from "@/lib/demo-data";
+import { QUIZ } from "@/lib/demo-data";
 import { ROUTES } from "@/lib/routes";
 import { useStudyStore } from "@/stores/study-store";
 import { ScoreChart } from "./score-chart";
@@ -16,6 +16,7 @@ const TITLE = "text-body md:text-base";
 
 /** 테스트 — 일일/주간/월간 + 내 점수 추이 */
 export function TestOverview() {
+  const me = useStudyStore((s) => s.me);
   const openScore = useStudyStore((s) => s.openScore);
   const scores = useStudyStore((s) => s.scores);
   const quizScore = useStudyStore((s) => s.quizScore);
@@ -28,9 +29,9 @@ export function TestOverview() {
           highlight
           className={CARD}
           titleClassName={TITLE}
-          kicker="일일 · AI 출제"
-          title={`단어 Day 12 · ${QUIZ.length}문항`}
-          description="어제 틀린 단어 포함 · 끝나면 단어 자동 인증"
+          kicker="일일 · 연습 문제"
+          title={`단어 연습 · ${QUIZ.length}문항`}
+          description="끝나면 결과 저장 · 단어 자동 인증"
           action={
             <Button asChild variant="primary">
               <Link href={ROUTES.dailyQuiz}>시작</Link>
@@ -56,14 +57,16 @@ export function TestOverview() {
           kickerClassName="text-neutral-400"
           title="실전 모의고사 200문항"
           description="파티 전원 같은 회차"
-          action={<LockSimple className="text-muted" aria-label="아직 열리지 않음" />}
+          action={
+            <LockSimple className="text-muted" aria-label="아직 열리지 않음" />
+          }
         />
       </div>
 
       <div className="flex min-w-0 flex-1 basis-col-half flex-col gap-3">
         <div className="flex items-baseline justify-between">
           <SectionTitle>내 점수 추이</SectionTitle>
-          <span className="text-label text-muted">목표 {ME.target}</span>
+          <span className="text-label text-muted">목표 {me.target}</span>
         </div>
         <ScoreChart scores={scores} />
         <ul className="m-0 flex list-none flex-wrap gap-2.5 p-0">

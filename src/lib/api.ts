@@ -4,11 +4,15 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import type { z } from "zod";
 import { clientKey, rateLimit } from "./rate-limit";
-import { getSessionUser, getSupabaseServerClient } from "./supabase/server";
+import { getSupabaseServerClient } from "./supabase/server";
 
 type Result<T> = { ok: true; data: T } | { ok: false; response: NextResponse };
 
-export function apiError(status: number, error: string, extra?: Record<string, unknown>) {
+export function apiError(
+  status: number,
+  error: string,
+  extra?: Record<string, unknown>,
+) {
   return NextResponse.json({ error, ...extra }, { status });
 }
 
@@ -24,7 +28,10 @@ export async function parseJson<S extends z.ZodType>(
 ): Promise<Result<z.infer<S>>> {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (parsed.success) return { ok: true, data: parsed.data };
-  return { ok: false, response: apiError(400, "invalid_request", { issues: parsed.error.issues }) };
+  return {
+    ok: false,
+    response: apiError(400, "invalid_request", { issues: parsed.error.issues }),
+  };
 }
 
 /** 사용자(없으면 IP) 기준 고정 창 Rate Limit — 넘으면 429 */
@@ -35,15 +42,24 @@ export function limitRequest(
   limit: number,
   windowMs: number,
 ) {
-  const { ok } = rateLimit(`${scope}:${clientKey(request, userId)}`, limit, windowMs);
+  const { ok } = rateLimit(
+    `${scope}:${clientKey(request, userId)}`,
+    limit,
+    windowMs,
+  );
   return ok ? null : apiError(429, "rate_limited");
 }
 
 /** 로그인 필수 API — Supabase 미설정이면 501, 세션 없으면 401 */
-export async function requireSession(): Promise<Result<{ supabase: SupabaseClient; user: User }>> {
+export async function requireSession(): Promise<
+  Result<{ supabase: SupabaseClient; user: User }>
+> {
   const supabase = await getSupabaseServerClient();
-  if (!supabase) return { ok: false, response: notConfigured("supabase_not_configured") };
-  const user = await getSessionUser();
+  if (!supabase)
+    return { ok: false, response: notConfigured("supabase_not_configured") };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { ok: false, response: apiError(401, "unauthorized") };
   return { ok: true, data: { supabase, user } };
 }

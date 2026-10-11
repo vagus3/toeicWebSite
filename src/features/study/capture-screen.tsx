@@ -12,7 +12,11 @@ import { useDoneCount, useStudyStore } from "@/stores/study-store";
 import type { StudyCategory } from "@/types";
 import { DriveSaveHint } from "./drive-save-hint";
 import { TaskStatusIcon } from "./task-status-icon";
-import { evidenceTitle, usePhotoPicker, useSubmitEvidence } from "./use-evidence-upload";
+import {
+  useEvidenceLabels,
+  usePhotoPicker,
+  useSubmitEvidence,
+} from "./use-evidence-upload";
 
 function usePreviewUrl(file: File | null) {
   const url = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
@@ -27,6 +31,7 @@ function usePreviewUrl(file: File | null) {
 
 /** 모바일 인증 화면 — 항목 고르고 바로 촬영 (프로토타입 시안) */
 export function CaptureScreen() {
+  const { title } = useEvidenceLabels();
   const router = useRouter();
   const params = useSearchParams();
   const done = useStudyStore((s) => s.done);
@@ -55,12 +60,16 @@ export function CaptureScreen() {
     <div className="flex flex-col gap-3.5 md:max-w-quiz">
       <div className="flex items-center gap-2.5">
         <IconLink href={ROUTES.dashboard} label="닫기" icon={X} />
-        <h1 className="m-0 flex-1 text-base font-medium tracking-normal">{evidenceTitle()}</h1>
+        <h1 className="m-0 flex-1 text-base font-medium tracking-normal">
+          {title}
+        </h1>
         <span className="text-label text-muted">
           {doneCount}/{TASKS.length} 완료
         </span>
       </div>
-      <span className="text-label text-muted">인증할 항목을 고르고 사진을 찍어요</span>
+      <span className="text-label text-muted">
+        인증할 항목을 고르고 사진을 찍어요
+      </span>
 
       <input {...photo.inputProps} />
       {TASKS.map((t) => {
@@ -75,7 +84,9 @@ export function CaptureScreen() {
             aria-pressed={selected}
             title={isDone ? "이미 인증 완료" : "인증하기"}
             onClick={() => choose(t.id)}
-            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && choose(t.id)}
+            onKeyDown={(e) =>
+              (e.key === "Enter" || e.key === " ") && choose(t.id)
+            }
             className={cn(
               "card gap-2.5 p-3.5",
               isDone ? "cursor-not-allowed opacity-45" : "cursor-pointer",

@@ -10,21 +10,40 @@ import {
 } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { DEMO_TODAY } from "@/lib/demo-data";
+import { useStudyStore } from "@/stores/study-store";
 import { cn } from "@/lib/utils";
 import { CheerButton, NudgeButton } from "@/features/party/party-buttons";
-import { buildMonth, dayDetail, LEVEL_CLASS, shiftMonth, type TrackerMonth } from "./tracker-data";
+import {
+  buildMonth,
+  dayDetail,
+  LEVEL_CLASS,
+  shiftMonth,
+  type TrackerMonth,
+} from "./tracker-data";
 
 /** 데스크톱 트래커 — 멤버 × 날짜 히트맵 + 칸 상세 (웹 시안) */
 export function TrackerBoard() {
+  const members = useStudyStore((s) => s.members);
+  const logs = useStudyStore((s) => s.logs);
+  const studyDate = useStudyStore((s) => s.studyDate);
+  const party = useStudyStore((s) => s.party);
+  const mode = useStudyStore((s) => s.mode);
+  const today = new Date(`${studyDate}T12:00:00`);
+  const source = {
+    members,
+    logs,
+    studyDate,
+    startDate: party?.createdAt ?? studyDate,
+    mode,
+  };
   const [ym, setYm] = useState<TrackerMonth>({
-    year: DEMO_TODAY.getFullYear(),
-    month: DEMO_TODAY.getMonth(),
+    year: today.getFullYear(),
+    month: today.getMonth(),
   });
-  const [cell, setCell] = useState<[number, number]>([1, DEMO_TODAY.getDate() - 1]);
-  const month = buildMonth(ym);
+  const [cell, setCell] = useState<[number, number]>([0, today.getDate() - 1]);
+  const month = buildMonth(ym, source);
   const dayIndex = Math.min(cell[1], month.lastDay - 1);
-  const detail = dayDetail(cell[0], ym, dayIndex);
+  const detail = dayDetail(cell[0], ym, dayIndex, source);
 
   const move = (delta: number) => {
     setYm((cur) => shiftMonth(cur, delta));
@@ -58,7 +77,9 @@ export function TrackerBoard() {
           >
             <CaretRight />
           </Button>
-          {!month.isCurrent && <span className="tag tag-neutral">지난 기록</span>}
+          {!month.isCurrent && (
+            <span className="tag tag-neutral">지난 기록</span>
+          )}
         </div>
         <span className="text-meta text-muted">
           칸을 누르면 그날 뭐 했는지 보여요 · 이번 달 평균 {month.average}
@@ -140,12 +161,8 @@ export function TrackerBoard() {
               </div>
             ))}
           </dl>
-          <div className="flex gap-1.5">
-            <div className="photo-placeholder-sm size-thumb rounded-sm" />
-            <div className="photo-placeholder-sm size-thumb rounded-sm" />
-          </div>
           <div className="flex gap-2">
-            <CheerButton name={detail.name} label="축하" />
+            <CheerButton name={detail.name} label="축하" logId={detail.logId} />
             <NudgeButton member={detail.member} variant="secondary" />
           </div>
         </div>

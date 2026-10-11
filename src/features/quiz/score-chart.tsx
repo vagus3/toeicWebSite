@@ -9,11 +9,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ME } from "@/lib/demo-data";
+import { useStudyStore } from "@/stores/study-store";
 import type { ScoreEntry } from "@/types";
 
 /** 점수 축 범위 — 시안의 600~820 매핑 */
-const DOMAIN: [number, number] = [600, 820];
+const DOMAIN: [number, number] = [0, 990];
 
 function ScoreTooltip({
   active,
@@ -34,22 +34,28 @@ function ScoreTooltip({
 
 /** 내 점수 추이 — 목표선(점선) + 주간 점수 라인 */
 export function ScoreChart({ scores }: { scores: ScoreEntry[] }) {
+  const me = useStudyStore((s) => s.me);
   return (
     <figure className="m-0 flex flex-col gap-1.5">
       <div className="aspect-score-chart w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={scores} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+          <LineChart
+            data={scores}
+            margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
+          >
             <XAxis dataKey="label" hide />
             <YAxis domain={DOMAIN} hide />
             <ReferenceLine
-              y={ME.target}
+              y={me.target}
               stroke="var(--color-accent)"
               strokeDasharray="3 4"
               strokeOpacity={0.5}
               ifOverflow="extendDomain"
             />
             <Tooltip
-              content={({ active, payload }) => <ScoreTooltip active={active} payload={payload} />}
+              content={({ active, payload }) => (
+                <ScoreTooltip active={active} payload={payload} />
+              )}
               cursor={{ stroke: "var(--color-divider)" }}
             />
             <Line

@@ -1,6 +1,6 @@
 /* 새벽 토익 서비스 워커 — 푸시 수신 · 알림 클릭 이동 · 앱 셸 캐시 */
-const CACHE = "dawn-toeic-v2";
-const APP_SHELL = ["/dashboard", "/icons/icon-192.png", "/icons/icon-512.png"];
+const CACHE = "dawn-toeic-v3";
+const APP_SHELL = ["/offline.html", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -15,25 +15,17 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith("dawn-toeic-") && k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
 
-/* 페이지 이동은 네트워크 우선 — 성공하면 그 화면을 캐시에 갱신, 오프라인이면 마지막으로 본 화면(없으면 홈) */
+/* 개인 기록과 초대 링크가 포함된 HTML은 캐시에 남기지 않는다. */
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET" || request.mode !== "navigate") return;
   event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (response.ok && response.type === "basic") {
-          const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(request, copy));
-        }
-        return response;
-      })
-      .catch(() => caches.match(request).then((r) => r || caches.match("/dashboard"))),
+    fetch(request).catch(() => caches.match("/offline.html")),
   );
 });
 

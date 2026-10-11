@@ -1,18 +1,23 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { PARTY } from "@/lib/demo-data";
+import { useStudyStore } from "@/stores/study-store";
 import { ROUTES } from "@/lib/routes";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useToast } from "@/stores/toast-store";
 
 export function useCopyInvite() {
   const flash = useToast((s) => s.flash);
+  const party = useStudyStore((s) => s.party);
   return async () => {
     try {
-      await navigator.clipboard.writeText(PARTY.inviteUrl);
+      if (!party) return;
+      await navigator.clipboard.writeText(
+        new URL(party.inviteUrl, window.location.origin).href,
+      );
     } catch {
-      // 권한이 없거나 http 환경이면 복사만 건너뛴다
+      flash("초대 링크를 복사하지 못했어요. 브라우저 권한을 확인해 주세요");
+      return;
     }
     flash("초대 링크를 복사했어요");
   };
@@ -32,5 +37,6 @@ export function useLogout() {
   return async () => {
     await getSupabaseBrowserClient()?.auth.signOut();
     router.push(ROUTES.login);
+    router.refresh();
   };
 }

@@ -7,6 +7,7 @@ import { IconLink } from "@/components/shared/icon-link";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { PushToggle } from "@/features/chat/push-toggle";
 import { usePartySummary } from "@/features/party/use-party";
+import { useStudyStore } from "@/stores/study-store";
 import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { isActive, TAB_ITEMS, type NavItem } from "./nav-items";
@@ -22,6 +23,7 @@ function useIsFullscreenRoute() {
 /** 모바일 상단 — 파티 이름 + 화면 모드 + 채팅 + 알림 */
 export function MobileHeader() {
   const party = usePartySummary();
+  const activeParty = useStudyStore((s) => s.party);
   if (useIsFullscreenRoute()) return null;
 
   return (
@@ -29,7 +31,11 @@ export function MobileHeader() {
       <span className="text-base font-medium">{party.name}</span>
       <span className="flex items-center gap-1">
         <ThemeToggle label="icon" />
-        <IconLink href={ROUTES.chat()} label="파티 채팅" icon={ChatTeardropText} />
+        <IconLink
+          href={ROUTES.chat(activeParty?.id, activeParty?.defaultChatRoomId)}
+          label="파티 채팅"
+          icon={ChatTeardropText}
+        />
         <PushToggle compact />
       </span>
     </header>
@@ -44,7 +50,9 @@ function TabLink({ item, active }: { item: NavItem; active: boolean }) {
       aria-current={active ? "page" : undefined}
       className={cn(
         "flex flex-col items-center gap-0.5 text-micro no-underline",
-        active ? "text-accent hover:text-accent" : "text-neutral-500 hover:text-neutral-500",
+        active
+          ? "text-accent hover:text-accent"
+          : "text-neutral-500 hover:text-neutral-500",
       )}
     >
       <Icon className="text-icon-lg" />
@@ -65,7 +73,11 @@ export function MobileTabBar() {
       className="rule-top pb-safe fixed inset-x-0 bottom-0 z-40 flex items-center justify-around px-2 pt-2.5 md:hidden"
     >
       {TAB_ITEMS.slice(0, half).map((item) => (
-        <TabLink key={item.href} item={item} active={isActive(pathname, item)} />
+        <TabLink
+          key={item.href}
+          item={item}
+          active={isActive(pathname, item)}
+        />
       ))}
       <Link
         href={ROUTES.upload}
@@ -75,7 +87,11 @@ export function MobileTabBar() {
         <Camera className="text-icon-xl" />
       </Link>
       {TAB_ITEMS.slice(half).map((item) => (
-        <TabLink key={item.href} item={item} active={isActive(pathname, item)} />
+        <TabLink
+          key={item.href}
+          item={item}
+          active={isActive(pathname, item)}
+        />
       ))}
     </nav>
   );

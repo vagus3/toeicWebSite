@@ -20,6 +20,8 @@ export function QuizRunner() {
   const [index, setIndex] = useState(0);
   const [pick, setPick] = useState<number | null>(null);
   const [score, setScore] = useState(0);
+  const [answers, setAnswers] = useState<number[]>([]);
+  const saving = useStudyStore((s) => s.saving);
 
   const q = QUIZ[index];
   const answered = pick !== null;
@@ -28,16 +30,17 @@ export function QuizRunner() {
   const choose = (i: number) => {
     if (answered) return;
     setPick(i);
+    setAnswers((previous) => [...previous, i]);
     if (i === q.answer) setScore((s) => s + 1);
   };
 
-  const next = () => {
+  const next = async () => {
     if (!isLast) {
       setIndex(index + 1);
       setPick(null);
       return;
     }
-    finishQuiz(score);
+    if (!(await finishQuiz(score, answers))) return;
     flash("일일 테스트 완료 · 단어 자동 인증");
     router.push(ROUTES.quizzes);
   };
@@ -62,8 +65,12 @@ export function QuizRunner() {
         </span>
       </div>
 
-      <span className="tag tag-neutral self-start">Day 12 · 빈칸 채우기</span>
-      <p className="m-0 text-heading leading-question text-pretty md:text-question">{q.text}</p>
+      <span className="tag tag-neutral self-start">
+        단어 연습 · 빈칸 채우기
+      </span>
+      <p className="m-0 text-heading leading-question text-pretty md:text-question">
+        {q.text}
+      </p>
 
       <div className="flex flex-col gap-2.5 md:grid md:grid-cols-[repeat(auto-fit,minmax(var(--spacing-card-min),1fr))]">
         {q.opts.map((word, i) => {
@@ -97,7 +104,9 @@ export function QuizRunner() {
             <Sparkle />
             {pick === q.answer ? "정답" : "오답"} · AI 해설
           </span>
-          <span className="text-meta leading-reading md:text-body">{q.why}</span>
+          <span className="text-meta leading-reading md:text-body">
+            {q.why}
+          </span>
         </div>
       )}
 
@@ -105,7 +114,7 @@ export function QuizRunner() {
         variant="primary"
         className="h-control-xl w-full text-base md:h-control-lg md:w-auto md:self-start md:px-6 md:text-body"
         onClick={next}
-        disabled={!answered}
+        disabled={!answered || saving}
       >
         {isLast ? "결과 보기" : "다음 문제"}
       </Button>

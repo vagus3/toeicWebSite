@@ -14,7 +14,7 @@ import { BrandMark } from "@/components/shared/brand-mark";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { usePartySummary } from "@/features/party/use-party";
-import { ME } from "@/lib/demo-data";
+
 import { cn } from "@/lib/utils";
 import { useStudyStore } from "@/stores/study-store";
 import { isActive, NAV_ITEMS, type NavItem } from "./nav-items";
@@ -29,7 +29,11 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
     <Link
       href={item.href}
       aria-current={active ? "page" : undefined}
-      className={cn("btn text-body", ROW, active ? "bg-accent-900 text-accent-200" : "text-text")}
+      className={cn(
+        "btn text-body",
+        ROW,
+        active ? "bg-accent-900 text-accent-200" : "text-text",
+      )}
     >
       <Icon weight={active ? "fill" : "regular"} className="text-icon" />
       {item.label}
@@ -54,6 +58,8 @@ function SidebarAction({
 /** 데스크톱 좌측 내비게이션 (웹 시안) */
 export function Sidebar() {
   const pathname = usePathname();
+  const me = useStudyStore((s) => s.me);
+  const activeParty = useStudyStore((s) => s.party);
   const openUpload = useStudyStore((s) => s.openUpload);
   const copyInvite = useCopyInvite();
   const openDrive = useDriveFolder();
@@ -69,10 +75,23 @@ export function Sidebar() {
         <BrandMark size="sm" />
         <span className="text-base font-medium">{party.name}</span>
       </div>
-      <span className="pr-2.5 pb-4.5 pl-12 text-label text-muted">{party.summary}</span>
+      <span className="pr-2.5 pb-4.5 pl-12 text-label text-muted">
+        {party.summary}
+      </span>
 
       {NAV_ITEMS.map((item) => (
-        <NavLink key={item.href} item={item} active={isActive(pathname, item)} />
+        <NavLink
+          key={item.href}
+          item={
+            item.match[0] === "/party/"
+              ? {
+                  ...item,
+                  href: `/party/${activeParty?.id}/chat/${activeParty?.defaultChatRoomId}`,
+                }
+              : item
+          }
+          active={isActive(pathname, item)}
+        />
       ))}
 
       <div className="flex-1" />
@@ -84,14 +103,26 @@ export function Sidebar() {
         label="오늘 인증 올리기"
         onClick={() => openUpload()}
       />
-      <SidebarAction icon={LinkIcon} label="초대 링크 복사" onClick={copyInvite} />
-      <SidebarAction icon={GoogleDriveLogo} label="드라이브 폴더" onClick={openDrive} />
-      <ThemeToggle label="long" className={cn(ROW, "text-meta")} iconClassName="text-icon" />
+      <SidebarAction
+        icon={LinkIcon}
+        label="초대 링크 복사"
+        onClick={copyInvite}
+      />
+      <SidebarAction
+        icon={GoogleDriveLogo}
+        label="드라이브 폴더"
+        onClick={openDrive}
+      />
+      <ThemeToggle
+        label="long"
+        className={cn(ROW, "text-meta")}
+        iconClassName="text-icon"
+      />
 
       <div className="flex items-center gap-2.5 px-2.5 pt-3">
-        <Avatar initial={ME.initial} size="sm" me />
-        <span className="flex-1 text-meta">{ME.name}</span>
-        <span className="tag tag-accent">{ME.track}</span>
+        <Avatar initial={me.initial} size="sm" me />
+        <span className="flex-1 text-meta">{me.name}</span>
+        <span className="tag tag-accent">{me.track}</span>
         <Button
           size="icon"
           className="size-7"

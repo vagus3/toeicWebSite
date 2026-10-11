@@ -10,14 +10,14 @@ import { isLazy, memberLabel, useMembers } from "./use-party";
 
 const COLUMNS = ["멤버", "트랙", "할당량", "교재", "최근 점수", "연속"];
 
-/** 홈 — 이번 주 파티 표 */
+/** 홈 — 오늘 파티 표 */
 export function MembersTable() {
   const members = useMembers();
 
   return (
     <section className="flex flex-col gap-2.5">
       <div className="flex items-baseline justify-between">
-        <SectionTitle>이번 주 파티</SectionTitle>
+        <SectionTitle>오늘 파티</SectionTitle>
         <Button asChild variant="ghost" className="text-meta">
           <Link href={ROUTES.tracker}>트래커 전체 보기</Link>
         </Button>
@@ -41,7 +41,11 @@ export function MembersTable() {
                 <td>{m.track}</td>
                 <td>
                   <span className="flex items-center gap-2">
-                    <ProgressBar value={m.quota} className="w-16" label={`${m.name} 할당량`} />
+                    <ProgressBar
+                      value={m.quota}
+                      className="w-16"
+                      label={`${m.name} 할당량`}
+                    />
                     {m.quota}%
                   </span>
                 </td>
@@ -50,7 +54,9 @@ export function MembersTable() {
                 </td>
                 <td>{m.score ?? "—"}</td>
                 <td>{m.streak}일</td>
-                <td className="text-right">{isLazy(m) && <NudgeButton member={m} />}</td>
+                <td className="text-right">
+                  {isLazy(m) && <NudgeButton member={m} />}
+                </td>
               </tr>
             ))}
           </tbody>

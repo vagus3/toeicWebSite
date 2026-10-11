@@ -3,15 +3,25 @@
 import { Check, CheckCircle, Image as ImageIcon } from "@phosphor-icons/react";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogActions, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { TASKS } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
 import { useModal, useStudyStore } from "@/stores/study-store";
 import { DriveSaveHint } from "./drive-save-hint";
-import { evidenceTitle, usePhotoPicker, useSubmitEvidence } from "./use-evidence-upload";
+import {
+  useEvidenceLabels,
+  usePhotoPicker,
+  useSubmitEvidence,
+} from "./use-evidence-upload";
 
 /** 데스크톱 인증 모달 (웹 시안) */
 export function UploadDialog() {
+  const { title } = useEvidenceLabels();
   const { open, close, onOpenChange } = useModal("upload");
   const done = useStudyStore((s) => s.done);
   const selection = useStudyStore((s) => s.uploadSelection);
@@ -32,9 +42,13 @@ export function UploadDialog() {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[min(var(--container-dialog-wide),calc(100%-2*var(--space-4)))]">
-        <DialogTitle>{evidenceTitle()}</DialogTitle>
+        <DialogTitle>{title}</DialogTitle>
 
-        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="인증할 항목">
+        <div
+          className="flex flex-wrap gap-2"
+          role="radiogroup"
+          aria-label="인증할 항목"
+        >
           {TASKS.map((t) => {
             const isDone = done[t.id];
             const selected = selection === t.id;
@@ -75,7 +89,9 @@ export function UploadDialog() {
             <ImageIcon className="text-icon-2xl" />
           )}
           <span className="text-meta">
-            {photo.file ? photo.file.name : "사진을 끌어다 놓거나 클릭해서 선택"}
+            {photo.file
+              ? photo.file.name
+              : "사진을 끌어다 놓거나 클릭해서 선택"}
           </span>
         </button>
 

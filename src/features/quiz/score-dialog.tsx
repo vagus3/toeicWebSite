@@ -4,9 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogActions, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { TextField } from "@/components/ui/text-field";
-import { DEMO_TODAY } from "@/lib/demo-data";
 import { weekTestLabel } from "@/lib/utils";
 import { useModal, useStudyStore } from "@/stores/study-store";
 import { useToast } from "@/stores/toast-store";
@@ -24,6 +28,7 @@ export function ScoreDialog() {
   const { open, close, onOpenChange } = useModal("score");
   const addScore = useStudyStore((s) => s.addScore);
   const flash = useToast((s) => s.flash);
+  const studyDate = useStudyStore((s) => s.studyDate);
 
   const { register, handleSubmit, control, formState } = useForm<
     ScoreForm,
@@ -36,9 +41,16 @@ export function ScoreDialog() {
   const [lc, rc] = useWatch({ control, name: ["lc", "rc"] });
   const total = (parseInt(lc) || 0) + (parseInt(rc) || 0);
 
-  const onSave = handleSubmit(({ lc, rc }) => {
+  const onSave = handleSubmit(async ({ lc, rc }) => {
     const sum = lc + rc;
-    addScore(sum, weekTestLabel(DEMO_TODAY));
+    if (
+      !(await addScore(
+        lc,
+        rc,
+        weekTestLabel(new Date(`${studyDate}T12:00:00`)),
+      ))
+    )
+      return;
     flash(`점수 ${sum}점 저장 · 파티에 공유`);
   });
 
@@ -70,7 +82,11 @@ export function ScoreDialog() {
             <Button variant="secondary" onClick={close}>
               취소
             </Button>
-            <Button type="submit" variant="primary">
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={formState.isSubmitting}
+            >
               저장
             </Button>
           </DialogActions>

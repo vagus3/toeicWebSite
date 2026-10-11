@@ -1,12 +1,12 @@
-import { GoogleDriveLogo } from "@phosphor-icons/react";
-import { evidenceFolderLabel } from "./use-evidence-upload";
+"use client";
 
-/** "새벽토익/형규/2026-10-08 에 저장" */
+import { Image as PhotoIcon } from "@phosphor-icons/react";
+
 export function DriveSaveHint() {
   return (
-    <div className="flex items-center gap-1.5 text-label text-muted">
-      <GoogleDriveLogo />
-      {evidenceFolderLabel()} 에 저장
-    </div>
+    <p className="flex items-center gap-1.5 text-label text-muted">
+      <PhotoIcon />
+      인증 사진은 파티원만 볼 수 있어요
+    </p>
   );
 }

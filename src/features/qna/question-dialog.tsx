@@ -5,13 +5,21 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogActions, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { FieldError } from "@/components/ui/field-error";
-import { ME } from "@/lib/demo-data";
 import { requestJson } from "@/lib/http";
 import { useModal, useStudyStore } from "@/stores/study-store";
 import { useToast } from "@/stores/toast-store";
-import { askRequestSchema, QUESTION_TAGS, type AskResponse } from "./ask-schema";
+import {
+  askRequestSchema,
+  QUESTION_TAGS,
+  type AskResponse,
+} from "./ask-schema";
 
 type QuestionForm = z.infer<typeof askRequestSchema>;
 
@@ -20,6 +28,9 @@ export function QuestionDialog() {
   const { open, close, onOpenChange } = useModal("question");
   const addThread = useStudyStore((s) => s.addThread);
   const flash = useToast((s) => s.flash);
+  const mode = useStudyStore((s) => s.mode);
+  const me = useStudyStore((s) => s.me);
+  const saveQuestion = useStudyStore((s) => s.saveQuestion);
 
   const { register, handleSubmit, reset, formState } = useForm<QuestionForm>({
     resolver: zodResolver(askRequestSchema),
@@ -27,12 +38,25 @@ export function QuestionDialog() {
   });
 
   const ask = useMutation({
-    mutationFn: (input: QuestionForm) => requestJson<AskResponse>("/api/ai/ask", input),
-    onSuccess: ({ answer }, input) => {
+    mutationFn: async (input: QuestionForm) => {
+      if (mode === "live") {
+        if (!(await saveQuestion(input.tag, input.title)))
+          throw new Error("save_failed");
+        return null;
+      }
+      return requestJson<AskResponse>("/api/ai/ask", input);
+    },
+    onSuccess: (result, input) => {
+      if (!result) {
+        reset();
+        flash("질문을 저장했어요");
+        return;
+      }
+      const { answer } = result;
       addThread({
         id: crypto.randomUUID(),
         tag: input.tag,
-        who: `${ME.name} · 방금`,
+        who: `${me.name} · 방금`,
         title: input.title,
         ai: answer,
         replies: [],
@@ -40,7 +64,8 @@ export function QuestionDialog() {
       reset();
       flash("질문을 올렸어요 · AI 초안 답변 완료");
     },
-    onError: () => flash("AI 답변을 만들지 못했어요. 잠시 후 다시 시도해 주세요"),
+    onError: () =>
+      flash("AI 답변을 만들지 못했어요. 잠시 후 다시 시도해 주세요"),
   });
 
   return (
