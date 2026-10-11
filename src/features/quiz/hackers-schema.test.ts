@@ -4,6 +4,11 @@ const ids = { submissionId: "11111111-1111-4111-8111-111111111111", partyId: "22
 const row = { number: 1, selected: "A", correctAnswer: "B", result: "correct" };
 const base = { ...ids, testDate: "2026-10-12", total: 1, correct: 0, method: "ocr-reviewed", rows: [row] };
 describe("해커스 채점표 검증", () => {
+  it("기존 요청은 RC를 유지하고 LC 분류도 허용한다", () => {
+    expect(confirmedReportSchema.parse(base).category).toBe("rc");
+    expect(confirmedReportSchema.parse({...base,category:"lc"}).category).toBe("lc");
+    expect(confirmedReportSchema.safeParse({...base,category:"word"}).success).toBe(false);
+  });
   it("선택 답과 정답이 있으면 정오를 계산한다", () => {
     expect(confirmedReportSchema.parse(base).rows[0].result).toBe("incorrect");
   });

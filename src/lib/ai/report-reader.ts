@@ -1,5 +1,5 @@
 import "server-only";
-import { ocrReportSchema, summarizeOcr } from "@/features/quiz/hackers-schema";
+import { ocrReportSchema, summarizeOcr, type HackersCategory } from "@/features/quiz/hackers-schema";
 
 export const MAX_REPORT_BYTES = 3 * 1024 * 1024;
 export const REPORT_MIME_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -9,7 +9,7 @@ export function isReportImage(bytes: Buffer, mime: string) {
   if (mime === "image/jpeg") return bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255;
   return mime === "image/webp" && bytes.toString("ascii", 0, 4) === "RIFF" && bytes.toString("ascii", 8, 12) === "WEBP";
 }
-export async function readHackersReport(bytes: Buffer, mime: string) {
+export async function readHackersReport(bytes: Buffer, mime: string, category: HackersCategory = "rc") {
   const apiKey = process.env.GROQ_API_KEY || process.env.GROQ_KEY;
   if (!apiKey) throw new Error("ai_not_configured");
   const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -19,7 +19,8 @@ export async function readHackersReport(bytes: Buffer, mime: string) {
       max_completion_tokens: 5000, response_format: { type: "json_object" },
       messages: [{ role: "user", content: [
         { type: "text", text: [
-          "Extract ONLY the grading report from this user-submitted TOEIC result screenshot. Return JSON, no markdown.",
+          `Extract ONLY the grading report from this user-submitted TOEIC ${category.toUpperCase()} result screenshot. Return JSON, no markdown.`,
+          "LC Part 2 has A/B/C choices; other parts may also have D. Read only visible answers and do not invent a D option for Part 2.",
           'Shape: {"recognized":true,"testDate":"YYYY-MM-DD" or null,"total":integer or null,"correct":integer or null,"rows":[{"number":1,"selected":"A" or null,"correctAnswer":"B" or null,"result":"correct" or "incorrect" or "unknown"}]}',
           "This is OCR, NOT solving questions. Copy only visible evidence. Do not infer answers from question text. Never invent totals, dates, rows or missing answers. Do not extract names, emails, account details, question texts, explanations, advertisements or other personal information.",
           "Find column headings: 나의 답/선택/제출답 = selected, 정답 = correctAnswer, 정오/O/X = result. Convert choices 1,2,3,4 to A,B,C,D only when clearly answer choices. O/○/✓ = correct; X/× = incorrect. Red text alone does not prove correctness. Preserve unclear fields as null or unknown.",

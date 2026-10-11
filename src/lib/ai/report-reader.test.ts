@@ -20,6 +20,13 @@ describe("채점표 이미지 읽기", () => {
     expect(body.messages[0].content[1].image_url.url).toBe(`data:image/png;base64,${png.toString("base64")}`);
     expect(body.messages[0].content[0].text).toContain("NOT solving questions");
   });
+  it("LC 읽기는 듣기 시험과 Part 2의 3개 보기를 안내한다", async () => {
+    fetchMock.mockResolvedValue(Response.json({ choices:[{ message:{ content:JSON.stringify({recognized:true,testDate:null,total:1,correct:1,rows:[{number:1,selected:"C",correctAnswer:"C",result:"correct"}]}) } }] }));
+    const result=await readHackersReport(png,"image/png","lc");
+    expect(result.rows[0].selected).toBe("C");
+    const instruction=JSON.parse(fetchMock.mock.calls[0][1].body).messages[0].content[0].text;
+    expect(instruction).toContain("TOEIC LC");expect(instruction).toContain("Part 2 has A/B/C");
+  });
   it("제공업체 오류와 잘못된 인식 결과를 성공으로 반환하지 않는다", async () => {
     fetchMock.mockResolvedValue(new Response("provider details",{ status:403 }));
     await expect(readHackersReport(png,"image/png")).rejects.toThrow("report_read_failed");

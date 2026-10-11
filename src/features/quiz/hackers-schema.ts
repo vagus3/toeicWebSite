@@ -1,6 +1,10 @@
 import { z } from "zod";
 
 export const HACKERS_RC_URL = "https://www.hackers.co.kr/?c=s_toeic/toeic_study/drc";
+export const HACKERS_LC_URL = "https://www.hackers.co.kr/?c=s_toeic/toeic_study/dlc";
+export const hackersCategorySchema = z.enum(["rc", "lc"]);
+export type HackersCategory = z.infer<typeof hackersCategorySchema>;
+export const HACKERS_URLS = { rc: HACKERS_RC_URL, lc: HACKERS_LC_URL };
 const choice = z.enum(["A", "B", "C", "D"]).nullable();
 export const reportRowSchema = z.object({
   number: z.number().int().min(1).max(200),
@@ -18,6 +22,7 @@ export const ocrReportSchema = z.object({
   rows,
 });
 export const confirmedReportSchema = z.object({
+  category: hackersCategorySchema.default("rc"),
   submissionId: z.uuid(), partyId: z.uuid(), testDate: z.iso.date(),
   total: z.number().int().min(1).max(200), correct: z.number().int().min(0).max(200),
   rows, method: z.enum(["ocr-reviewed", "manual"]),
@@ -29,6 +34,7 @@ export const confirmedReportSchema = z.object({
 export type ReportRow = z.infer<typeof reportRowSchema>;
 export type OcrReport = z.infer<typeof ocrReportSchema>;
 export type HackersReport = {
+  category: HackersCategory;
   id: string; user_id: string; test_date: string; total: number; correct: number;
   rows: ReportRow[]; method: "ocr-reviewed" | "manual"; study_log_id: string;
   created_at: string; profiles: { nickname: string } | null;

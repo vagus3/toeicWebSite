@@ -29,6 +29,15 @@ export function TestOverview() {
           highlight
           className={CARD}
           titleClassName={TITLE}
+          kicker="일일 LC · 해커스에서 듣기 풀이"
+          title="해커스 LC 채점표 제출"
+          description="결과 이미지 읽기 · 점수·문항별 결과 저장 · LC 인증"
+          action={<Button asChild variant="primary"><Link href={ROUTES.hackersLc}>풀기 / 제출</Link></Button>}
+        />
+        <ActionCard
+          highlight
+          className={CARD}
+          titleClassName={TITLE}
           kicker="일일 RC · 해커스에서 풀이"
           title="해커스 채점표 제출"
           description="결과 이미지 읽기 · 점수·문항별 결과 저장 · RC 인증"
