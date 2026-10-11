@@ -1,6 +1,7 @@
 "use client";
 
 import { HandPointing, Trophy } from "@phosphor-icons/react";
+import Link from "next/link";
 import { ActionCard } from "@/components/shared/action-card";
 import { Avatar } from "@/components/shared/avatar";
 import { SectionTitle } from "@/components/shared/section-title";
@@ -9,6 +10,7 @@ import { CheerButton, NudgeButton } from "./party-buttons";
 import { lazyMember, useMembers } from "./use-party";
 import { EvidencePhoto } from "@/features/study/evidence-photo";
 import { cn } from "@/lib/utils";
+import { ROUTES } from "@/lib/routes";
 
 /** 데스크톱 홈 우측 — 파티 피드 */
 export function Feed({ className }: { className?: string }) {
@@ -20,7 +22,12 @@ export function Feed({ className }: { className?: string }) {
         className,
       )}
     >
-      <SectionTitle>피드</SectionTitle>
+      <div className="flex items-baseline justify-between gap-3">
+        <SectionTitle>피드</SectionTitle>
+        <Link href={ROUTES.records} className="text-meta text-accent underline">
+          기록 전체 보기
+        </Link>
+      </div>
       {feed.map((f, i) => (
         <article key={f.id} className="flex gap-2.5">
           <Avatar initial={f.initial} />

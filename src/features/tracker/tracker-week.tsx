@@ -1,9 +1,11 @@
 "use client";
 
 import { Fire } from "@phosphor-icons/react";
+import Link from "next/link";
 import { Avatar } from "@/components/shared/avatar";
 import { PageTitle } from "@/components/shared/page-title";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { ROUTES } from "@/lib/routes";
 import { NudgeButton } from "@/features/party/party-buttons";
 import { bookPercent, isLazy, memberLabel, useMembers } from "@/features/party/use-party";
 import type { Member } from "@/types";
@@ -62,7 +64,12 @@ export function TrackerWeek() {
   const members = useMembers();
   return (
     <div className="flex flex-col gap-4.5">
-      <PageTitle>트래커 · 이번 주</PageTitle>
+      <div className="flex items-center justify-between gap-3">
+        <PageTitle>트래커 · 이번 주</PageTitle>
+        <Link href={ROUTES.records} className="text-meta text-accent underline">
+          인증 기록 보기
+        </Link>
+      </div>
       {members.map((m) => (
         <MemberWeek key={m.id} member={m} />
       ))}

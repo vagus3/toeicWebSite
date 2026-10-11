@@ -8,11 +8,15 @@ import {
   Headphones,
   TextAa,
 } from "@phosphor-icons/react";
+import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useStudyStore } from "@/stores/study-store";
 import { cn } from "@/lib/utils";
+import { TASKS } from "@/lib/demo-data";
+import { ROUTES } from "@/lib/routes";
 import { CheerButton, NudgeButton } from "@/features/party/party-buttons";
+import { EvidencePhoto, evidenceUrl } from "@/features/study/evidence-photo";
 import {
   buildMonth,
   dayDetail,
@@ -161,9 +165,27 @@ export function TrackerBoard() {
               </div>
             ))}
           </dl>
-          <div className="flex gap-2">
+          {detail.evidenceLogs.length > 0 && (
+            <div className="grid grid-cols-2 gap-2">
+              {detail.evidenceLogs.map((log) => (
+                <EvidencePhoto
+                  key={log.id}
+                  src={evidenceUrl(log.id)}
+                  alt={`${detail.title} ${TASKS.find((t) => t.id === log.category)?.short ?? ""} 인증 사진`}
+                />
+              ))}
+            </div>
+          )}
+          <div className="flex flex-wrap gap-2">
             <CheerButton name={detail.name} label="축하" logId={detail.logId} />
             <NudgeButton member={detail.member} variant="secondary" />
+            {mode === "live" && (
+              <Button asChild variant="ghost" className="text-meta">
+                <Link href={`${ROUTES.records}?memberId=${detail.member.id}&month=${detail.month}`}>
+                  기록에서 보기
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>

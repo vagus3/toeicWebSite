@@ -284,6 +284,34 @@ export async function readPersonalEvidence(ownerId: string, fileId: string) {
   ).data as unknown as ArrayBuffer;
 }
 
+/** 목록 썸네일의 긴 변 길이(px). 고해상도 화면의 카드 폭을 덮는다. */
+const THUMBNAIL_SIZE = 480;
+
+/**
+ * 목록용 작은 이미지. Drive가 아직 썸네일을 만들지 않았거나 받을 수 없으면 null을 돌려
+ * 호출자가 원본으로 대체하게 한다. Drive가 준 Google 이미지 주소만 따라간다.
+ */
+export async function readPersonalThumbnail(ownerId: string, fileId: string) {
+  const { api, auth } = await personalDrive(ownerId);
+  const { data } = await api.files.get({ fileId, fields: "thumbnailLink" });
+  if (!data.thumbnailLink) return null;
+  const link = new URL(data.thumbnailLink);
+  if (link.protocol !== "https:" || !link.hostname.endsWith(".googleusercontent.com"))
+    return null;
+  const { token } = await auth.getAccessToken();
+  const response = await fetch(
+    link.toString().replace(/=s\d+$/, `=s${THUMBNAIL_SIZE}`),
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      signal: AbortSignal.timeout(10_000),
+      cache: "no-store",
+    },
+  );
+  const mimeType = response.headers.get("content-type") ?? "";
+  if (!response.ok || !mimeType.startsWith("image/")) return null;
+  return { body: await response.arrayBuffer(), mimeType };
+}
+
 export async function removePersonalEvidence(ownerId: string, fileId: string) {
   const { api } = await personalDrive(ownerId);
   await api.files.delete({ fileId });

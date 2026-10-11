@@ -4,6 +4,7 @@ import {
   ChatTeardropText,
   Exam,
   House,
+  Images,
   type Icon,
 } from "@phosphor-icons/react";
 import { ROUTES } from "@/lib/routes";
@@ -28,6 +29,8 @@ export const NAV_ITEMS: NavItem[] = [
     icon: ChartBar,
     match: [ROUTES.tracker],
   },
+  // 모바일 하단 탭은 카메라 버튼 양쪽 2개씩이라 넣지 않고, 트래커·홈 피드의 링크로 들어간다
+  { href: ROUTES.records, label: "인증 기록", icon: Images, match: [ROUTES.records] },
   {
     href: ROUTES.quizzes,
     label: "테스트",

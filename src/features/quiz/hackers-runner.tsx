@@ -6,7 +6,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import imageCompression from "browser-image-compression";
 import { Button } from "@/components/ui/button";
 import { PageTitle } from "@/components/shared/page-title";
-import { EvidencePhoto } from "@/features/study/evidence-photo";
+import { EvidencePhoto, evidenceUrl } from "@/features/study/evidence-photo";
+import { ReportRowsTable } from "./report-rows-table";
 import { DriveControls } from "@/features/study/drive-controls";
 import { useStudyStore } from "@/stores/study-store";
 import { ROUTES } from "@/lib/routes";
@@ -206,9 +207,8 @@ function HackersReportFlow({ partyId, category }: { partyId: string | undefined;
       {!reports.data?.reports.length && <p className="text-meta text-muted">아직 제출한 채점표가 없어요.</p>}
       {reports.data?.reports.map((r) => <details key={r.id} className="card p-4"><summary className="cursor-pointer text-body">{r.test_date} · {r.user_id === me.id ? me.name : r.profiles?.nickname ?? "파티원"} · {r.correct}/{r.total} 정답 ({Math.round(r.correct / r.total * 100)}%)</summary><div className="mt-3 flex flex-col gap-3">
         <span className="text-meta text-muted">제출자 확인 · {r.method === "manual" ? "직접 입력" : "자동 인식 후 확인"}</span>
-        <div className="overflow-x-auto"><table className="w-full text-left text-meta"><thead><tr><th>번호</th><th>내 답</th><th>정답</th><th>결과</th></tr></thead><tbody>{r.rows.map((row) => <tr key={row.number}><td>{row.number}</td><td>{row.selected ?? "—"}</td><td>{row.correctAnswer ?? "—"}</td><td>{row.result === "correct" ? "O" : row.result === "incorrect" ? "X" : "확인 필요"}</td></tr>)}</tbody></table></div>
-        {!r.rows.length && <p className="text-meta text-muted">문항별 정보 없이 합계만 제출된 기록입니다.</p>}
-        <EvidencePhoto src={`/api/study/evidence/${r.study_log_id}`} alt={`${r.test_date} 해커스 ${label} 채점표`} />
+        <ReportRowsTable rows={r.rows} />
+        <EvidencePhoto src={evidenceUrl(r.study_log_id)} alt={`${r.test_date} 해커스 ${label} 채점표`} />
       </div></details>)}
     </>}
   </div>;

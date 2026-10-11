@@ -121,5 +121,10 @@ export function dayDetail(
     rc: value("rc", 3),
     book: value("book", 4),
     logId: logs[0]?.id,
+    /** 그날 올린 인증 사진(증빙이 있는 기록)의 id */
+    evidenceLogs: logs
+      .filter((l) => l.study_evidences?.length)
+      .map((l) => ({ id: l.id, category: l.category })),
+    month: dateKey(ym, 1).slice(0, 7),
   };
 }

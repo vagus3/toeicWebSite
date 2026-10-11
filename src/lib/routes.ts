@@ -5,6 +5,7 @@ export const ROUTES = {
   signup: "/signup",
   dashboard: "/dashboard",
   tracker: "/tracker",
+  records: "/records",
   quizzes: "/quizzes",
   hackersLc: "/quizzes/hackers/lc",
   hackersRc: "/quizzes/hackers",

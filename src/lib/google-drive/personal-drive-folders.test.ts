@@ -37,6 +37,7 @@ import { encryptDriveToken } from "./token-crypto";
 import {
   DEFAULT_FOLDER_NAME,
   pickerConfig,
+  readPersonalThumbnail,
   setPersonalDriveFolder,
   uploadPersonalEvidence,
 } from "./personal-drive";
@@ -132,5 +133,35 @@ describe("Picker로 고른 폴더 지정", () => {
     expect(pickerConfig()).toBeNull();
     vi.stubEnv("NEXT_PUBLIC_GOOGLE_PICKER_API_KEY", "browser-key");
     expect(pickerConfig()).toEqual({ apiKey: "browser-key", appId: "123456789012" });
+  });
+});
+
+describe("목록용 Drive 썸네일", () => {
+  it("Drive가 준 Google 이미지 주소만 크기를 바꿔 토큰과 함께 받는다", async () => {
+    m.get.mockResolvedValue({ data: { thumbnailLink: "https://lh3.googleusercontent.com/drive-storage/abc=s220" } });
+    const fetchMock = vi.fn().mockResolvedValue(new Response(new Uint8Array([1]), { headers: { "content-type": "image/jpeg" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    const thumb = await readPersonalThumbnail("owner", "file");
+    expect(thumb?.mimeType).toBe("image/jpeg");
+    expect(fetchMock.mock.calls[0][0]).toBe("https://lh3.googleusercontent.com/drive-storage/abc=s480");
+    expect(fetchMock.mock.calls[0][1].headers).toEqual({ Authorization: "Bearer short-lived" });
+    vi.unstubAllGlobals();
+  });
+  it.each([
+    ["썸네일이 아직 없을 때", { thumbnailLink: undefined }],
+    ["다른 호스트 주소일 때", { thumbnailLink: "https://evil.example.com/x=s220" }],
+  ])("%s 요청하지 않고 null을 돌려준다", async (_label, data) => {
+    m.get.mockResolvedValue({ data });
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    expect(await readPersonalThumbnail("owner", "file")).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+  it("이미지가 아닌 응답은 쓰지 않는다", async () => {
+    m.get.mockResolvedValue({ data: { thumbnailLink: "https://lh3.googleusercontent.com/x=s220" } });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("<html>", { headers: { "content-type": "text/html" } })));
+    expect(await readPersonalThumbnail("owner", "file")).toBeNull();
+    vi.unstubAllGlobals();
   });
 });
