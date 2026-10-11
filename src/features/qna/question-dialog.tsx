@@ -12,18 +12,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FieldError } from "@/components/ui/field-error";
-import { requestJson } from "@/lib/http";
 import { useModal, useStudyStore } from "@/stores/study-store";
 import { useToast } from "@/stores/toast-store";
 import {
   askRequestSchema,
   QUESTION_TAGS,
-  type AskResponse,
 } from "./ask-schema";
 
 type QuestionForm = z.infer<typeof askRequestSchema>;
 
-/** 새 질문 — 서버(/api/ai/ask)에서 Gemini로 초안 답변을 만든 뒤 스레드에 올린다 */
+/** 새 질문을 파티에 공유하고 첫 AI 답변을 받는다. */
 export function QuestionDialog() {
   const { open, close, onOpenChange } = useModal("question");
   const addThread = useStudyStore((s) => s.addThread);
@@ -44,7 +42,7 @@ export function QuestionDialog() {
           throw new Error("save_failed");
         return null;
       }
-      return requestJson<AskResponse>("/api/ai/ask", input);
+      return { answer: "" };
     },
     onSuccess: (result, input) => {
       if (!result) {
@@ -62,10 +60,10 @@ export function QuestionDialog() {
         replies: [],
       });
       reset();
-      flash("질문을 올렸어요 · AI 초안 답변 완료");
+      flash("데모 질문을 올렸어요. AI 대화는 로그인 후 사용할 수 있어요");
     },
     onError: () =>
-      flash("AI 답변을 만들지 못했어요. 잠시 후 다시 시도해 주세요"),
+      flash("질문을 저장하지 못했어요. 잠시 후 다시 시도해 주세요"),
   });
 
   return (
@@ -92,17 +90,20 @@ export function QuestionDialog() {
             <textarea
               id="q-title"
               className="input"
-              placeholder="교재 쪽수·문항 번호를 같이 적으면 파티원이 보충하기 쉬워요"
+              rows={5}
+              maxLength={2000}
+              placeholder="예: because와 because of의 차이를 토익 예문으로 설명해 줘. 교재 쪽수·문항 번호를 적어 파티원에게 물어봐도 좋아요"
               {...register("title")}
             />
             <FieldError message={formState.errors.title?.message} />
           </div>
+          <p className="m-0 text-label text-muted">질문은 파티원에게 공유되며 AI 답변을 위해 Groq에 전달돼요. 개인정보는 입력하지 마세요.</p>
           <DialogActions>
             <Button variant="secondary" onClick={close}>
               취소
             </Button>
             <Button type="submit" variant="primary" disabled={ask.isPending}>
-              {ask.isPending ? "AI 초안 만드는 중…" : "올리기"}
+              {ask.isPending ? "질문 올리고 답변 받는 중…" : "질문 올리기"}
             </Button>
           </DialogActions>
         </form>

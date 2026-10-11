@@ -142,7 +142,7 @@ export async function loadStudySnapshot(
       supabase
         .from("questions")
         .select(
-          "id, user_id, tag, title, ai_answer, created_at, question_replies(id, user_id, body, created_at)",
+          "id, user_id, tag, title, ai_answer, created_at, question_replies(id, user_id, body, created_at), question_ai_turns(id, user_id, prompt, answer, created_at)",
         )
         .eq("party_id", party.id)
         .order("created_at", { ascending: false })
@@ -260,7 +260,15 @@ export async function loadStudySnapshot(
       tag: q.tag,
       title: q.title,
       who: names.get(q.user_id) ?? "파티원",
-      ai: q.ai_answer ?? "파티원의 답변을 기다리고 있어요",
+      ai: q.ai_answer ?? "",
+      aiTurns: [...q.question_ai_turns]
+        .sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id))
+        .map((turn) => ({
+          id: turn.id,
+          name: names.get(turn.user_id) ?? "파티원",
+          prompt: turn.prompt,
+          answer: turn.answer,
+        })),
       replies: [...q.question_replies]
         .sort((a, b) => a.created_at.localeCompare(b.created_at))
         .map((r) => ({

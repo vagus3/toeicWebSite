@@ -64,6 +64,13 @@ export interface QnaReply {
   text: string;
 }
 
+export interface QnaAiTurn {
+  id: string;
+  name: string;
+  prompt: string;
+  answer: string;
+}
+
 export interface QnaThread {
   id: string;
   tag: string;
@@ -71,6 +78,7 @@ export interface QnaThread {
   title: string;
   ai: string;
   replies: QnaReply[];
+  aiTurns?: QnaAiTurn[];
 }
 
 export interface QuizQuestion {

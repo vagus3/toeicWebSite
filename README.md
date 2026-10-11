@@ -16,7 +16,7 @@
 | 차트               | Recharts                                                                                  |
 | DB · 인증 · 실시간 | Supabase (PostgreSQL + RLS, Auth + Google OAuth, Realtime Broadcast)                      |
 | 사진 저장          | 각 사용자의 Google Drive + 사진 압축 (기존 Supabase 사진 조회 호환)               |
-| AI                 | Gemini API (`@google/genai`)                                                              |
+| AI                 | Groq Chat Completions API                                                              |
 | PWA · 알림         | Web App Manifest + Service Worker(`public/sw.js`) + Web Push(`web-push`)                  |
 | 테스트             | Vitest                                                                                    |
 
@@ -48,7 +48,7 @@ pnpm dev                     # http://localhost:3000
 1. **Supabase** — 아래 CLI 절차로 `supabase/migrations/`의 SQL을 적용합니다. Auth에서 Google 공급자를 활성화하고 배포 주소의 `/auth/callback`을 허용 리디렉션 URL에 등록합니다. 앱에는 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`가 필요합니다.
 2. **Google Cloud** — Drive API 활성화, 웹 OAuth 클라이언트 생성. 아래 개인 Drive 설정을 진행합니다. 신규 사진 업로드에는 본인 Drive 연결이 필요합니다.
    (OAuth 앱이 Testing 상태면 refresh token이 7일 뒤 만료될 수 있음)
-3. **Gemini** — Google AI Studio에서 API 키 발급 (`GEMINI_API_KEY`, 서버 전용)
+3. **Groq** — Groq Console에서 API 키 발급 (`GROQ_API_KEY`, 서버 전용). `GROQ_MODEL`로 모델 선택 가능 (기본 `openai/gpt-oss-20b`). 질문별 AI 후속 대화와 파티원 댓글은 별도로 저장됩니다.
 4. **Web Push** — `pnpm dlx web-push generate-vapid-keys`로 키 생성. iPhone은 iOS 16.4+에서 홈 화면에 추가한 뒤 알림 허용
 5. **Vercel** — 환경변수 등록 후 배포 (HTTPS가 있어야 PWA 설치·푸시 가능)
 

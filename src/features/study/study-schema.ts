@@ -14,7 +14,13 @@ export const studyActionSchema = z.discriminatedUnion("action", [
     action: z.literal("question"),
     partyId,
     tag: z.enum(QUESTION_TAGS),
-    title: z.string().trim().min(4).max(500),
+    title: z.string().trim().min(4).max(2000),
+  }),
+  z.object({
+    action: z.literal("ask-ai"),
+    partyId,
+    threadId: z.uuid(),
+    prompt: z.string().trim().min(1).max(2000),
   }),
   z.object({
     action: z.literal("reply"),

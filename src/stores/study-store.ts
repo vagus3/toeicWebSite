@@ -4,7 +4,7 @@ import { createContext, useContext } from "react";
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import { TASKS } from "@/lib/demo-data";
-import { requestJson } from "@/lib/http";
+import { HttpError, requestJson } from "@/lib/http";
 import type { StudySnapshot } from "@/lib/study-model";
 import type { StudyAction } from "@/features/study/study-schema";
 import { useToast } from "./toast-store";
@@ -33,6 +33,7 @@ interface StudyState extends StudySnapshot {
   finishQuiz: (score: number, answers: number[]) => Promise<boolean>;
   addReply: (threadId: string, text: string) => Promise<boolean>;
   addThread: (thread: QnaThread) => void;
+  askAi: (threadId: string, prompt: string) => Promise<boolean>;
   saveQuestion: (
     tag: Extract<StudyAction, { action: "question" }>["tag"],
     title: string,
@@ -62,10 +63,15 @@ export function createStudyStore(initial: StudySnapshot) {
       set({ saving: true });
       try {
         await requestJson("/api/study", { ...input, partyId });
-      } catch {
-        useToast
-          .getState()
-          .flash("저장하지 못했어요. 잠시 후 다시 시도해 주세요");
+      } catch (error) {
+        const message = input.action === "ask-ai"
+          ? error instanceof HttpError && error.status === 503
+            ? "AI 연결이 준비되지 않았어요. 파티원 댓글은 이용할 수 있어요"
+            : error instanceof HttpError && error.status === 429
+              ? "오늘 AI 질문 횟수를 모두 사용했어요. 내일 다시 질문해 주세요"
+              : "AI 답변을 받지 못했어요. 입력한 내용으로 다시 시도해 주세요"
+          : "저장하지 못했어요. 잠시 후 다시 시도해 주세요";
+        useToast.getState().flash(message);
         set({ saving: false });
         return false;
       }
@@ -129,6 +135,13 @@ export function createStudyStore(initial: StudySnapshot) {
         if (get().mode === "live") return save({ action: "quiz", answers });
         set((s) => ({ quizScore: score, done: { ...s.done, word: true } }));
         return true;
+      },
+      askAi: async (threadId, prompt) => {
+        if (get().mode !== "live") {
+          useToast.getState().flash("파티에 로그인하면 AI에게 질문할 수 있어요");
+          return false;
+        }
+        return save({ action: "ask-ai", threadId, prompt });
       },
       addReply: async (threadId, text) => {
         if (get().mode === "live")

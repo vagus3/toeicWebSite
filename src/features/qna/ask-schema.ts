@@ -14,11 +14,5 @@ export const QUESTION_TAGS = [
 
 export const askRequestSchema = z.object({
   tag: z.enum(QUESTION_TAGS),
-  title: z.string().trim().min(4, "질문을 조금 더 자세히 적어 주세요").max(500),
+  title: z.string().trim().min(4, "질문을 조금 더 자세히 적어 주세요").max(2000),
 });
-
-export interface AskResponse {
-  answer: string;
-  /** Gemini 키가 없어서 안내 문구로 대체했는지 */
-  fallback: boolean;
-}

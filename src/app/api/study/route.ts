@@ -1,9 +1,12 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { gradeQuiz, studyActionSchema } from "@/features/study/study-schema";
-import { draftTutorAnswer } from "@/lib/ai/gemini";
+import { answerTutorConversation, answerInitialQuestion, isAiConfigured } from "@/lib/ai/groq";
 import { apiError, limitRequest, parseJson, requireSession } from "@/lib/api";
+import { getSupabaseAdminClient } from "@/lib/supabase/server";
 import { loadStudySnapshot } from "@/lib/study-server";
+
+export const maxDuration = 60;
 
 export async function GET(request: Request) {
   const session = await requireSession();
@@ -32,12 +35,13 @@ export async function POST(request: Request) {
   const body = await parseJson(request, studyActionSchema);
   if (!body.ok) return body.response;
   const input = body.data;
+  const isAiRequest = input.action === "question" || input.action === "ask-ai";
   const limited = limitRequest(
     request,
-    `study-${input.action}`,
+    isAiRequest ? "study-ai" : `study-${input.action}`,
     user.id,
-    input.action === "question" ? 20 : 120,
-    input.action === "question" ? 86400000 : 60000,
+    isAiRequest ? 20 : 120,
+    isAiRequest ? 86400000 : 60000,
   );
   if (limited) return limited;
   const { data: member, error: membershipError } = await supabase
@@ -63,12 +67,9 @@ export async function POST(request: Request) {
           });
         break;
       case "question": {
-        let answer =
-          "AI 초안을 만들지 못했어요. 파티원의 보충 답변을 기다려 주세요.";
+        let answer: string | null = null;
         try {
-          answer =
-            (await draftTutorAnswer(input.tag, input.title)) ??
-            "AI가 연결되지 않았어요. 파티원의 보충 답변을 기다려 주세요.";
+          answer = await answerInitialQuestion(input.tag, input.title);
         } catch {
           /* AI 장애여도 질문은 저장한다. */
         }
@@ -81,6 +82,45 @@ export async function POST(request: Request) {
             title: input.title,
             ai_answer: answer,
           });
+        break;
+      }
+      case "ask-ai": {
+        const { data: question, error: questionError } = await supabase
+          .from("questions")
+          .select("id, tag, title, ai_answer")
+          .eq("id", input.threadId)
+          .eq("party_id", input.partyId)
+          .maybeSingle();
+        if (questionError) return apiError(500, "study_load_failed");
+        if (!question) return apiError(403, "forbidden");
+        if (!isAiConfigured()) return apiError(503, "ai_not_configured");
+        const admin = getSupabaseAdminClient();
+        if (!admin) return apiError(503, "ai_not_configured");
+        const { data: turns, error: historyError } = await supabase
+          .from("question_ai_turns")
+          .select("prompt, answer")
+          .eq("question_id", question.id)
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false })
+          .limit(10);
+        if (historyError) return apiError(500, "study_load_failed");
+        let answer: string | null;
+        try {
+          answer = await answerTutorConversation(
+            question.tag, question.title, question.ai_answer,
+            [...(turns ?? [])].reverse(), input.prompt,
+          );
+        } catch {
+          return apiError(502, "ai_failed");
+        }
+        if (!answer) return apiError(502, "ai_failed");
+        // 호출자는 RLS로 질문을 읽은 파티원이다. AI 답변은 서버만 기록한다.
+        result = await admin.from("question_ai_turns").insert({
+          question_id: question.id,
+          user_id: user.id,
+          prompt: input.prompt,
+          answer,
+        });
         break;
       }
       case "reply": {

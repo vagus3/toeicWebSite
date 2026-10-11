@@ -3,9 +3,20 @@ import { LegalDocument, LegalSection } from "@/features/legal/legal-document";
 
 const retentionConfigured = Boolean(process.env.CRON_SECRET && process.env.SUPABASE_SECRET_KEY);
 const recordRetention =
-  "학습·소통 기록은 생성일부터 달력상 1년이 지난 후 다음 일일 정리 작업에서 삭제합니다. 질문·학습 기록을 삭제할 때 연결된 답글·반응·사진 연결 정보도 함께 삭제하므로 하위 기록은 1년보다 일찍 삭제될 수 있습니다.";
+  "학습·소통 기록은 생성일부터 달력상 1년이 지난 후 다음 일일 정리 작업에서 삭제합니다. 질문·학습 기록을 삭제할 때 연결된 AI 대화·답글·반응·사진 연결 정보도 함께 삭제하므로 하위 기록은 1년보다 일찍 삭제될 수 있습니다.";
 
 const overseasServices = [
+  {
+    name: "Groq LLC (GroqCloud)",
+    contact: "privacy@groq.com",
+    location: "미국 및 Groq·하위 처리업체가 운영하는 기타 국가에서 처리될 수 있습니다. Groq가 보관하는 고객 데이터는 미국 내 Google Cloud 저장소에 저장된다고 안내합니다. 요청별 추론 처리 국가의 세부 범위는 최종 확인 중입니다.",
+    data: "질문 영역·본문, 이용자가 입력한 추가 프롬프트와 이전 AI 질문·답변. 계정 식별자·이메일·이름, Google 로그인 정보, Drive 사진과 파티원 댓글은 AI 요청에 포함하지 않습니다. 이용자가 질문에 직접 적은 개인정보는 함께 전달될 수 있으므로 입력하지 마세요.",
+    purpose: "이용자가 요청한 토익 학습 질문의 AI 답변 생성과 후속 대화 제공.",
+    timing: "새 질문 등록 시 또는 AI에게 질문 버튼을 누를 때 암호화된 서버 간 API 통신으로 전송합니다.",
+    retention: "일반 추론 요청의 입력·출력은 기본적으로 보관하지 않지만, 시스템 안정성·오남용 조사 시 일시 기록되어 최대 30일(법적 보관 의무 시 더 길게) 보관될 수 있습니다. 이용량 메타데이터는 수집됩니다. 운영 조직의 Zero Data Retention 활성화 여부는 아직 확인되지 않았습니다. 앱의 AI 대화는 부모 질문의 1년 보관 기준에 따라 함께 삭제합니다.",
+    source: "https://console.groq.com/docs/your-data",
+    sourceLabel: "GroqCloud 데이터 처리·보관 안내",
+  },
   {
     name: "Supabase Pte. Ltd.",
     contact: "privacy@supabase.com",
@@ -94,7 +105,7 @@ export default function PrivacyPage() {
       </LegalSection>
       <LegalSection title="2. 파티원에게 보이는 정보">
         <p>
-          닉네임, 학습 인증 사진과 기록, 점수, 질문·답글, 채팅 등 파티 활동
+          닉네임, 학습 인증 사진과 기록, 점수, 질문·답글, AI에게 보낸 추가 질문과 답변, 채팅 등 파티 활동
           정보는 같은 파티의 구성원에게 표시됩니다. 초대 링크를 가진 사람은 참가
           전에 파티 이름, 초대한 운영자의 닉네임과 정원 정보를 볼 수 있습니다.
           사진에는 타인의 개인정보나 공개하고 싶지 않은 내용을 포함하지 마세요.
@@ -168,9 +179,7 @@ export default function PrivacyPage() {
           삭제 시점은 별도로 확인합니다.
         </p>
         <p>
-          Gemini AI 답변을 활성화하는 경우 질문 내용이 해당 서비스에 전달됩니다.
-          활성화 전 해당 기능에 적용되는 처리 국가·항목·보관 조건을 확인하여
-          이 문서에 추가하고 필요한 안내와 절차를 제공합니다.
+          AI 질문 기능을 사용하면 질문과 이전 AI 대화가 GroqCloud에 전달됩니다. 이 처리를 원하지 않으면 질문 등록 및 AI에게 질문 기능을 사용하지 않아야 합니다. 기존 질문 열람과 파티원 댓글 작성은 AI 요청을 발생시키지 않습니다. AI 대화 기록은 같은 파티원에게 표시되며 질문 삭제 시 함께 삭제합니다.
         </p>
         <h3 className="text-title">Google 데이터의 사용 제한</h3>
         <p>
@@ -178,7 +187,7 @@ export default function PrivacyPage() {
           저장·조회 및 이용자가 선택한 파티 내 공유 기능을 제공하는 데
           사용합니다. Google 데이터를 판매하거나 광고·신용평가 목적으로
           이용하지 않으며, 범용 AI 모델의 학습 데이터로 사용하지 않습니다.
-          Gemini 질문 답변 기능에 Google 로그인 정보나 Drive 사진을 전달하지
+          Groq AI 질문 답변 기능에 Google 로그인 정보나 Drive 사진을 전달하지
           않습니다. 사진을 업로드하면 같은 파티원이 해당 사진을 볼 수 있으므로
           공유 범위를 확인한 뒤 업로드해 주세요.
         </p>
