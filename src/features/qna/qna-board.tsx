@@ -1,15 +1,15 @@
 "use client";
 
-import { Plus, Sparkle } from "@phosphor-icons/react";
+import { ArrowLeft, CaretRight, Plus, Sparkle } from "@phosphor-icons/react";
+import { useState } from "react";
 import { Avatar } from "@/components/shared/avatar";
 import { MessageComposer } from "@/components/shared/message-composer";
 import { PageTitle } from "@/components/shared/page-title";
 import { Button } from "@/components/ui/button";
 import { AiConversation } from "./ai-conversation";
-import { cn } from "@/lib/utils";
 import { useStudyStore } from "@/stores/study-store";
 
-/** 질문별 AI 대화와 파티원 댓글을 함께 보여준다. */
+/** 목록에서 선택한 질문의 AI 대화와 댓글만 펼친다. */
 export function QnaBoard() {
   const threads = useStudyStore((s) => s.threads);
   const saving = useStudyStore((s) => s.saving);
@@ -17,13 +17,18 @@ export function QnaBoard() {
   const openQuestion = useStudyStore((s) => s.openQuestion);
   const selectedId = useStudyStore((s) => s.activeThreadId);
   const setSelectedId = useStudyStore((s) => s.setActiveThread);
+  const [detailOpen, setDetailOpen] = useState(false);
   const thread = threads.find((t) => t.id === selectedId) ?? threads[0];
+  const showDetail = detailOpen && Boolean(thread);
 
   return (
-    <div className="flex flex-wrap items-start gap-6 md:gap-8">
-      <div className="flex min-w-col-min flex-1 flex-col gap-1 md:flex-none md:shrink md:basis-col-threads">
+    <div className="flex w-full max-w-thread flex-col gap-4">
         <div className="mb-2 flex items-center justify-between">
-          <PageTitle>질문 창구</PageTitle>
+          {showDetail ? (
+            <Button variant="ghost" onClick={() => setDetailOpen(false)}>
+              <ArrowLeft aria-hidden /> 질문 목록으로
+            </Button>
+          ) : <PageTitle>질문 창구</PageTitle>}
           <Button
             variant="primary"
             className="text-meta"
@@ -33,32 +38,32 @@ export function QnaBoard() {
             질문
           </Button>
         </div>
+      {!showDetail && <div aria-label="질문 목록" className="flex flex-col gap-2">
         {threads.map((t) => (
           <button
             key={t.id}
             type="button"
-            onClick={() => setSelectedId(t.id)}
-            aria-pressed={t.id === thread?.id}
-            className={cn(
-              "flex cursor-pointer flex-col gap-1 rounded-md p-3 text-left",
-              t.id === thread?.id ? "bg-surface" : "bg-transparent",
-            )}
+            onClick={() => { setSelectedId(t.id); setDetailOpen(true); }}
+            className="card flex cursor-pointer flex-col gap-1 rounded-md p-3 text-left hover:bg-surface"
           >
             <span className="flex items-center gap-1.5">
               <span className="tag tag-neutral">{t.tag}</span>
               <span className="text-label text-muted">{t.who}</span>
             </span>
-            <span className="line-clamp-3 break-words text-body leading-snug">{t.title}</span>
+            <span className="flex w-full items-center gap-2">
+              <span className="line-clamp-2 min-w-0 flex-1 break-words text-body leading-snug">{t.title}</span>
+              <CaretRight aria-hidden className="shrink-0 text-muted" />
+            </span>
             <span className="flex items-center gap-1 text-label text-accent-300">
               <Sparkle /> AI 대화 {t.aiTurns?.length ?? 0} · 댓글 {t.replies.length}
             </span>
           </button>
         ))}
-      </div>
+      </div>}
 
       {!thread && <p className="text-muted">아직 질문이 없어요. 질문을 올려 AI와 파티원에게 물어보세요.</p>}
-      {thread && (
-        <article className="flex max-w-thread min-w-0 flex-1 basis-col-thread flex-col gap-4">
+      {showDetail && thread && (
+        <article key={thread.id} aria-label="선택한 질문" className="flex min-w-0 flex-col gap-4">
           <span className="text-label text-muted">
             {thread.tag} · {thread.who}
           </span>
