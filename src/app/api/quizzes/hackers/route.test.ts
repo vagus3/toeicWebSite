@@ -1,7 +1,7 @@
 import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
 const m = vi.hoisted(() => ({ session:vi.fn(),member:vi.fn(),report:vi.fn(),rpc:vi.fn(),upload:vi.fn(),remove:vi.fn(),read:vi.fn(),limit:vi.fn(),configured:true,filters:[] as unknown[][] }));
 vi.mock("@/lib/api",()=>({ requireSession:m.session,limitRequest:m.limit,apiError:(status:number,error:string)=>Response.json({ error },{ status }) }));
-vi.mock("@/lib/ai/report-reader",()=>({ MAX_REPORT_BYTES:3*1024*1024,isReportImage:(b:Buffer,mime:string)=>mime==="image/png"&&b[0]===137,readHackersReport:m.read }));
+vi.mock("@/lib/ai/report-reader",()=>({ MAX_REPORT_BYTES:3*1024*1024,MAX_REPORT_TOTAL_BYTES:4*1024*1024,isReportImage:(b:Buffer,mime:string)=>mime==="image/png"&&b[0]===137,readHackersReport:m.read }));
 vi.mock("@/lib/supabase/server",()=>({ getSupabaseAdminClient:()=>({ rpc:m.rpc }) }));
 vi.mock("@/lib/google-drive/personal-drive",()=>({ DriveConnectionError:class extends Error {},isPersonalDriveConfigured:()=>m.configured,uploadPersonalEvidence:m.upload,removePersonalEvidence:m.remove }));
 import { GET, POST } from "./route";
@@ -34,7 +34,7 @@ describe("해커스 채점표 API",()=>{
   });
   it("LC 자동 읽기에 분류를 전달하고 잘못된 분류는 AI 호출 전에 거절한다",async()=>{
     expect((await analyze(request({category:"lc"}))).status).toBe(200);
-    expect(m.read).toHaveBeenCalledWith(expect.any(Buffer),"image/png","lc");
+    expect(m.read).toHaveBeenCalledWith([{ bytes:expect.any(Buffer),mime:"image/png" }],"lc");
     m.read.mockClear();expect((await analyze(request({category:"book"}))).status).toBe(400);
     expect((await POST(request({category:"book"}))).status).toBe(400);expect(m.read).not.toHaveBeenCalled();
   });
@@ -77,5 +77,23 @@ describe("해커스 채점표 API",()=>{
   });
   it("Drive가 미설정이면 인증을 완료로 표시하지 않는다",async()=>{
     m.configured=false;expect((await POST(request())).status).toBe(503);expect(m.rpc).not.toHaveBeenCalled();
+  });
+});
+describe("결과지 PDF 쪽별 자동 읽기",()=>{
+  const png=new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0]);
+  function pagesRequest(mimes:string[]) {
+    const form=new FormData();form.set("partyId",partyId);form.set("category","rc");
+    mimes.forEach((mime,i)=>form.append("file",new File([png],`r-p${i+1}.png`,{ type:mime })));
+    return new Request("https://app.test/api/quizzes/hackers/analyze",{ method:"POST",body:form });
+  }
+  it("5쪽까지 순서대로 한 번에 넘긴다",async()=>{
+    expect((await analyze(pagesRequest(Array(5).fill("image/png")))).status).toBe(200);
+    expect(m.read).toHaveBeenCalledTimes(1);
+    expect(m.read.mock.calls[0][0]).toHaveLength(5);
+  });
+  it("쪽 수를 넘거나 한 쪽이라도 이미지가 아니면 AI를 호출하지 않는다",async()=>{
+    expect((await analyze(pagesRequest(Array(6).fill("image/png")))).status).toBe(400);
+    expect((await analyze(pagesRequest(["image/png","text/html"]))).status).toBe(415);
+    expect(m.read).not.toHaveBeenCalled();
   });
 });

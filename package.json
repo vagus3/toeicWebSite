@@ -24,6 +24,7 @@
     "date-fns": "^4.4.0",
     "googleapis": "^184.0.0",
     "next": "16.4.0",
+    "pdfjs-dist": "^6.4.299",
     "radix-ui": "^1.7.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",

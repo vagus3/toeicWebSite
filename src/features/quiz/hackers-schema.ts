@@ -14,12 +14,16 @@ export const reportRowSchema = z.object({
 }).transform((r) => ({ ...r, result: r.selected && r.correctAnswer
   ? r.selected === r.correctAnswer ? "correct" as const : "incorrect" as const : r.result }));
 const rows = z.array(reportRowSchema).max(200).refine((rs) => new Set(rs.map((r) => r.number)).size === rs.length, "문항 번호가 중복됐어요");
+/** 한 번에 읽는 쪽 수. 해커스 결과지 PDF(5쪽)를 한 번의 요청으로 보낸다. */
+export const MAX_REPORT_PAGES = 5;
 export const ocrReportSchema = z.object({
   recognized: z.boolean(),
   testDate: z.iso.date().nullable(),
   total: z.number().int().min(1).max(200).nullable(),
   correct: z.number().int().min(0).max(200).nullable(),
   rows,
+  /** 채점 결과가 보이는 쪽 번호(1부터). 이 쪽만 증빙으로 저장한다. */
+  pages: z.array(z.number().int().min(1).max(MAX_REPORT_PAGES)).max(MAX_REPORT_PAGES).default([]),
 });
 export const confirmedReportSchema = z.object({
   category: hackersCategorySchema.default("rc"),

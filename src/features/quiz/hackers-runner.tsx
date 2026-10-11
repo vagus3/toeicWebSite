@@ -10,7 +10,14 @@ import { EvidencePhoto } from "@/features/study/evidence-photo";
 import { DriveControls } from "@/features/study/drive-controls";
 import { useStudyStore } from "@/stores/study-store";
 import { ROUTES } from "@/lib/routes";
-import { confirmedReportSchema, HACKERS_URLS, type HackersCategory, type HackersReport, type OcrReport, type ReportRow } from "./hackers-schema";
+import { confirmedReportSchema, HACKERS_URLS, MAX_REPORT_PAGES, type HackersCategory, type HackersReport, type OcrReport, type ReportRow } from "./hackers-schema";
+import { isPdf, PdfPageLimitError, pdfToPages, stitchImages } from "./pdf-to-image";
+
+const MB = 1024 * 1024;
+/** Vercel 함수 요청 본문 제한(4.5MB) 안에 여러 쪽이 함께 들어가도록 한다 */
+const MAX_READ_BYTES = 4 * MB;
+const CAPTURE_COMPRESSION = { maxSizeMB: 2.5, maxWidthOrHeight: 4000, initialQuality: 0.9, useWebWorker: true };
+const PAGE_COMPRESSION = { maxSizeMB: 0.7, maxWidthOrHeight: 2400, initialQuality: 0.85, fileType: "image/jpeg", useWebWorker: true };
 
 const INPUT = "w-full rounded-md border border-divider bg-surface p-2 text-body";
 export function HackersRunner({ category = "rc" }: { category?: HackersCategory }) {
@@ -24,10 +31,18 @@ function HackersReportFlow({ partyId, category }: { partyId: string | undefined;
   const today = useStudyStore((s) => s.studyDate);
   const refresh = useStudyStore((s) => s.refresh);
   const client = useQueryClient();
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const previewRef = useRef<string | null>(null);
-  useEffect(() => () => { if (previewRef.current) URL.revokeObjectURL(previewRef.current); }, []);
+  // 캡처는 한 장, 결과지 PDF는 쪽마다 한 장. keep은 Drive 증빙으로 남길 쪽 번호(1부터)다.
+  const [pages, setPages] = useState<File[]>([]);
+  const [sourceName, setSourceName] = useState("");
+  const [fromPdf, setFromPdf] = useState(false);
+  const [keep, setKeep] = useState<number[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const previewRef = useRef<string[]>([]);
+  const replacePreviews = (urls: string[]) => {
+    previewRef.current.forEach((u) => URL.revokeObjectURL(u));
+    previewRef.current = urls; setPreviewUrls(urls);
+  };
+  useEffect(() => () => previewRef.current.forEach((u) => URL.revokeObjectURL(u)), []);
   const [submissionId, setSubmissionId] = useState("");
   const [testDate, setTestDate] = useState(today);
   const [total, setTotal] = useState("");
@@ -47,34 +62,54 @@ function HackersReportFlow({ partyId, category }: { partyId: string | undefined;
   });
   async function selectFile(selected: File | undefined) {
     if (!selected || pending.current) return;
-    if (!["image/jpeg", "image/png", "image/webp"].includes(selected.type)) {
-      setMessage("PNG·JPG·WebP 채점표 이미지를 선택해 주세요."); return;
+    const pdf = isPdf(selected);
+    if (!pdf && !["image/jpeg", "image/png", "image/webp"].includes(selected.type)) {
+      setMessage("PDF 또는 PNG·JPG·WebP 채점표를 선택해 주세요."); return;
     }
-    if (selected.size > 20 * 1024 * 1024) { setMessage("20MB 이하 이미지를 선택해 주세요."); return; }
+    if (selected.size > 20 * 1024 * 1024) { setMessage("20MB 이하 파일을 선택해 주세요."); return; }
     pending.current = true; setBusy("file"); setMessage("");
     try {
-      const compressed = await imageCompression(selected, { maxSizeMB: 2.5, maxWidthOrHeight: 4000, initialQuality: 0.9, useWebWorker: true });
-      if (compressed.size > 3 * 1024 * 1024) throw new Error("too_large");
-      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
-      previewRef.current = URL.createObjectURL(compressed); setPreviewUrl(previewRef.current);
-      setFile(compressed); setSubmissionId(crypto.randomUUID()); setReview(false); setRows([]); setTotal(""); setCorrect(""); setTestDate(today); setMethod("manual");
-    } catch { setMessage("이미지를 준비하지 못했어요. 더 작은 PNG·JPG로 다시 선택해 주세요."); }
+      // PDF는 브라우저에서 쪽별 이미지로 바꾼 뒤 기존 이미지 흐름(읽기·Drive 저장)을 탄다
+      let images: File[];
+      try { images = pdf ? await pdfToPages(selected) : [selected]; }
+      catch (e) {
+        setMessage(e instanceof PdfPageLimitError
+          ? `PDF가 ${e.pages}쪽이에요. ${MAX_REPORT_PAGES}쪽 이하 결과지만 읽을 수 있어요. 결과 표를 캡처해 올려 주세요.`
+          : "PDF를 열지 못했어요. 암호가 걸려 있지 않은지 확인하거나 결과 표를 캡처해 주세요.");
+        return;
+      }
+      const compressed = await Promise.all(images.map((image) => imageCompression(image, pdf ? PAGE_COMPRESSION : CAPTURE_COMPRESSION)));
+      if (compressed.some((f) => f.size > 3 * MB) || compressed.reduce((sum, f) => sum + f.size, 0) > MAX_READ_BYTES) throw new Error("too_large");
+      replacePreviews(compressed.map((f) => URL.createObjectURL(f)));
+      setPages(compressed); setSourceName(selected.name); setFromPdf(pdf); setKeep(pdf ? [] : [1]);
+      setSubmissionId(crypto.randomUUID()); setReview(false); setRows([]); setTotal(""); setCorrect(""); setTestDate(today); setMethod("manual");
+    } catch { setMessage("파일을 준비하지 못했어요. 더 작은 PNG·JPG로 다시 선택해 주세요."); }
     finally { pending.current = false; setBusy(null); }
   }
-  function formData() {
-    const body = new FormData(); body.append("file", file!, file!.name); body.append("partyId", partyId!); body.append("category", category); return body;
+  function formData(files: File[]) {
+    const body = new FormData(); files.forEach((f) => body.append("file", f, f.name)); body.append("partyId", partyId!); body.append("category", category); return body;
+  }
+  /** 증빙은 고른 쪽만 남긴다. 여러 쪽이면 세로로 이어 붙여 한 장으로 저장한다. */
+  async function evidenceFile() {
+    const chosen = pages.filter((_, i) => keep.includes(i + 1));
+    if (chosen.length <= 1) return chosen[0] ?? null;
+    const stitched = await stitchImages(chosen, `${sourceName.replace(/\.pdf$/i, "")}-result.png`);
+    return imageCompression(stitched, { ...CAPTURE_COMPRESSION, fileType: "image/jpeg" });
   }
   async function read() {
-    if (pending.current || !file || !partyId) return;
+    if (pending.current || !pages.length || !partyId) return;
     pending.current = true; setBusy("read"); setMessage("");
     try {
-      const res = await fetch("/api/quizzes/hackers/analyze", { method: "POST", body: formData() });
+      const res = await fetch("/api/quizzes/hackers/analyze", { method: "POST", body: formData(pages) });
       if (!res.ok) throw new Error(res.status === 429 ? "rate_limited" : "read_failed");
       const data = await res.json() as OcrReport;
-      if (!data.recognized) { setMessage("채점 결과를 찾지 못했어요. 결과 표가 보이게 다시 캡처하거나 직접 입력해 주세요."); return; }
+      if (!data.recognized) { setMessage(fromPdf ? "PDF에서 채점 결과를 찾지 못했어요. 결과 표를 캡처하거나 직접 입력해 주세요." : "채점 결과를 찾지 못했어요. 결과 표가 보이게 다시 캡처하거나 직접 입력해 주세요."); return; }
       setTestDate(data.testDate ?? today); setTotal(data.total === null ? "" : String(data.total));
       setCorrect(data.correct === null ? "" : String(data.correct)); setRows(data.rows); setMethod("ocr-reviewed"); setReview(true);
-      setMessage("읽은 값을 원본과 비교해 확인해 주세요. 날짜가 보이지 않으면 오늘 날짜로 표시되니 실제 문제 날짜로 수정해 주세요.");
+      if (fromPdf) setKeep(data.pages);
+      setMessage(fromPdf && !data.pages.length
+        ? "결과표가 있는 쪽을 찾지 못했어요. 아래에서 Drive에 저장할 쪽을 골라 주세요."
+        : "읽은 값을 원본과 비교해 확인해 주세요. 날짜가 보이지 않으면 오늘 날짜로 표시되니 실제 문제 날짜로 수정해 주세요.");
     } catch (e) {
       setMessage(e instanceof Error && e.message === "rate_limited" ? "오늘 자동 읽기 요청이 많아요. 원본을 보고 직접 입력할 수 있어요."
         : "자동으로 읽지 못했어요. 다시 시도하거나 원본을 보고 직접 입력해 주세요.");
@@ -91,12 +126,15 @@ function HackersReportFlow({ partyId, category }: { partyId: string | undefined;
     if (updated.length === Number(total) && updated.every((r) => r.result !== "unknown")) setCorrect(String(updated.filter((r) => r.result === "correct").length));
   }
   async function save() {
-    if (pending.current || !file || !partyId) return;
+    if (pending.current || !pages.length || !partyId) return;
     const parsed = confirmedReportSchema.safeParse({ submissionId, partyId, category, testDate, total: total === "" ? null : Number(total), correct: correct === "" ? null : Number(correct), rows, method });
     if (!parsed.success) { setMessage(parsed.error.issues[0]?.message ?? "입력값을 확인해 주세요."); return; }
+    if (!keep.length) { setMessage("Drive에 저장할 결과표 쪽을 하나 이상 골라 주세요."); return; }
     pending.current = true; setBusy("save"); setMessage("");
     try {
-      const body = formData(); body.append("report", JSON.stringify(parsed.data));
+      const evidence = await evidenceFile();
+      if (!evidence || evidence.size > 3 * MB) throw new Error("save_failed");
+      const body = formData([evidence]); body.append("report", JSON.stringify(parsed.data));
       const res = await fetch("/api/quizzes/hackers", { method: "POST", body });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -104,9 +142,8 @@ function HackersReportFlow({ partyId, category }: { partyId: string | undefined;
         if (data.error === "future_test_date") throw new Error("future_date");
         throw new Error("save_failed");
       }
-      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
-      previewRef.current = null; setPreviewUrl(null);
-      setFile(null); setReview(false); setRows([]); setTotal(""); setCorrect("");
+      replacePreviews([]);
+      setPages([]); setKeep([]); setReview(false); setRows([]); setTotal(""); setCorrect("");
       setMessage(`채점표와 결과를 저장했어요. ${label} 인증도 완료됐어요.`);
       const outcomes = await Promise.allSettled([refresh(), client.invalidateQueries({ queryKey: ["hackers-reports", partyId, category] })]);
       if (outcomes.some((r) => r.status === "rejected")) setMessage("결과는 저장됐어요. 목록이 갱신되지 않으면 새로고침해 주세요.");
@@ -119,23 +156,34 @@ function HackersReportFlow({ partyId, category }: { partyId: string | undefined;
   return <div className="flex w-full max-w-3xl flex-col gap-5">
     <Link href={ROUTES.quizzes} className="text-meta text-muted">← 테스트 목록</Link>
     <PageTitle>해커스 일일 {label} 제출</PageTitle>
-    <ol className="m-0 list-decimal pl-5 text-body leading-reading"><li>해커스에서 문제를 풀고 채점하세요.</li><li>문제 날짜·정답 수·문항별 결과가 보이게 채점표만 캡처하세요.</li><li>이미지를 선택하고 읽은 내용을 확인한 뒤 저장하세요.</li></ol>
+    <ol className="m-0 list-decimal pl-5 text-body leading-reading"><li>해커스에서 문제를 풀고 채점하세요.</li><li>문제 날짜·정답 수·문항별 결과가 보이게 채점표만 캡처하거나 결과지 PDF를 내려받으세요.</li><li>파일을 선택하고 읽은 내용을 확인한 뒤 저장하세요.</li></ol>
     <Button asChild variant="primary"><a href={HACKERS_URLS[category]} target="_blank" rel="noopener noreferrer">해커스 {label} 풀고 채점하기 ↗</a></Button>
-    <p className="text-meta text-muted">해커스 공식 연동이 아닌 제출자 확인 기록입니다. 현재 PNG·JPG·WebP 이미지를 지원합니다. 문제 원문·해설과 계정 정보는 제외하고 결과 표만 캡처해 주세요.</p>
+    <p className="text-meta text-muted">해커스 공식 연동이 아닌 제출자 확인 기록입니다. 결과지 PDF({MAX_REPORT_PAGES}쪽 이하)와 PNG·JPG·WebP 캡처를 지원합니다. PDF는 이 기기에서 쪽별 이미지로 바꾸고, 결과표가 있는 쪽만 Drive에 저장합니다. 캡처할 때는 문제 원문·해설과 계정 정보를 빼고 결과 표만 담아 주세요.</p>
     <DriveControls />
-    <label className="card gap-2 p-4 text-body">채점표 이미지 선택<input type="file" accept="image/png,image/jpeg,image/webp" disabled={Boolean(busy) || mode !== "live" || !partyId} onChange={(e) => { void selectFile(e.target.files?.[0]); e.target.value = ""; }} /></label>
-    {busy === "file" && <p role="status">이미지 준비 중…</p>}
-    {file && <section className="card gap-3 p-4">
-      <strong className="break-all">선택한 파일: {file.name}</strong>
-      {previewUrl && <details><summary className="cursor-pointer text-meta">선택한 원본 보기</summary>
+    <label className="card gap-2 p-4 text-body">채점표 PDF·이미지 선택<input type="file" accept="application/pdf,.pdf,image/png,image/jpeg,image/webp" disabled={Boolean(busy) || mode !== "live" || !partyId} onChange={(e) => { void selectFile(e.target.files?.[0]); e.target.value = ""; }} /></label>
+    {busy === "file" && <p role="status">파일 준비 중…</p>}
+    {pages.length > 0 && <section className="card gap-3 p-4">
+      <strong className="break-all">선택한 파일: {sourceName}{fromPdf && ` · ${pages.length}쪽`}</strong>
+      {fromPdf ? <fieldset className="flex flex-col gap-2" disabled={Boolean(busy)}>
+        <legend className="text-meta text-muted">Drive에 저장할 결과표 쪽 {keep.length ? `· ${keep.join(", ")}쪽 선택됨` : "· Groq로 읽으면 자동으로 골라요"}</legend>
+        {previewUrls.map((url, i) => <div key={url} className="flex flex-col gap-1">
+          <label className="flex items-center gap-2 text-meta"><input type="checkbox" checked={keep.includes(i + 1)} onChange={(e) => setKeep(e.target.checked ? [...keep, i + 1].sort((a, b) => a - b) : keep.filter((p) => p !== i + 1))} />{i + 1}쪽 저장</label>
+          <details><summary className="cursor-pointer text-meta">{i + 1}쪽 보기</summary>
+            {/* eslint-disable-next-line @next/next/no-img-element -- 사용자가 선택한 로컬 PDF 쪽 미리보기 */}
+            <img src={url} alt={`선택한 결과지 ${i + 1}쪽`} className="mt-2 max-h-[60dvh] w-full object-contain" />
+          </details>
+        </div>)}
+      </fieldset> : previewUrls[0] && <details><summary className="cursor-pointer text-meta">선택한 원본 보기</summary>
         {/* eslint-disable-next-line @next/next/no-img-element -- 사용자가 선택한 로컬 이미지 미리보기 */}
-        <img src={previewUrl} alt="선택한 채점표 원본" className="mt-2 max-h-[60dvh] w-full object-contain" />
+        <img src={previewUrls[0]} alt="선택한 채점표 원본" className="mt-2 max-h-[60dvh] w-full object-contain" />
       </details>}
-      <p className="text-meta text-muted">자동 읽기를 누르면 이 이미지가 Groq로 전송됩니다. 저장 시 원본은 내 Drive에 저장되고 결과와 함께 같은 파티원에게 표시됩니다. 직접 입력하면 Groq에 보내지 않습니다.</p>
+      <p className="text-meta text-muted">{fromPdf
+        ? `자동 읽기를 누르면 PDF ${pages.length}쪽 전체(문제 원문이 있는 쪽 포함)가 Groq로 전송됩니다. 저장 시에는 고른 결과표 쪽만 내 Drive에 저장되고 결과와 함께 같은 파티원에게 표시됩니다. 직접 입력하면 Groq에 보내지 않습니다.`
+        : "자동 읽기를 누르면 이 이미지가 Groq로 전송됩니다. 저장 시 원본은 내 Drive에 저장되고 결과와 함께 같은 파티원에게 표시됩니다. 직접 입력하면 Groq에 보내지 않습니다."}</p>
       <div className="flex flex-wrap gap-3"><Button variant="primary" disabled={Boolean(busy)} onClick={read}>{busy === "read" ? "채점표 읽는 중…" : "Groq로 채점표 읽기"}</Button><Button variant="secondary" disabled={Boolean(busy)} onClick={() => { setReview(true); setMethod("manual"); }}>원본 보고 직접 입력</Button></div>
     </section>}
     {message && <p role="status" className="text-meta text-accent-300">{message}</p>}
-    {review && file && <section className="card gap-4 p-4">
+    {review && pages.length > 0 && <section className="card gap-4 p-4">
       <strong>채점 결과 확인·수정</strong>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <label>문제 날짜<input className={INPUT} type="date" value={testDate} max={today} disabled={Boolean(busy)} onChange={(e) => setTestDate(e.target.value)} /></label>

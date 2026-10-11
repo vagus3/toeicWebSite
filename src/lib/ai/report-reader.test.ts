@@ -14,7 +14,7 @@ describe("채점표 이미지 읽기", () => {
   });
   it("선택한 이미지와 OCR 지침만 vision 모델로 보내고 결과를 검사한다", async () => {
     fetchMock.mockResolvedValue(Response.json({ choices:[{ message:{ content:JSON.stringify({ recognized:true,testDate:null,total:2,correct:1,rows:[] }) } }] }));
-    expect(await readHackersReport(png,"image/png")).toMatchObject({ total:2,correct:1 });
+    expect(await readHackersReport([{ bytes:png,mime:"image/png" }])).toMatchObject({ total:2,correct:1 });
     const body=JSON.parse(fetchMock.mock.calls[0][1].body);
     expect(body.model).toBe("qwen/qwen3.8-27b");
     expect(body.messages[0].content[1].image_url.url).toBe(`data:image/png;base64,${png.toString("base64")}`);
@@ -22,15 +22,42 @@ describe("채점표 이미지 읽기", () => {
   });
   it("LC 읽기는 듣기 시험과 Part 2의 3개 보기를 안내한다", async () => {
     fetchMock.mockResolvedValue(Response.json({ choices:[{ message:{ content:JSON.stringify({recognized:true,testDate:null,total:1,correct:1,rows:[{number:1,selected:"C",correctAnswer:"C",result:"correct"}]}) } }] }));
-    const result=await readHackersReport(png,"image/png","lc");
+    const result=await readHackersReport([{ bytes:png,mime:"image/png" }],"lc");
     expect(result.rows[0].selected).toBe("C");
     const instruction=JSON.parse(fetchMock.mock.calls[0][1].body).messages[0].content[0].text;
     expect(instruction).toContain("TOEIC LC");expect(instruction).toContain("Part 2 has A/B/C");
   });
   it("제공업체 오류와 잘못된 인식 결과를 성공으로 반환하지 않는다", async () => {
     fetchMock.mockResolvedValue(new Response("provider details",{ status:403 }));
-    await expect(readHackersReport(png,"image/png")).rejects.toThrow("report_read_failed");
+    await expect(readHackersReport([{ bytes:png,mime:"image/png" }])).rejects.toThrow("report_read_failed");
     fetchMock.mockResolvedValue(Response.json({ choices:[{ message:{ content:'{"recognized":true,"total":995}' } }] }));
-    await expect(readHackersReport(png,"image/png")).rejects.toThrow();
+    await expect(readHackersReport([{ bytes:png,mime:"image/png" }])).rejects.toThrow();
+  });
+});
+describe("결과지 PDF 여러 쪽 읽기", () => {
+  const pages = [1,2,3].map(() => ({ bytes:png,mime:"image/png" }));
+  it("쪽 번호를 붙여 한 번에 보내고, 결과표가 있는 쪽만 돌려준다", async () => {
+    fetchMock.mockResolvedValue(Response.json({ choices:[{ message:{ content:JSON.stringify({ recognized:true,testDate:null,total:2,correct:1,rows:[],pages:[3,1,3] }) } }] }));
+    const result = await readHackersReport(pages,"rc");
+    expect(result.pages).toEqual([1,3]);
+    const content = JSON.parse(fetchMock.mock.calls[0][1].body).messages[0].content;
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(content.filter((c: { type: string }) => c.type === "image_url")).toHaveLength(3);
+    expect(content.map((c: { text?: string }) => c.text)).toContain("Page 2");
+    expect(content[0].text).toContain("ignore those pages");
+  });
+  it("보내지 않은 쪽 번호는 버린다", async () => {
+    fetchMock.mockResolvedValue(Response.json({ choices:[{ message:{ content:JSON.stringify({ recognized:true,testDate:null,total:2,correct:1,rows:[],pages:[2,5] }) } }] }));
+    expect((await readHackersReport(pages)).pages).toEqual([2]);
+  });
+  it("캡처 한 장은 인식되면 그 장을 결과표로 본다", async () => {
+    fetchMock.mockResolvedValue(Response.json({ choices:[{ message:{ content:JSON.stringify({ recognized:true,testDate:null,total:2,correct:1,rows:[] }) } }] }));
+    const result = await readHackersReport([pages[0]]);
+    expect(result.pages).toEqual([1]);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).messages[0].content.some((c: { text?: string }) => c.text === "Page 1")).toBe(false);
+  });
+  it("허용된 쪽 수를 넘으면 모델을 호출하지 않는다", async () => {
+    await expect(readHackersReport(Array.from({ length:6 },() => pages[0]))).rejects.toThrow("invalid_pages");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
