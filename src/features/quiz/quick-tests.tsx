@@ -22,9 +22,9 @@ export function QuickTests() {
         }
       />
       <ActionCard
-        kicker="일일 RC · Groq AI 출제"
-        title="Part 5·6·7 · 총 3문항"
-        action={<Button asChild variant="primary" className="text-meta"><Link href={ROUTES.dailyRc}>시작 / 결과</Link></Button>}
+        kicker="일일 RC · 해커스 풀이"
+        title="해커스 채점표 제출"
+        action={<Button asChild variant="primary" className="text-meta"><Link href={ROUTES.hackersRc}>풀기 / 제출</Link></Button>}
       />
       <ActionCard
         kicker="주간 테스트 · 토"
