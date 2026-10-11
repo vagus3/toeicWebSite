@@ -25,10 +25,16 @@ export function useCopyInvite() {
 
 export function useDriveFolder() {
   const flash = useToast((s) => s.flash);
-  return () => {
-    const url = process.env.NEXT_PUBLIC_DRIVE_FOLDER_URL;
-    if (url) window.open(url, "_blank", "noopener,noreferrer");
-    else flash("드라이브 폴더가 아직 연결되지 않았어요");
+  return async () => {
+    try {
+      const response = await fetch("/api/drive", { cache: "no-store" });
+      const status = response.ok ? await response.json() : null;
+      if (status?.connected && status.folderUrl)
+        window.location.assign(status.folderUrl);
+      else flash("화면의 내 Drive 연결에서 먼저 연결해 주세요");
+    } catch {
+      flash("Drive 연결 상태를 확인하지 못했어요");
+    }
   };
 }
 

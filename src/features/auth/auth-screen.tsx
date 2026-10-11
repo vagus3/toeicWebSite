@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { EnvelopeSimpleOpen, GoogleLogo } from "@phosphor-icons/react";
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
@@ -234,7 +235,26 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
               <label className="radio text-meta">
                 <input type="checkbox" {...register("agree")} />
                 <span className="dot rounded-sm" />
-                이용약관 및 개인정보 처리방침 동의
+                <span>
+                  <Link
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    이용약관
+                  </Link>
+                  {" 및 "}
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    개인정보처리방침
+                  </Link>
+                  {" 동의"}
+                </span>
               </label>
               <FieldError message={errors.agree?.message} />
             </>
@@ -265,6 +285,17 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
             </div>
           )}
         </form>
+        <nav
+          aria-label="서비스 정책"
+          className="flex flex-wrap gap-4 text-meta text-muted"
+        >
+          <Link href="/privacy" target="_blank" rel="noopener noreferrer">
+            개인정보처리방침
+          </Link>
+          <Link href="/terms" target="_blank" rel="noopener noreferrer">
+            이용약관
+          </Link>
+        </nav>
       </section>
     </div>
   );

@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { apiError, limitRequest, requireSession } from "@/lib/api";
 import {
-  isDriveConfigured,
-  removeUploadedEvidence,
-  uploadEvidence,
-} from "@/lib/google-drive/drive";
+  DriveConnectionError,
+  isPersonalDriveConfigured,
+  removePersonalEvidence,
+  uploadPersonalEvidence,
+} from "@/lib/google-drive/personal-drive";
 import { koreaStudyDate } from "@/lib/study-model";
 import { STUDY_CATEGORIES } from "@/types";
 
@@ -49,48 +50,43 @@ export async function POST(request: Request) {
     .eq("user_id", user.id)
     .maybeSingle();
   if (error || !membership) return apiError(403, "forbidden");
+  if (!isPersonalDriveConfigured())
+    return apiError(503, "drive_not_configured");
   try {
     const date = koreaStudyDate();
     const fileName = `${category}-${crypto.randomUUID()}.${file.type.split("/")[1]}`;
-    let fileId: string | null = null;
-    let storagePath: string | null = null;
-    if (isDriveConfigured()) {
-      fileId = (
-        await uploadEvidence({
-          partyId,
-          userFolder: user.id,
-          studyDate: date,
-          fileName,
-          mimeType: file.type,
-          data: Buffer.from(await file.arrayBuffer()),
-        })
-      ).fileId;
-    } else {
-      storagePath = `${partyId}/${user.id}/${date}/${fileName}`;
-      const uploaded = await supabase.storage
-        .from("study-evidence")
-        .upload(storagePath, file, { contentType: file.type, upsert: false });
-      if (uploaded.error) return apiError(502, "upload_failed");
-    }
+    const fileId = await uploadPersonalEvidence({
+      ownerId: user.id,
+      partyId,
+      studyDate: date,
+      fileName,
+      mimeType: file.type,
+      data: Buffer.from(await file.arrayBuffer()),
+    });
     const saved = await supabase.rpc("record_study_evidence", {
       p_party: partyId,
       p_category: category,
       p_file_id: fileId,
       p_mime_type: file.type,
-      p_storage_path: storagePath,
+      p_storage_path: null,
     });
     if (saved.error) {
       try {
-        if (storagePath)
-          await supabase.storage.from("study-evidence").remove([storagePath]);
-        if (fileId) await removeUploadedEvidence(fileId);
+        await removePersonalEvidence(user.id, fileId);
       } catch {
         console.error("[upload] Failed to clean up an unrecorded photo");
       }
       return apiError(500, "db_failed");
     }
-    return NextResponse.json({ fileId, storagePath });
-  } catch {
+    return NextResponse.json({ fileId });
+  } catch (error) {
+    if (error instanceof DriveConnectionError)
+      return apiError(409, "drive_connection_required");
+    const code = (error as { code?: number }).code;
+    const reason = (error as { response?: { data?: { error?: unknown } } })
+      .response?.data?.error;
+    if (code === 401 || reason === "invalid_grant")
+      return apiError(409, "drive_reconnect_required");
     return apiError(502, "upload_failed");
   }
 }

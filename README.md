@@ -15,7 +15,7 @@
 | 폼 검증            | React Hook Form + Zod                                                                     |
 | 차트               | Recharts                                                                                  |
 | DB · 인증 · 실시간 | Supabase (PostgreSQL + RLS, Auth + Google OAuth, Realtime Broadcast)                      |
-| 사진 저장          | Supabase 비공개 Storage (기본) / 운영자 Google Drive (선택) + 사진 압축               |
+| 사진 저장          | 각 사용자의 Google Drive + 사진 압축 (기존 Supabase 사진 조회 호환)               |
 | AI                 | Gemini API (`@google/genai`)                                                              |
 | PWA · 알림         | Web App Manifest + Service Worker(`public/sw.js`) + Web Push(`web-push`)                  |
 | 테스트             | Vitest                                                                                    |
@@ -46,7 +46,7 @@ pnpm dev                     # http://localhost:3000
 ### 실제 서비스 연결
 
 1. **Supabase** — 아래 CLI 절차로 `supabase/migrations/`의 SQL을 적용합니다. Auth에서 Google 공급자를 활성화하고 배포 주소의 `/auth/callback`을 허용 리디렉션 URL에 등록합니다. 앱에는 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`가 필요합니다.
-2. **Google Cloud (선택)** — Drive API 활성화, OAuth 클라이언트 생성. 운영자 계정으로 한 번 연결해 refresh token과 루트 폴더 ID를 환경변수에 저장. 미설정 시 Supabase의 비공개 `study-evidence` 버킷을 사용합니다.
+2. **Google Cloud** — Drive API 활성화, 웹 OAuth 클라이언트 생성. 아래 개인 Drive 설정을 진행합니다. 신규 사진 업로드에는 본인 Drive 연결이 필요합니다.
    (OAuth 앱이 Testing 상태면 refresh token이 7일 뒤 만료될 수 있음)
 3. **Gemini** — Google AI Studio에서 API 키 발급 (`GEMINI_API_KEY`, 서버 전용)
 4. **Web Push** — `pnpm dlx web-push generate-vapid-keys`로 키 생성. iPhone은 iOS 16.4+에서 홈 화면에 추가한 뒤 알림 허용
@@ -64,6 +64,31 @@ pnpm db:push
 일반 로그인 화면에는 초대 안내가 없습니다. `/invite/<code>`로 들어온 경우에만 실제 파티와 초대한 사람을 확인하고 로그인·가입 후 참가합니다. 기존 회원도 초대 링크에서 참가할 수 있고, 정원이 찬 파티는 참가를 거절합니다.
 
 실제 모드에서는 파티 생성·참가, 사진 인증, 점수, 질문·답글, 응원, 독려, 퀴즈 결과를 DB에 저장합니다. 화면은 저장 후 서버 데이터를 다시 읽고, 학습 날짜는 한국 시간 기준으로 계산합니다. 일일 퀴즈 문제는 현재 고정 연습 문제이며 AI 문제 생성은 구현되지 않았습니다.
+
+### 개인 Drive 연결
+
+각 사용자가 로그인 후 **내 Drive 연결**에서 동의하면 본인 Drive에 `새벽 토익 인증` 폴더를 만듭니다. 신규 인증 사진은 이 폴더에 저장하고 DB에는 파일 ID와 소유자만 기록합니다. 같은 파티원은 웹사이트 안에서 사진을 보고 확대할 수 있습니다. 공개 링크나 파티원 Google 계정에 대한 직접 Drive 공유는 생성하지 않습니다.
+
+Google Cloud의 웹 OAuth 클라이언트 **Authorized redirect URIs**에는 기존 Supabase 로그인 콜백과 별도로 다음을 추가합니다.
+
+```text
+https://toeicwebsite-src.vercel.app/auth/drive/callback
+```
+
+Google Drive API를 활성화하고 OAuth의 Data Access에 `https://www.googleapis.com/auth/drive.file`을 등록합니다. Drive 연결 요청은 `openid`, `email`, `drive.file` 권한을 사용합니다. Testing 상태에서는 연결할 계정을 테스트 사용자로 등록해야 하며, 테스트용 Google 권한/refresh token은 7일 후 만료되어 재연결이 필요할 수 있습니다.
+
+서버 환경변수:
+
+| 이름 | 용도 |
+| --- | --- |
+| `GOOGLE_CLIENT_ID` | 위 웹 OAuth 클라이언트 ID |
+| `GOOGLE_CLIENT_SECRET` | 위 클라이언트의 Secret |
+| `SUPABASE_SECRET_KEY` | 서버 전용 Supabase Secret 또는 service_role 키. 로그인·파일 RLS 검증 후 연결 자격증명에만 접근 |
+| `DRIVE_TOKEN_ENCRYPTION_KEY` | 32바이트 난수의 base64 값. 사용자 ID에 바인딩한 AES-256-GCM 토큰 암호화 |
+
+이 값들은 Git에 넣지 않고 Vercel 환경변수 또는 `.env.local`에 등록합니다. 암호화 키는 기존 연결이 있는 동안 유지해야 합니다. 계정 토큰과 암호화 키는 클라이언트에 전달하지 않습니다. Drive 연결 해제는 서버에 저장한 토큰을 삭제하며 Drive 원본 파일은 남깁니다. 앱의 기존 사진 조회는 재연결 전까지 중단됩니다. Google 계정의 앱 권한 자체를 철회하려면 Google 계정 보안 설정을 사용합니다. 재연결은 기존 사진을 보존하기 위해 같은 Google 계정으로 제한됩니다.
+
+개인 Drive 전환 이전에 저장한 Supabase 사진은 계속 조회할 수 있습니다. 기존 운영자 Drive 사진은 기존 환경변수로 읽기만 지원합니다.
 
 ### 홈 화면 설치 (PWA)
 

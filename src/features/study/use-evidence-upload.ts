@@ -58,7 +58,7 @@ export function usePhotoPicker() {
 
 /**
  * 인증 올리기 — 압축 → /api/upload(Drive 저장 + study_evidences 기록) → 진행률 반영
- * 드라이브가 아직 연결되지 않았으면 서버가 skipped를 돌려주고, 진행률만 반영한다.
+ * 실제 모드는 본인 Drive 연결이 필요하며, 저장 실패 시 완료로 표시하지 않는다.
  */
 export function useSubmitEvidence() {
   const completeTask = useStudyStore((s) => s.completeTask);
@@ -87,7 +87,24 @@ export function useSubmitEvidence() {
       body.append("category", category);
       body.append("partyId", party.id);
       const res = await fetch("/api/upload", { method: "POST", body });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        if (
+          ["drive_connection_required", "drive_reconnect_required"].includes(
+            result.error,
+          )
+        ) {
+          flash("내 Drive를 연결하거나 다시 연결한 뒤 인증해 주세요");
+          return false;
+        }
+        if (result.error === "drive_not_configured") {
+          flash(
+            "현재 Drive 연결을 사용할 수 없어요. 연결 준비가 끝나면 다시 시도해 주세요",
+          );
+          return false;
+        }
+        throw new Error("upload_failed");
+      }
       completeTask(category);
       try {
         await refresh();

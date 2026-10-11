@@ -10,6 +10,7 @@ import { StudyProvider } from "@/features/party/study-provider";
 import { PartyControls, PartySetup } from "@/features/party/party-setup";
 import { demoSnapshot, loadStudySnapshot } from "@/lib/study-server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { DriveControls } from "@/features/study/drive-controls";
 
 export default async function MainLayout({
   children,
@@ -56,6 +57,7 @@ export default async function MainLayout({
         <main className="flex min-w-0 flex-1 flex-col gap-4.5 px-5 pt-4 pb-tabbar md:gap-8 md:px-page-x md:pt-8 md:pb-16 md:glow-main">
           <MobileHeader />
           <PartyControls />
+          <DriveControls />
           {children}
         </main>
         <MobileTabBar />

@@ -7,12 +7,19 @@ import { SectionTitle } from "@/components/shared/section-title";
 import { useStudyStore } from "@/stores/study-store";
 import { CheerButton, NudgeButton } from "./party-buttons";
 import { lazyMember, useMembers } from "./use-party";
+import { EvidencePhoto } from "@/features/study/evidence-photo";
+import { cn } from "@/lib/utils";
 
 /** 데스크톱 홈 우측 — 파티 피드 */
-export function Feed() {
+export function Feed({ className }: { className?: string }) {
   const feed = useStudyStore((s) => s.feed);
   return (
-    <aside className="flex min-w-col-aside-min shrink basis-col-aside flex-col gap-5">
+    <aside
+      className={cn(
+        "flex min-w-col-aside-min shrink basis-col-aside flex-col gap-5",
+        className,
+      )}
+    >
       <SectionTitle>피드</SectionTitle>
       {feed.map((f, i) => (
         <article key={f.id} className="flex gap-2.5">
@@ -23,12 +30,9 @@ export function Feed() {
               <span className="text-muted">{f.what}</span>
             </span>
             {f.photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- 인증 쿠키를 사용하는 비공개 사진 API
-              <img
+              <EvidencePhoto
                 src={f.photoUrl}
                 alt={`${f.name}님의 학습 인증 사진`}
-                loading="lazy"
-                className="h-feed-photo w-full rounded-md object-cover"
               />
             ) : (
               f.photo && (

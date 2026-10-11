@@ -8,6 +8,9 @@ const PUBLIC_PATHS = ["/login", "/signup", "/invite", "/auth"];
  * Supabase 키가 없으면(데모 모드) 아무것도 하지 않는다.
  */
 export async function proxy(request: NextRequest) {
+  // 약관 문서는 로그인 여부와 인증 서비스 상태에 관계없이 열 수 있어야 한다.
+  if (["/privacy", "/terms"].includes(request.nextUrl.pathname))
+    return NextResponse.next();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) return NextResponse.next();
@@ -19,7 +22,9 @@ export async function proxy(request: NextRequest) {
       setAll: (toSet) => {
         toSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
-        toSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        toSet.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, options),
+        );
       },
     },
   });
@@ -29,7 +34,8 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isPublic = pathname === "/" || PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  const isPublic =
+    pathname === "/" || PUBLIC_PATHS.some((p) => pathname.startsWith(p));
   if (!user && !isPublic && !pathname.startsWith("/api")) {
     const login = request.nextUrl.clone();
     login.pathname = "/login";
@@ -40,5 +46,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|icons/).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|icons/).*)",
+  ],
 };

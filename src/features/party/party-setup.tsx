@@ -8,6 +8,7 @@ import { TextField } from "@/components/ui/text-field";
 import { requestJson } from "@/lib/http";
 import { useStudyStore } from "@/stores/study-store";
 import { useCopyInvite, useLogout } from "@/features/shell/shell-actions";
+import { DriveControls } from "@/features/study/drive-controls";
 
 function CreatePartyForm() {
   const router = useRouter();
@@ -82,6 +83,7 @@ export function PartySetup() {
         만들고 친구를 초대해도 좋아요.
       </p>
       <CreatePartyForm />
+      <DriveControls />
       <Button variant="ghost" onClick={logout}>
         로그아웃
       </Button>

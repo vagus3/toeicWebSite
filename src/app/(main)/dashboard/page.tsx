@@ -3,7 +3,10 @@ import { Feed, MobileSocialCards } from "@/features/party/feed";
 import { MembersTable } from "@/features/party/members-table";
 import { QuickTests } from "@/features/quiz/quick-tests";
 import { TaskCards, TaskChecklist } from "@/features/study/task-list";
-import { TodayHeaderDesktop, TodayHeaderMobile } from "@/features/study/today-header";
+import {
+  TodayHeaderDesktop,
+  TodayHeaderMobile,
+} from "@/features/study/today-header";
 
 export const metadata: Metadata = { title: "홈" };
 
@@ -26,6 +29,7 @@ export default function DashboardPage() {
         <TodayHeaderMobile />
         <TaskChecklist />
         <MobileSocialCards />
+        <Feed className="min-w-0 basis-auto" />
       </div>
     </>
   );

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { apiError, requireSession } from "@/lib/api";
 import { readEvidence } from "@/lib/google-drive/drive";
+import { readPersonalEvidence } from "@/lib/google-drive/personal-drive";
 
 export async function GET(
   _request: Request,
@@ -14,7 +15,7 @@ export async function GET(
   // study_evidences의 RLS로 같은 파티 사용자에게만 파일 위치를 반환한다.
   const { data, error } = await session.data.supabase
     .from("study_evidences")
-    .select("storage_path, drive_file_id, mime_type")
+    .select("storage_path, drive_file_id, drive_owner_id, mime_type")
     .eq("study_log_id", logId.data)
     .limit(1)
     .maybeSingle();
@@ -30,7 +31,10 @@ export async function GET(
         headers: { "Cache-Control": "private, no-store" },
       });
     }
-    return new Response(await readEvidence(data.drive_file_id), {
+    const photo = data.drive_owner_id
+      ? await readPersonalEvidence(data.drive_owner_id, data.drive_file_id)
+      : await readEvidence(data.drive_file_id);
+    return new Response(photo, {
       headers: {
         "Content-Type": data.mime_type,
         "Cache-Control": "private, no-store",
