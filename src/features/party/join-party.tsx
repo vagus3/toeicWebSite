@@ -27,19 +27,22 @@ export function JoinParty() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-auth flex-col justify-center gap-5 px-5">
       <h1 className="text-h3">파티 초대</h1>
-      {preview.isPending ? (
-        <p role="status">초대 정보를 확인하고 있어요…</p>
-      ) : preview.data ? (
-        <p>
-          {preview.data.inviterName}님이 {preview.data.partyName}에 초대했어요.
-          ({preview.data.memberCount}/{preview.data.capacity}명)
-        </p>
-      ) : (
-        <p role="alert">유효하지 않은 초대 링크예요</p>
-      )}
+      <div className="card elev-sm gap-1 p-4">
+        {preview.isPending ? (
+          <p role="status" className="m-0">초대 정보를 확인하고 있어요…</p>
+        ) : preview.data ? (
+          <p className="m-0">
+            {preview.data.inviterName}님이 {preview.data.partyName}에 초대했어요.
+            ({preview.data.memberCount}/{preview.data.capacity}명)
+          </p>
+        ) : (
+          <p role="alert" className="m-0">유효하지 않은 초대 링크예요</p>
+        )}
+      </div>
       {error && <p role="alert">{error}</p>}
       <Button
         variant="primary"
+        className="h-control-xl w-full text-base md:h-control-lg md:text-body"
         disabled={!preview.data || pending}
         onClick={async () => {
           setPending(true);

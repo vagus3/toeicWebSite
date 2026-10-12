@@ -116,6 +116,15 @@ Claude Design 프로젝트 **토익 스터디 PWA**의 두 시안을 구현합�
 | `size-camera` · `size-thumb`                 | 52 / 64                                 | 카메라 버튼, 인증 썸네일    |
 | `h-dropzone` · `h-feed-photo`                | 180 / 120                               | 업로드 영역, 피드 사진      |
 | `h-control-lg` · `h-control-xl`              | 44 / 48                                 | 큰 버튼 (데스크톱 / 모바일) |
+| `tracker-name-sm`                            | 36px                                    | 모바일 월간 잔디의 이름 칸  |
+| `toast-top`                                  | 64px                                    | 전체 화면 토스트 위치(헤더 아래) |
+
+### 안전 영역 · 전체 화면 규칙
+
+- `pt-safe` · `pb-safe` · `top-toast-safe`는 `@utility`입니다. 일반 클래스로 두면 레이어 밖이라 `md:pt-8` 같은 반응형 값을 이겨 버립니다.
+- 탭바·헤더 없이 화면 전체를 쓰는 경로는 `features/shell/fullscreen.ts`의 `isFullscreenPath`가 정합니다 (촬영, 단어 연습, AI RC, 해커스 LC/RC, 오답 다시 풀기, 질문 상세, 파티 채팅).
+- 이 경로의 화면은 안전 영역을 **직접** 맡습니다. 위는 `ScreenHeader`(pt-safe), 아래는 `PinnedFooter`(pb-safe)입니다. `MainFrame`은 위아래 여백을 주지 않아요. 둘 다 주면 iPhone에서 두 번 들어갑니다.
+- `PinnedFooter`는 탭바가 있는 화면에서 쓰지 않습니다(탭바가 가립니다). 토스트는 전체 화면에서 헤더 아래에 뜨고, 설치 안내 카드는 숨습니다.
 
 ---
 
@@ -132,7 +141,7 @@ Claude Design 프로젝트 **토익 스터디 PWA**의 두 시안을 구현합�
 | `.card` `.card-kicker` `.elev-sm`                               | 카드                                      | —                       |
 | `.tag` `.tag-accent` `.tag-neutral`                             | 태그                                      | —                       |
 | `.ds-table`                                                     | 끝이 사라지는 행 구분선 표                | —                       |
-| `.dialog` `.dialog-backdrop` `.dialog-title` `.dialog-actions`  | 다이얼로그                                | `<Dialog>` (Radix)      |
+| `.dialog` `.dialog-backdrop` `.dialog-title` `.dialog-actions`  | 다이얼로그 (md 미만은 아래에서 올라오는 시트) | `<Dialog>` (Radix)      |
 | `.hr` `.rule-top`                                               | 끝이 사라지는 구분선                      | —                       |
 | `.photo-placeholder(-sm)`                                       | 인증 사진 빗금 자리                       | —                       |
 | `glow-auth` `glow-main` (utility)                               | 좌상단 accent 글로우, `md:glow-main` 가능 | —                       |
@@ -146,18 +155,25 @@ Claude Design 프로젝트 **토익 스터디 PWA**의 두 시안을 구현합�
 | 컴포넌트                                                          | 위치                                      | 쓰는 곳                                                                      |
 | ----------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------- |
 | `Button` (`variant`: plain·primary·secondary·ghost, `size`: icon) | `components/ui/button`                    | 모든 버튼                                                                    |
-| `Dialog` · `DialogContent` · `DialogTitle` · `DialogActions`      | `components/ui/dialog`                    | 인증 · 점수 · 질문 모달 (`useModal(name)`과 함께)                            |
+| `Dialog` · `DialogContent` · `DialogTitle` · `DialogActions`      | `components/ui/dialog`                    | 인증 · 점수 · 질문 모달 (`useModal(name)`과 함께). `closeLabel`을 주면 닫기(X) |
+| `ScreenHeader` · `PinnedFooter`                                   | `components/shared`                       | 전체 화면 상단 바(닫기·제목·진행) · 하단 고정 버튼·입력창 (`keyboardAware`)  |
+| `AiText` · `AiConfirm`                                            | `components/shared`                       | AI 답변 본문(줄바꿈 유지) · 파티원 확인 표시 — 채팅과 질문 창구               |
+| `FilePickerButton`                                                | `components/shared/file-picker-button`    | 기본 파일 입력 대신 버튼으로 고르기 (해커스 채점표, 오답노트 결과지)         |
 | `TextField` · `FieldError`                                        | `components/ui/text-field`, `field-error` | 로그인 · 회원가입 · 점수 입력                                                |
 | `ProgressBar`                                                     | `components/ui/progress-bar`              | 오늘 진행률, 할당량·교재 막대, 퀴즈 진행                                     |
 | `PageTitle` · `SectionTitle`                                      | `components/shared`                       | 페이지 제목(모바일 heading / 데스크톱 h3) · 섹션 제목                        |
 | `ActionCard`                                                      | `components/shared/action-card`           | 키커·제목·설명 + 오른쪽 액션 카드 (테스트, 홈 바로가기, 콕 찌르기·축하 카드) |
-| `MessageComposer`                                                 | `components/shared/message-composer`      | 질문 창구 보충 답변, 파티 채팅 입력                                          |
+| `MessageComposer`                                                 | `components/shared/message-composer`      | 질문 창구·파티 채팅 입력. 높이가 늘어나는 입력창, 한글 조합 중 Enter 무시, 터치 기기는 Enter가 줄바꿈 |
 | `IconLink`                                                        | `components/shared/icon-link`             | 닫기(X), 채팅 바로가기                                                       |
-| `ThemeToggle` (`label`: short·long·icon)                          | `components/shared/theme-toggle`          | 로그인 우상단, 사이드바, 모바일 헤더                                         |
-| `Avatar` · `BrandMark`                                            | `components/shared`                       | 멤버 이니셜, 로고                                                            |
+| `ThemeToggle` (`label`: short·long·icon)                          | `components/shared/theme-toggle`          | 로그인 우상단, 사이드바, 내 메뉴                                             |
+| `Avatar` · `BrandMark`                                            | `components/shared`                       | 멤버 이니셜(모바일 헤더의 내 메뉴 링크 포함), 로고                            |
 | `TaskStatusIcon` · `DriveSaveHint`                                | `features/study`                          | 할당량 체크, 드라이브 저장 경로                                              |
+| `TaskShortcutChips`                                               | `features/study/task-shortcut-chips`      | 항목 아래 "테스트로 인증" 칩 — 홈 체크리스트, 촬영 화면                       |
+| `DriveBanner` (`inline`)                                          | `features/study/drive-banner`             | Drive 미연결일 때만 보이는 한 줄 안내 — 레이아웃 위, 촬영·해커스 화면 안      |
+| `ReportRowsView` · `ReportRowEditorList`                          | `features/quiz`                           | 해커스 문항 결과(모바일 칩 / 데스크톱 표) · 모바일 A–D 버튼 수정              |
 | `NudgeButton` · `CheerButton`                                     | `features/party/party-buttons`            | 콕 찌르기(멤버별 하루 1회), 축하                                             |
-| `PushToggle` (`compact`)                                          | `features/chat/push-toggle`               | 채팅 헤더, 모바일 헤더 알림                                                  |
+| `PushToggle` (`compact`)                                          | `features/chat/push-toggle`               | 채팅 헤더, 내 메뉴                                                           |
+| `PartyList` · `NewPartyButton`                                    | `features/party/party-setup`              | 내 메뉴의 파티 전환(라디오 카드) · 새 파티 만들기                            |
 | `InstallGuide`                                                    | `features/pwa/install-guide`              | 모바일 홈 화면 설치 안내 (iOS 공유→추가 / Android 앱 설치 버튼·메뉴 안내)    |
 
 ---
@@ -166,15 +182,19 @@ Claude Design 프로젝트 **토익 스터디 PWA**의 두 시안을 구현합�
 
 | 경로                             | 데스크톱 (웹 시안)                                     | 모바일 (프로토타입)                        |
 | -------------------------------- | ------------------------------------------------------ | ------------------------------------------ |
-| `/login` `/signup`               | 좌측 소개 + 우측 폼, 우상단 라이트/다크                | 같은 화면이 세로로 쌓임                    |
-| `/dashboard`                     | D-day · 할당량 카드 · 파티 표 · 테스트 바로가기 · 피드 | D-day · 체크리스트 · 콕 찌르기 · 축하 카드 |
-| `/study/upload`                  | (사이드바 버튼 → 인증 모달)                            | 항목 고르고 바로 촬영                      |
-| `/tracker`                       | 월간 히트맵 + 칸 상세(그날 인증 사진)                  | 이번 주 멤버별 할당량·교재 막대 + 기록 링크 |
-| `/records`                       | 월 이동·멤버·항목 필터 + 날짜별 사진 그리드 + 상세 패널 | 같은 그리드, 상세는 전체 화면 다이얼로그   |
-| `/quizzes`                       | 일일/주간/월간 카드 + 점수 추이                        | 같은 카드, 아래 점수 추이                  |
-| `/quizzes/daily`                 | 퀴즈 3문항 + AI 해설                                   | 전체 화면, 하단 큰 버튼                    |
-| `/quizzes/review`                | 오답노트: 출처·복습 상태 필터, 정답 가리고 다시 풀기, 해커스 결과지로 문제 채우기 | 같은 카드가 세로로 쌓임                    |
-| `/qna`                           | 스레드 목록 + 상세                                     | 목록 아래 상세                             |
-| `/party/[partyId]/chat/[roomId]` | 파티 채팅 (설계안 추가 기능, 같은 토큰으로 구성)       | 헤더의 채팅 아이콘                         |
+| `/login` `/signup`               | 좌측 소개 + 우측 폼, 우상단 라이트/다크                | 같은 화면이 세로로 쌓임, 라이트/다크는 화면 우상단 |
+| `/dashboard`                     | D-day · 할당량 카드 · 파티 표 · 테스트 바로가기 · 피드 | D-day · 체크리스트(+ 테스트로 인증 칩) · 콕 찌르기 · 축하 카드 |
+| `/me`                            | 프로필 · 파티 목록·새 파티·초대 · Drive · 알림·화면 · 바로가기 · 로그아웃 (사이드바 프로필 줄) | 같은 화면, 모바일 헤더의 아바타로 들어감 |
+| `/study/upload`                  | (사이드바 버튼 → 인증 모달)                            | 전체 화면 · 항목 고르고 [촬영] [앨범] · 테스트 칩 · 하단 고정 "인증 올리기" (보드 3a) |
+| `/tracker`                       | 월간 히트맵 + 칸 상세(그날 인증 사진)                  | [이번 주 \| 월간] — 이번 주 막대(4a), 월간 잔디 + 하루 상세·멤버 칩·날짜 이동(4b) |
+| `/records`                       | 월 이동·멤버·항목 필터 + 날짜별 사진 그리드 + 상세 패널 | 같은 그리드, 상세는 바텀시트(닫기 버튼, 해커스 문항은 칩) |
+| `/quizzes`                       | 오늘 할 것 · 복습 · 주간/월간 카드 + 점수 추이·오답 통계 | 같은 구성이 세로로 쌓임                    |
+| `/quizzes/daily` `/quizzes/rc`   | 퀴즈 · AI RC 문항 + 해설, "질문 창구에 올리기"          | 전체 화면, 진행 막대, 하단 고정 버튼 (보드 5b) |
+| `/quizzes/hackers` `/hackers/lc` | 결과지 받기 → 파일 확인 → 결과 확인·저장 단계, 제출 기록 접기 | 전체 화면, 문항 수정은 A–D 버튼 카드     |
+| `/quizzes/review`                | 오답노트: 출처 칩 · 복습 상태 · 정답 가리기 · 해커스 결과지로 채우기 · 한 문제씩 다시 풀기 | 출처 칩은 한 줄 가로 스크롤             |
+| `/quizzes/review/retry`          | 복습 전 오답을 한 문제씩 다시 풀기, 복습 완료 표시       | 전체 화면 (보드 5b)                        |
+| `/qna`                           | 질문 목록 (누르면 상세 경로)                           | 같은 목록                                  |
+| `/qna/[threadId]`                | 질문 · AI 답변(파티원 확인) · 파티원 답변 · 입력창 하나 [파티원에게 \| AI에게] | 전체 화면, 하단 고정 입력창 (보드 6a) |
+| `/party/[partyId]/chat/[roomId]` | 파티 채팅: [전체 \| 질문만], @AI 답변·확인, 인증 알림·축하 | 전체 화면, 하단 고정 입력창 (보드 6b), 헤더의 채팅 아이콘으로 들어감 |
 
 Claude Design 편집기 UI(상단 theme/accent 드롭다운, Comment·Edit·Present·Share)는 앱에 포함하지 않습니다.

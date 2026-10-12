@@ -124,10 +124,12 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
   };
 
   return (
-    <div className="flex min-h-dvh flex-wrap bg-bg text-text">
+    // 모바일은 소개가 위에 쌓여서, 테마 버튼을 폼 위가 아니라 화면 오른쪽 위에 둔다(relative를 바깥에).
+    // 데스크톱은 지금처럼 오른쪽 폼 영역의 오른쪽 위다(md:relative).
+    <div className="relative flex min-h-dvh flex-wrap bg-bg text-text">
       <AuthIntro />
 
-      <section className="relative flex min-w-0 flex-1 basis-col-half flex-col justify-center gap-6 px-auth-x py-12">
+      <section className="flex min-w-0 flex-1 basis-col-half flex-col justify-center gap-6 px-auth-x py-12 md:relative">
         <ThemeToggle
           variant="secondary"
           className="absolute top-6 right-6 text-meta"
