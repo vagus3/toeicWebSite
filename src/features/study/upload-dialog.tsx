@@ -72,10 +72,10 @@ export function UploadDialog() {
           사진을 하나 이상 올리면 해당 항목이 인증돼요. 인증 후에도 추가할 수 있어요.
         </p>
 
-        <input {...photo.inputProps} />
+        <input {...photo.galleryInputProps} />
         <button
           type="button"
-          onClick={photo.open}
+          onClick={photo.openGallery}
           {...photo.dropProps}
           className={cn(
             "flex h-dropzone cursor-pointer flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-accent text-accent",

@@ -21,31 +21,39 @@ export function useEvidenceLabels() {
   };
 }
 
-/** 사진 선택(촬영)·드래그 앤 드롭 상태 */
+/**
+ * 사진 선택 상태 — 촬영·앨범·드래그 앤 드롭.
+ * capture를 붙인 입력은 휴대폰에서 바로 카메라를 열고 앨범을 고를 수 없다.
+ * 그래서 촬영용과 앨범용 입력을 따로 둔다 (보드 3a의 [촬영] [앨범]).
+ */
 export function usePhotoPicker() {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const reset = useCallback(() => setFile(null), []);
 
   const accept = (f: File | undefined | null) => {
     if (f && f.type.startsWith("image/")) setFile(f);
   };
+  const input = {
+    type: "file" as const,
+    accept: "image/*",
+    hidden: true,
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+      accept(e.target.files?.[0]);
+      e.target.value = "";
+    },
+  };
 
   return {
     file,
     reset,
-    open: () => inputRef.current?.click(),
-    inputProps: {
-      ref: inputRef,
-      type: "file" as const,
-      accept: "image/*",
-      capture: "environment" as const,
-      hidden: true,
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-        accept(e.target.files?.[0]);
-        e.target.value = "";
-      },
-    },
+    openCamera: () => cameraRef.current?.click(),
+    openGallery: () => galleryRef.current?.click(),
+    /** 촬영 — 휴대폰은 뒤쪽 카메라가 바로 열린다 */
+    cameraInputProps: { ...input, ref: cameraRef, capture: "environment" as const },
+    /** 앨범·파일 — 이미 찍어 둔 사진이나 데스크톱 파일 */
+    galleryInputProps: { ...input, ref: galleryRef },
     dropProps: {
       onDragOver: (e: React.DragEvent) => e.preventDefault(),
       onDrop: (e: React.DragEvent) => {

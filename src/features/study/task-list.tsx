@@ -4,6 +4,7 @@ import { TASKS } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
 import { useStudyStore } from "@/stores/study-store";
 import type { StudyTask } from "@/types";
+import { TaskShortcutChips } from "./task-shortcut-chips";
 import { TaskStatusIcon } from "./task-status-icon";
 import { useStartUpload } from "./use-start-upload";
 
@@ -59,25 +60,28 @@ export function TaskCards() {
   );
 }
 
-/** 모바일 — 체크 리스트 (프로토타입) */
+/**
+ * 모바일 — 체크 리스트 (프로토타입). 행을 누르면 사진 인증, 아래 칩은 테스트로 인증.
+ * 칩(링크)이 행 버튼 안에 들어가지 않도록 형제로 둔다.
+ */
 export function TaskChecklist() {
   return (
     <ul className="flex flex-col">
       {useTaskItems().map(({ task, done, buttonProps }) => (
-        <li key={task.id}>
+        <li key={task.id} className="flex flex-col gap-1.5 py-3">
           <button
             {...buttonProps}
-            className={cn(
-              "flex w-full cursor-pointer items-center gap-3 py-3 text-left",
-            )}
+            className="flex w-full cursor-pointer items-center gap-3 text-left"
           >
             <TaskStatusIcon done={done} className="text-icon-lg" />
             <span className="flex flex-1 flex-col">
               <span className="text-body">{task.label}</span>
               <span className="text-label text-muted">{task.mobileSub}</span>
             </span>
-            <span className="tag tag-neutral">{done ? "추가 업로드" : "인증"}</span>
+            <span className="tag tag-neutral">{done ? "추가 업로드" : "사진 인증"}</span>
           </button>
+          {/* 상태 아이콘(22px) + 간격(12px)만큼 들여 글자 줄에 맞춘다 */}
+          <TaskShortcutChips category={task.id} done={done} className="pl-8.5" />
         </li>
       ))}
     </ul>
