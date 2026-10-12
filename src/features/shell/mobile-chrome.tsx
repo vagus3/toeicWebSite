@@ -11,13 +11,11 @@ import { useStudyStore } from "@/stores/study-store";
 import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { isActive, TAB_ITEMS, type NavItem } from "./nav-items";
+import { isFullscreenPath } from "./fullscreen";
 
 /** 촬영·퀴즈 화면은 프로토타입처럼 탭/헤더 없이 전체 화면 */
-const FULLSCREEN = [ROUTES.upload, ROUTES.dailyQuiz];
-
 function useIsFullscreenRoute() {
-  const pathname = usePathname();
-  return FULLSCREEN.some((p) => pathname.startsWith(p));
+  return isFullscreenPath(usePathname());
 }
 
 /** 모바일 상단 — 파티 이름 + 화면 모드 + 채팅 + 알림 */

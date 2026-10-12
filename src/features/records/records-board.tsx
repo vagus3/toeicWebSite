@@ -289,7 +289,7 @@ function RecordsBoardContent() {
 
       {isMobile && (
         <Dialog open={Boolean(selected)} onOpenChange={(open) => !open && setSelectedId(null)}>
-          <DialogContent className="w-full max-w-3xl">
+          <DialogContent className="w-full max-w-3xl" closeLabel="닫기">
             <DialogTitle className="sr-only">선택한 인증 상세</DialogTitle>
             {selected && (
               <RecordDetail item={selected} name={nameOf(selected.userId)} demo={!live} mine={selected.userId === meId} />

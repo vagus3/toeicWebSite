@@ -52,10 +52,11 @@ export function useChatRoom(partyId: string, roomId: string) {
         .select("id, room_id, sender_id, content, created_at, profiles(nickname)")
         .eq("room_id", roomId)
         .is("deleted_at", null)
-        .order("created_at", { ascending: true })
+        // 최신 200개를 받은 뒤 시간순으로 뒤집는다. 오름차순으로 자르면 가장 오래된 200개만 보인다.
+        .order("created_at", { ascending: false })
         .limit(200);
       if (error) throw error;
-      return (data as unknown as MessageRow[]).map(toMessage);
+      return (data as unknown as MessageRow[]).reverse().map(toMessage);
     },
   });
 

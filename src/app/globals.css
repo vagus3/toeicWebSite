@@ -594,6 +594,19 @@
     gap: var(--space-2);
     margin-top: var(--space-2);
   }
+  /* 모바일(md 미만)은 화면 아래에서 올라오는 시트. 아래쪽은 홈 바 높이만큼 비운다 */
+  @media (max-width: 47.99rem) {
+    .dialog {
+      top: auto;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      transform: none;
+      max-height: min(88dvh, calc(100dvh - 32px));
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
+    }
+  }
 
   /* 인증 사진 자리 표시 (빗금) */
   .photo-placeholder {
@@ -620,10 +633,12 @@
   background: radial-gradient(70% 40% at 0% 0%, var(--color-accent-900), transparent 70%);
 }
 
-/* iOS 홈 화면 PWA 안전 영역 */
-.pb-safe {
+/* iOS 홈 화면 PWA 안전 영역.
+   일반 CSS 클래스로 두면 레이어 밖에 있어서 md:pt-8 같은 반응형 유틸리티를 이겨 버린다.
+   @utility로 두면 md: 변형이 뒤에 놓여 데스크톱에서 정상 동작한다. */
+@utility pb-safe {
   padding-bottom: max(26px, env(safe-area-inset-bottom));
 }
-.pt-safe {
+@utility pt-safe {
   padding-top: env(safe-area-inset-top);
 }
