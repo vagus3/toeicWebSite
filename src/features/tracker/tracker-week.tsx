@@ -2,6 +2,7 @@
 
 import { Fire } from "@phosphor-icons/react";
 import Link from "next/link";
+import { useState } from "react";
 import { Avatar } from "@/components/shared/avatar";
 import { PageTitle } from "@/components/shared/page-title";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -9,6 +10,7 @@ import { ROUTES } from "@/lib/routes";
 import { NudgeButton } from "@/features/party/party-buttons";
 import { bookPercent, isLazy, memberLabel, useMembers } from "@/features/party/use-party";
 import type { Member } from "@/types";
+import { TrackerMonthMobile } from "./tracker-month-mobile";
 
 function StatRow({
   label,
@@ -59,20 +61,50 @@ function MemberWeek({ member }: { member: Member }) {
   );
 }
 
-/** 모바일 트래커 — 이번 주 멤버별 할당량·교재 진행 (프로토타입) */
+/** 이번 주 멤버별 할당량·교재 진행 (보드 4a) */
 export function TrackerWeek() {
   const members = useMembers();
   return (
     <div className="flex flex-col gap-4.5">
+      {members.map((m) => (
+        <MemberWeek key={m.id} member={m} />
+      ))}
+    </div>
+  );
+}
+
+type View = "week" | "month";
+const VIEWS: { value: View; label: string }[] = [
+  { value: "week", label: "이번 주" },
+  { value: "month", label: "월간" },
+];
+
+/** 모바일 트래커 — [이번 주 | 월간] 전환. 월간은 잔디 + 하루 상세 (보드 4b) */
+export function TrackerMobile() {
+  const [view, setView] = useState<View>("week");
+  return (
+    <div className="flex flex-col gap-4.5">
       <div className="flex items-center justify-between gap-3">
-        <PageTitle>트래커 · 이번 주</PageTitle>
+        <PageTitle>트래커</PageTitle>
         <Link href={ROUTES.records} className="text-meta text-accent underline">
           인증 기록 보기
         </Link>
       </div>
-      {members.map((m) => (
-        <MemberWeek key={m.id} member={m} />
-      ))}
+      <div role="radiogroup" aria-label="트래커 보기" className="seg self-start">
+        {VIEWS.map((option) => (
+          <label key={option.value} className="seg-opt">
+            <input
+              type="radio"
+              name="tracker-view"
+              value={option.value}
+              checked={view === option.value}
+              onChange={() => setView(option.value)}
+            />
+            {option.label}
+          </label>
+        ))}
+      </div>
+      {view === "week" ? <TrackerWeek /> : <TrackerMonthMobile />}
     </div>
   );
 }

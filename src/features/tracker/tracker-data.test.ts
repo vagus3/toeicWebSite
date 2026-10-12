@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dayDetail, type TrackerSource } from "./tracker-data";
+import { dayDetail, stepDay, type TrackerSource } from "./tracker-data";
 import type { Member } from "@/types";
 
 const member: Member = { id: "m1", name: "가", initial: "가", track: "800", quota: 0, book: { done: 0, total: 24 }, score: null, streak: 0, baseline: 0 };
@@ -21,5 +21,13 @@ describe("트래커 칸 상세", () => {
     expect(detail.evidenceLogs).toEqual([{ id: "a", category: "word" }]);
     expect(detail.month).toBe("2026-10");
     expect(detail.rc).toBe("인증 완료");
+  });
+});
+
+describe("하루씩 이동", () => {
+  it("달의 첫날과 마지막 날(이번 달은 오늘)에서 멈춘다", () => {
+    expect(stepDay(4, 1, 12)).toBe(5);
+    expect(stepDay(0, -1, 31)).toBe(0);
+    expect(stepDay(11, 1, 12)).toBe(11);
   });
 });

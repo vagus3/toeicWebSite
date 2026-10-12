@@ -83,6 +83,14 @@ export function buildMonth({ year, month }: TrackerMonth, source = DEMO) {
       dateKey({ year, month }, 1).slice(0, 7) < source.studyDate.slice(0, 7),
   };
 }
+/**
+ * 하루 상세의 ‹ › 이동. 이번 달은 오늘(lastDay)까지만 갈 수 있다.
+ * 모바일 월간 잔디는 칸이 작아서, 손가락 대신 이 버튼으로 하루씩 옮긴다.
+ */
+export function stepDay(dayIndex: number, delta: number, lastDay: number) {
+  return Math.min(Math.max(dayIndex + delta, 0), lastDay - 1);
+}
+
 export function shiftMonth(
   { year, month }: TrackerMonth,
   delta: number,

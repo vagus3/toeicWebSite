@@ -116,6 +116,7 @@
   /* 레이아웃 치수 — w-sidebar, max-w-auth 처럼 사용 */
   --spacing-sidebar: 220px;
   --spacing-tracker-name: 52px;
+  --spacing-tracker-name-sm: 36px;
   --spacing-tracker-cell: 18px;
   --spacing-camera: 52px;
   --spacing-thumb: 64px;

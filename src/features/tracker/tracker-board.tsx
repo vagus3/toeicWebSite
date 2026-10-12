@@ -1,58 +1,16 @@
 "use client";
 
-import {
-  BookmarkSimple,
-  BookOpen,
-  CaretLeft,
-  CaretRight,
-  Headphones,
-  TextAa,
-} from "@phosphor-icons/react";
-import Link from "next/link";
-import { useState } from "react";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import { useStudyStore } from "@/stores/study-store";
 import { cn } from "@/lib/utils";
-import { TASKS } from "@/lib/demo-data";
-import { ROUTES } from "@/lib/routes";
-import { CheerButton, NudgeButton } from "@/features/party/party-buttons";
-import { EvidencePhoto, evidenceUrl } from "@/features/study/evidence-photo";
-import {
-  buildMonth,
-  dayDetail,
-  LEVEL_CLASS,
-  shiftMonth,
-  type TrackerMonth,
-} from "./tracker-data";
+import { LEVEL_CLASS } from "./tracker-data";
+import { TrackerDayDetail } from "./tracker-day-detail";
+import { useTrackerMonth } from "./use-tracker-month";
 
 /** 데스크톱 트래커 — 멤버 × 날짜 히트맵 + 칸 상세 (웹 시안) */
 export function TrackerBoard() {
-  const members = useStudyStore((s) => s.members);
-  const logs = useStudyStore((s) => s.logs);
-  const studyDate = useStudyStore((s) => s.studyDate);
-  const party = useStudyStore((s) => s.party);
-  const mode = useStudyStore((s) => s.mode);
-  const today = new Date(`${studyDate}T12:00:00`);
-  const source = {
-    members,
-    logs,
-    studyDate,
-    startDate: party?.createdAt ?? studyDate,
-    mode,
-  };
-  const [ym, setYm] = useState<TrackerMonth>({
-    year: today.getFullYear(),
-    month: today.getMonth(),
-  });
-  const [cell, setCell] = useState<[number, number]>([0, today.getDate() - 1]);
-  const month = buildMonth(ym, source);
-  const dayIndex = Math.min(cell[1], month.lastDay - 1);
-  const detail = dayDetail(cell[0], ym, dayIndex, source);
-
-  const move = (delta: number) => {
-    setYm((cur) => shiftMonth(cur, delta));
-    setCell(([r]) => [r, 0]);
-  };
+  const { ym, month, memberIndex, dayIndex, detail, mode, select, move } =
+    useTrackerMonth();
 
   return (
     <div className="flex flex-col gap-6">
@@ -114,13 +72,13 @@ export function TrackerBoard() {
               <div key={row.member.id} className="contents">
                 <span>{row.member.name}</span>
                 {row.cells.map((c, d) => {
-                  const selected = cell[0] === r && dayIndex === d;
+                  const selected = memberIndex === r && dayIndex === d;
                   return (
                     <button
                       key={c.day}
                       type="button"
                       disabled={c.future}
-                      onClick={() => setCell([r, d])}
+                      onClick={() => select(r, d)}
                       title={`${row.member.name} ${ym.month + 1}/${c.day}${c.future ? " (예정)" : ""}`}
                       aria-label={`${row.member.name} ${ym.month + 1}월 ${c.day}일`}
                       aria-pressed={selected}
@@ -146,48 +104,11 @@ export function TrackerBoard() {
           </div>
         </div>
 
-        <div className="card elev-sm min-w-col-aside-min shrink basis-col-detail gap-3.5 p-4.5">
-          <div className="flex items-center justify-between">
-            <span className="text-title font-medium">{detail.title}</span>
-            <span className="tag tag-accent">{detail.pct}</span>
-          </div>
-          <dl className="m-0 flex flex-col gap-2.5 text-meta">
-            {[
-              { icon: TextAa, label: "단어 · 50개", value: detail.word },
-              { icon: Headphones, label: "LC · 15문제", value: detail.lc },
-              { icon: BookOpen, label: "RC · 15문제", value: detail.rc },
-              { icon: BookmarkSimple, label: "교재", value: detail.book },
-            ].map(({ icon: Icon, label, value }) => (
-              <div key={label} className="flex gap-2.5">
-                <Icon className="text-muted" />
-                <dt className="flex-1">{label}</dt>
-                <dd className="m-0 text-muted">{value}</dd>
-              </div>
-            ))}
-          </dl>
-          {detail.evidenceLogs.length > 0 && (
-            <div className="grid grid-cols-2 gap-2">
-              {detail.evidenceLogs.map((log) => (
-                <EvidencePhoto
-                  key={log.id}
-                  src={evidenceUrl(log.id)}
-                  alt={`${detail.title} ${TASKS.find((t) => t.id === log.category)?.short ?? ""} 인증 사진`}
-                />
-              ))}
-            </div>
-          )}
-          <div className="flex flex-wrap gap-2">
-            <CheerButton name={detail.name} label="축하" logId={detail.logId} />
-            <NudgeButton member={detail.member} variant="secondary" />
-            {mode === "live" && (
-              <Button asChild variant="ghost" className="text-meta">
-                <Link href={`${ROUTES.records}?memberId=${detail.member.id}&month=${detail.month}`}>
-                  기록에서 보기
-                </Link>
-              </Button>
-            )}
-          </div>
-        </div>
+        <TrackerDayDetail
+          detail={detail}
+          live={mode === "live"}
+          className="min-w-col-aside-min shrink basis-col-detail"
+        />
       </div>
     </div>
   );
