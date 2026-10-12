@@ -42,7 +42,8 @@ self.addEventListener("push", (event) => {
       await self.registration.showNotification(data.title, {
         body: data.body,
         icon: "/icons/icon-192.png",
-        badge: "/icons/icon-192.png",
+        // Android 상태 표시줄 배지는 알파만 쓴다 — 흰 글리프 + 투명 배경 (컬러 아이콘이면 흰 네모로 보인다)
+        badge: "/icons/badge-96.png",
         tag: data.tag,
         renotify: Boolean(data.tag),
         data: { url: data.url || "/dashboard" },

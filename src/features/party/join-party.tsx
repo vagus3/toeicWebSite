@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { InAppBrowserNotice } from "@/features/pwa/in-app-notice";
 import { requestJson } from "@/lib/http";
 import { partyErrorMessage, type InvitePreview } from "./party-schema";
 
@@ -63,6 +64,8 @@ export function JoinParty() {
         {pending ? "참가하는 중…" : "파티 참가하기"}
       </Button>
       <Link href="/dashboard">홈으로 돌아가기</Link>
+      {/* 참가는 여기서 해도 되지만, 앱 설치·알림은 기기 브라우저에서만 된다 */}
+      <InAppBrowserNotice reason="install" className="card p-4" />
     </main>
   );
 }

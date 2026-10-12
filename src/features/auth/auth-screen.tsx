@@ -13,6 +13,7 @@ import {
   type InvitePreview,
   partyErrorMessage,
 } from "@/features/party/party-schema";
+import { InAppBrowserNotice } from "@/features/pwa/in-app-notice";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import {
   authSchema,
@@ -173,6 +174,9 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
                 : "계정 만들기"
               : "다시 오셨네요"}
           </h2>
+
+          {/* 초대 링크는 대개 카카오톡으로 와서, 앱 안 브라우저에서는 Google 로그인이 막히기 쉽다 */}
+          <InAppBrowserNotice reason="login" className="card p-4" />
 
           <Button
             variant="secondary"

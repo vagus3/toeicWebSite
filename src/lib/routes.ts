@@ -19,6 +19,8 @@ export const ROUTES = {
   upload: "/study/upload",
   /** 내 메뉴 — 프로필·파티·Drive·알림·화면·로그아웃 */
   me: "/me",
+  /** 현재 파티 채팅방으로 보내는 고정 주소 (홈 화면 앱 바로가기용) */
+  chatShortcut: "/chat",
   chat: (partyId: string = PARTY.id, roomId: string = PARTY.defaultChatRoomId) =>
     `/party/${partyId}/chat/${roomId}`,
 } as const;

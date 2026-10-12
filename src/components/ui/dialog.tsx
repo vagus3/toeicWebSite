@@ -2,9 +2,18 @@
 
 import { X } from "@phosphor-icons/react";
 import { Dialog as DialogPrimitive } from "radix-ui";
+import { useCloseWatcher } from "@/lib/hooks/use-close-watcher";
 import { cn } from "@/lib/utils";
 
-export const Dialog = DialogPrimitive.Root;
+/** 열려 있는 동안 Android 뒤로가기로 닫힌다 (모든 다이얼로그가 open을 직접 넘긴다) */
+export function Dialog({
+  open,
+  onOpenChange,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  useCloseWatcher(open === true, () => onOpenChange?.(false));
+  return <DialogPrimitive.Root open={open} onOpenChange={onOpenChange} {...props} />;
+}
 export const DialogClose = DialogPrimitive.Close;
 
 export function DialogContent({

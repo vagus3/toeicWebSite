@@ -125,6 +125,14 @@ Claude Design 프로젝트 **토익 스터디 PWA**의 두 시안을 구현합�
 - 탭바·헤더 없이 화면 전체를 쓰는 경로는 `features/shell/fullscreen.ts`의 `isFullscreenPath`가 정합니다 (촬영, 단어 연습, AI RC, 해커스 LC/RC, 오답 다시 풀기, 질문 상세, 파티 채팅).
 - 이 경로의 화면은 안전 영역을 **직접** 맡습니다. 위는 `ScreenHeader`(pt-safe), 아래는 `PinnedFooter`(pb-safe)입니다. `MainFrame`은 위아래 여백을 주지 않아요. 둘 다 주면 iPhone에서 두 번 들어갑니다.
 - `PinnedFooter`는 탭바가 있는 화면에서 쓰지 않습니다(탭바가 가립니다). 토스트는 전체 화면에서 헤더 아래에 뜨고, 설치 안내 카드는 숨습니다.
+- 다이얼로그(바텀시트)는 Android 뒤로가기로 닫힙니다(`useCloseWatcher`, Chrome 120+). 새 팝업을 직접 만들면 같은 훅을 씁니다.
+
+### 앱 아이콘 (`public/icons`)
+
+- `icon-192/512.png`: 둥근 모서리(투명). iOS·데스크톱용 `purpose: any`.
+- `icon-maskable-192/512.png`: 배경 `#141815`가 가장자리까지 차고, 글리프는 가운데 80% 안. Android 런처가 원·물방울로 자릅니다.
+- `badge-96.png`: 푸시 알림 배지. Android는 알파만 쓰므로 흰 글리프 + 투명 배경이어야 합니다.
+- 원본은 `icon.svg`입니다. 글리프를 바꾸면 세 종류를 모두 다시 만듭니다.
 
 ---
 
@@ -174,7 +182,8 @@ Claude Design 프로젝트 **토익 스터디 PWA**의 두 시안을 구현합�
 | `NudgeButton` · `CheerButton`                                     | `features/party/party-buttons`            | 콕 찌르기(멤버별 하루 1회), 축하                                             |
 | `PushToggle` (`compact`)                                          | `features/chat/push-toggle`               | 채팅 헤더, 내 메뉴                                                           |
 | `PartyList` · `NewPartyButton`                                    | `features/party/party-setup`              | 내 메뉴의 파티 전환(라디오 카드) · 새 파티 만들기                            |
-| `InstallGuide`                                                    | `features/pwa/install-guide`              | 모바일 홈 화면 설치 안내 (iOS 공유→추가 / Android 앱 설치 버튼·메뉴 안내)    |
+| `InstallGuide`                                                    | `features/pwa/install-guide`              | 모바일 홈 화면 설치 안내 — 브라우저별 단계(iOS Safari·iOS 다른 브라우저·Android Chrome·삼성 인터넷 등), 설치 프롬프트가 있으면 [앱 설치] |
+| `InAppBrowserNotice` (`login` · `install`)                        | `features/pwa/in-app-notice`              | 카카오톡 등 앱 안 브라우저일 때만 — 기기 브라우저로 열기·주소 복사 (로그인·초대 참가·설치 안내) |
 
 ---
 
@@ -196,5 +205,6 @@ Claude Design 프로젝트 **토익 스터디 PWA**의 두 시안을 구현합�
 | `/qna`                           | 질문 목록 (누르면 상세 경로)                           | 같은 목록                                  |
 | `/qna/[threadId]`                | 질문 · AI 답변(파티원 확인) · 파티원 답변 · 입력창 하나 [파티원에게 \| AI에게] | 전체 화면, 하단 고정 입력창 (보드 6a) |
 | `/party/[partyId]/chat/[roomId]` | 파티 채팅: [전체 \| 질문만], @AI 답변·확인, 인증 알림·축하 | 전체 화면, 하단 고정 입력창 (보드 6b), 헤더의 채팅 아이콘으로 들어감 |
+| `/chat`                          | 현재 파티 채팅방으로 이동 (홈 화면 앱 바로가기용)      | 같음                                       |
 
 Claude Design 편집기 UI(상단 theme/accent 드롭다운, Comment·Edit·Present·Share)는 앱에 포함하지 않습니다.
