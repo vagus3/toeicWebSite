@@ -18,6 +18,17 @@ const rc = (setId: string, studyDate: string, answers: number[]): DailyRcAttempt
 const empty = { dailyRc: [], word: [], hackers: [], notes: [], quiz };
 
 describe("오답노트 모으기", () => {
+  it("해커스 단어는 별도 출처와 주관식 답을 유지한다", () => {
+    const items = buildReviewItems({ ...empty, hackers: [{ reportId: "word-report", category: "word", testDate: "2026-10-13",
+      rows: [{ number: 1, selected: "employer", correctAnswer: "employee", result: "incorrect" }] }] });
+    expect(items[0]).toMatchObject({ source: "hackers_word", myAnswer: null, correctAnswer: null,
+      myAnswerText: "employer", correctAnswerText: "employee", hasContent: false });
+  });
+  it("객체 속성과 같은 단어도 보기 번호로 해석하지 않는다", () => {
+    const items = buildReviewItems({ ...empty, hackers: [{ reportId: "word-report", category: "word", testDate: "2026-10-13",
+      rows: [{ number: 1, selected: "constructor", correctAnswer: "toString", result: "incorrect" }] }] });
+    expect(items[0]).toMatchObject({ myAnswer: null, correctAnswer: null, myAnswerText: "constructor" });
+  });
   it("일일 RC는 틀린 문항만 지문·보기·해설과 함께 모은다", () => {
     const items = buildReviewItems({ ...empty, dailyRc: [rc("set-1", "2026-10-12", [0, 3, 2])] });
     expect(items).toHaveLength(1);

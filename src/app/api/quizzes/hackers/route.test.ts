@@ -22,6 +22,16 @@ beforeEach(()=>{
 });
 afterEach(()=>vi.unstubAllEnvs());
 describe("해커스 채점표 API",()=>{
+  it("단어 결과와 주관식 답을 저장하고 단어 분류로 조회·분석한다",async()=>{
+    const written = { category:"word", total:1, correct:0, rows:[{number:1,selected:"employer",correctAnswer:"employee",result:"incorrect"}] };
+    expect((await POST(request(written))).status).toBe(200);
+    expect(m.rpc).toHaveBeenCalledWith("record_hackers_report",expect.objectContaining({p_category:"word",p_rows:written.rows}));
+    expect(m.upload).toHaveBeenCalledWith(expect.objectContaining({fileName:expect.stringContaining("hackers-word-")}));
+    expect((await GET(new Request(`https://app.test/api/quizzes/hackers?partyId=${partyId}&category=word`))).status).toBe(200);
+    expect(m.filters).toContainEqual(["category","word"]);
+    expect((await analyze(request(written))).status).toBe(200);
+    expect(m.read).toHaveBeenCalledWith([{ bytes:expect.any(Buffer),mime:"image/png" }],"word");
+  });
   it("LC 저장은 LC 분류와 파일명으로 전달한다",async()=>{
     expect((await POST(request({category:"lc"}))).status).toBe(200);
     expect(m.rpc).toHaveBeenCalledWith("record_hackers_report",expect.objectContaining({p_category:"lc"}));

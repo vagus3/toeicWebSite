@@ -9,7 +9,7 @@ export const ROUTES = {
   quizzes: "/quizzes",
   hackersLc: "/quizzes/hackers/lc",
   hackersRc: "/quizzes/hackers",
-  dailyRc: "/quizzes/rc",
+  hackersWord: "/quizzes/hackers/word",
   dailyQuiz: "/quizzes/daily",
   review: "/quizzes/review",
   qna: "/qna",

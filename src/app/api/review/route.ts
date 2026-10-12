@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { reportRowSchema } from "@/features/quiz/hackers-schema";
+import { hackersCategorySchema, reportRowSchema } from "@/features/quiz/hackers-schema";
 import { rcSetSchema } from "@/features/quiz/rc-schema";
 import {
   buildReviewItems,
@@ -91,8 +91,9 @@ export async function GET(request: Request) {
   });
   const reports: HackersReportInput[] = (hackers.data ?? []).flatMap((row) => {
     const rows = reportRows.safeParse(row.rows);
-    return rows.success
-      ? [{ reportId: row.id, category: row.category === "lc" ? "lc" as const : "rc" as const, testDate: row.test_date, rows: rows.data }]
+    const category = hackersCategorySchema.safeParse(row.category);
+    return rows.success && category.success
+      ? [{ reportId: row.id, category: category.data, testDate: row.test_date, rows: rows.data }]
       : [];
   });
   const items = buildReviewItems({

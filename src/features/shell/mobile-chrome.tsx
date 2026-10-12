@@ -12,8 +12,8 @@ import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { isActive, TAB_ITEMS, type NavItem } from "./nav-items";
 
-/** 촬영·퀴즈 화면은 프로토타입처럼 탭/헤더 없이 전체 화면 */
-const FULLSCREEN = [ROUTES.upload, ROUTES.dailyQuiz];
+/** 촬영 화면은 탭/헤더 없이 전체 화면 */
+const FULLSCREEN = [ROUTES.upload];
 
 function useIsFullscreenRoute() {
   const pathname = usePathname();

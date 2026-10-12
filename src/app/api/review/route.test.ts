@@ -60,6 +60,14 @@ beforeEach(() => {
 
 describe("오답노트 조회", () => {
   const get = (q = `partyId=${partyId}`) => GET(new Request(`https://app.test/api/review?${q}`));
+  it("해커스 단어를 RC로 바꾸지 않고 주관식 답과 함께 돌려준다", async () => {
+    tables.hackers_rc_reports = query(() => ({ data: [{ id: reportId, category: "word", test_date: "2026-10-13",
+      rows: [{ number: 4, selected: "employer", correctAnswer: "employee", result: "incorrect" }] }], error: null }));
+    const { items } = await (await get()).json();
+    expect(items.find((i: { source: string }) => i.source === "hackers_word")).toMatchObject({
+      number: 4, myAnswerText: "employer", correctAnswerText: "employee", myAnswer: null, correctAnswer: null,
+    });
+  });
   it("로그인하지 않았거나 파티 id가 이상하면 읽지 않는다", async () => {
     m.session.mockResolvedValueOnce({ ok: false, response: Response.json({}, { status: 401 }) });
     expect((await get()).status).toBe(401);

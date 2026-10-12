@@ -2,16 +2,22 @@ import { z } from "zod";
 
 export const HACKERS_RC_URL = "https://www.hackers.co.kr/?c=s_toeic/toeic_study/drc";
 export const HACKERS_LC_URL = "https://www.hackers.co.kr/?c=s_toeic/toeic_study/dlc";
-export const hackersCategorySchema = z.enum(["rc", "lc"]);
+export const HACKERS_WORD_URL = "https://www.hackers.co.kr/?c=s_toeic/toeic_study/new_voca_toeic_testpaper";
+export const hackersCategorySchema = z.enum(["rc", "lc", "word"]);
 export type HackersCategory = z.infer<typeof hackersCategorySchema>;
-export const HACKERS_URLS = { rc: HACKERS_RC_URL, lc: HACKERS_LC_URL };
-const choice = z.enum(["A", "B", "C", "D"]).nullable();
+export const HACKERS_URLS = { rc: HACKERS_RC_URL, lc: HACKERS_LC_URL, word: HACKERS_WORD_URL };
+export const HACKERS_LABELS = { rc: "RC", lc: "LC", word: "단어" };
+const choice = z.string().trim().min(1).max(200).nullable();
+/** 주관식은 문자열 비교로 채점하지 않고 원본 결과표의 정오를 유지한다. */
+export function hasChoiceAnswers(row: { selected: string | null; correctAnswer: string | null }) {
+  return Boolean(row.selected && row.correctAnswer && /^[A-D]$/.test(row.selected) && /^[A-D]$/.test(row.correctAnswer));
+}
 export const reportRowSchema = z.object({
   number: z.number().int().min(1).max(200),
   selected: choice,
   correctAnswer: choice,
   result: z.enum(["correct", "incorrect", "unknown"]),
-}).transform((r) => ({ ...r, result: r.selected && r.correctAnswer
+}).transform((r) => ({ ...r, result: hasChoiceAnswers(r)
   ? r.selected === r.correctAnswer ? "correct" as const : "incorrect" as const : r.result }));
 const rows = z.array(reportRowSchema).max(200).refine((rs) => new Set(rs.map((r) => r.number)).size === rs.length, "문항 번호가 중복됐어요");
 /** 한 번에 읽는 쪽 수. 해커스 결과지 PDF(5쪽)를 한 번의 요청으로 보낸다. */
@@ -31,6 +37,8 @@ export const confirmedReportSchema = z.object({
   total: z.number().int().min(1).max(200), correct: z.number().int().min(0).max(200),
   rows, method: z.enum(["ocr-reviewed", "manual"]),
 }).superRefine((r, ctx) => {
+  if (r.category !== "word" && r.rows.some((row) => [row.selected, row.correctAnswer].some((answer) => answer !== null && !/^[A-D]$/.test(answer))))
+    ctx.addIssue({ code: "custom", message: "LC·RC 답은 A–D 보기로 입력해 주세요" });
   if (r.correct > r.total || r.rows.length > r.total) ctx.addIssue({ code: "custom", message: "정답 수와 문항 수를 확인해 주세요" });
   if (r.rows.length === r.total && r.rows.every((row) => row.result !== "unknown") && r.correct !== r.rows.filter((row) => row.result === "correct").length)
     ctx.addIssue({ code: "custom", message: "문항별 결과와 정답 수가 일치하지 않아요" });

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ActionCard } from "@/components/shared/action-card";
 import { Button } from "@/components/ui/button";
-import { QUIZ } from "@/lib/demo-data";
 import { ROUTES } from "@/lib/routes";
 import { useStudyStore } from "@/stores/study-store";
 
@@ -13,11 +12,11 @@ export function QuickTests() {
   return (
     <div className="grid grid-cols-[repeat(auto-fit,minmax(var(--spacing-card-min),1fr))] gap-3">
       <ActionCard
-        kicker="일일 테스트 · 단어 연습"
-        title={`단어 Day 12 · ${QUIZ.length}문항`}
+        kicker="일일 단어 · 해커스에서 시험 응시"
+        title="해커스 단어 시험 결과 제출"
         action={
           <Button asChild variant="primary" className="text-meta">
-            <Link href={ROUTES.dailyQuiz}>시작</Link>
+            <Link href={ROUTES.hackersWord}>응시 / 결과 제출</Link>
           </Button>
         }
       />

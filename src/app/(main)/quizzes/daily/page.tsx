@@ -1,8 +1,6 @@
-import type { Metadata } from "next";
-import { QuizRunner } from "@/features/quiz/quiz-runner";
-
-export const metadata: Metadata = { title: "일일 테스트" };
+import { redirect } from "next/navigation";
+import { ROUTES } from "@/lib/routes";
 
 export default function DailyQuizPage() {
-  return <QuizRunner />;
+  redirect(ROUTES.hackersWord);
 }

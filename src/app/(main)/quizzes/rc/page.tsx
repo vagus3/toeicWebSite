@@ -1,4 +1,6 @@
-import type { Metadata } from "next";
-import { RcRunner } from "@/features/quiz/rc-runner";
-export const metadata: Metadata = { title: "일일 RC 테스트" };
-export default function DailyRcPage() { return <RcRunner />; }
+import { redirect } from "next/navigation";
+import { ROUTES } from "@/lib/routes";
+
+export default function DailyRcPage() {
+  redirect(ROUTES.hackersRc);
+}

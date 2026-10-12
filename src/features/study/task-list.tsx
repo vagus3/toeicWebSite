@@ -1,6 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { TASKS } from "@/lib/demo-data";
+import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useStudyStore } from "@/stores/study-store";
 import type { StudyTask } from "@/types";
@@ -9,6 +11,7 @@ import { useStartUpload } from "./use-start-upload";
 
 /** 오늘 할당량 + 인증 여부 + 누르면 인증 시작 */
 function useTaskItems() {
+  const router = useRouter();
   const done = useStudyStore((s) => s.done);
   const startUpload = useStartUpload();
   return TASKS.map((task) => ({
@@ -16,8 +19,8 @@ function useTaskItems() {
     done: done[task.id],
     buttonProps: {
       type: "button" as const,
-      title: done[task.id] ? "인증 사진 추가하기" : "인증하기",
-      onClick: () => startUpload(task.id),
+      title: task.id === "word" ? "해커스에서 단어 시험 응시 / 결과 제출" : done[task.id] ? "인증 사진 추가하기" : "인증하기",
+      onClick: () => task.id === "word" ? router.push(ROUTES.hackersWord) : startUpload(task.id),
     },
   }));
 }
@@ -76,7 +79,7 @@ export function TaskChecklist() {
               <span className="text-body">{task.label}</span>
               <span className="text-label text-muted">{task.mobileSub}</span>
             </span>
-            <span className="tag tag-neutral">{done ? "추가 업로드" : "인증"}</span>
+            <span className="tag tag-neutral">{task.id === "word" ? "결과 제출" : done ? "추가 업로드" : "인증"}</span>
           </button>
         </li>
       ))}

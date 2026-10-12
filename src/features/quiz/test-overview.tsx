@@ -6,7 +6,6 @@ import { ActionCard } from "@/components/shared/action-card";
 import { PageTitle } from "@/components/shared/page-title";
 import { SectionTitle } from "@/components/shared/section-title";
 import { Button } from "@/components/ui/button";
-import { QUIZ } from "@/lib/demo-data";
 import { ROUTES } from "@/lib/routes";
 import { useStudyStore } from "@/stores/study-store";
 import { ScoreChart } from "./score-chart";
@@ -20,7 +19,6 @@ export function TestOverview() {
   const me = useStudyStore((s) => s.me);
   const openScore = useStudyStore((s) => s.openScore);
   const scores = useStudyStore((s) => s.scores);
-  const quizScore = useStudyStore((s) => s.quizScore);
   const review = useReviewItems();
 
   return (
@@ -48,22 +46,14 @@ export function TestOverview() {
         <ActionCard
           className={CARD}
           titleClassName={TITLE}
-          kicker="일일 · 연습 문제"
-          title={`단어 연습 · ${QUIZ.length}문항`}
-          description="끝나면 결과 저장 · 단어 자동 인증"
+          kicker="일일 단어 · 해커스에서 시험 응시"
+          title="해커스 단어 시험 결과 제출"
+          description="해커스에서 원하는 시험 생성·응시 · 결과지·스크린샷 제출 · 단어 인증"
           action={
             <Button asChild variant="primary">
-              <Link href={ROUTES.dailyQuiz}>시작</Link>
+              <Link href={ROUTES.hackersWord}>응시 / 결과 제출</Link>
             </Button>
           }
-        />
-        <ActionCard
-          className={CARD}
-          titleClassName={TITLE}
-          kicker="일일 · Groq AI 출제"
-          title="RC · Part 5·6·7 각 1문항"
-          description="하루 3문항 · 지문·해설 제공 · RC 자동 인증"
-          action={<Button asChild variant="primary"><Link href={ROUTES.dailyRc}>시작 / 결과</Link></Button>}
         />
         <ActionCard
           className={CARD}
@@ -72,8 +62,8 @@ export function TestOverview() {
           title="오답노트"
           description={
             review.data
-              ? `복습할 문제 ${review.data.items.filter((i) => !i.reviewed).length}개 · 일일 RC·단어·해커스 오답`
-              : "일일 RC·단어·해커스에서 틀린 문제를 모아 다시 풀어요"
+              ? `복습할 문제 ${review.data.items.filter((i) => !i.reviewed).length}개 · 제출한 채점표와 기존 기록의 오답`
+              : "제출한 채점표와 기존 기록에서 틀린 문제를 모아 다시 풀어요"
           }
           action={<Button asChild variant="secondary"><Link href={ROUTES.review}>복습하기</Link></Button>}
         />
@@ -115,14 +105,6 @@ export function TestOverview() {
             </li>
           ))}
         </ul>
-        {quizScore !== null && (
-          <div className="card elev-sm gap-0.5 p-3.5">
-            <span className="text-label text-muted">방금 일일 테스트</span>
-            <span className="text-stat font-medium">
-              {quizScore} / {QUIZ.length}
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -70,7 +70,7 @@ export function QnaBoard() {
           <h2 className="m-0 whitespace-pre-wrap break-words text-title leading-question font-normal tracking-normal md:text-heading">
             {thread.title}
           </h2>
-          <AiConversation key={thread.id} thread={thread} />
+          <AiConversation key={`ai:${thread.id}`} thread={thread} />
           <h3 className="m-0 text-body">파티원 댓글 · {thread.replies.length}</h3>
           {!thread.replies.length && <p className="m-0 text-meta text-muted">설명이나 다른 풀이를 댓글로 남겨 주세요.</p>}
           {thread.replies.map((r, i) => (
@@ -90,7 +90,7 @@ export function QnaBoard() {
             </div>
           ))}
           <MessageComposer
-            key={thread.id}
+            key={`reply:${thread.id}`}
             disabled={saving}
             placeholder="파티원에게 댓글 남기기 (Enter)"
             label="파티원 댓글"
