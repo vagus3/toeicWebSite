@@ -4,6 +4,13 @@ import { dDay } from "@/lib/utils";
 import { useStudyStore } from "@/stores/study-store";
 import type { Member } from "@/types";
 
+/** 시험까지 남은 날 표시. 시험일이 없으면 "미정", 당일은 "D-Day", 지난 날은 "D+3" */
+export function dDayLabel(days: number | null) {
+  if (days === null) return "미정";
+  if (days === 0) return "D-Day";
+  return days > 0 ? `D-${days}` : `D+${-days}`;
+}
+
 export function usePartySummary() {
   const party = useStudyStore((s) => s.party);
   const date = useStudyStore((s) => s.studyDate);
@@ -11,10 +18,11 @@ export function usePartySummary() {
   const days = party?.examDate
     ? dDay(new Date(`${date}T12:00:00`), new Date(`${party.examDate}T12:00:00`))
     : null;
+  const label = dDayLabel(days);
   return {
     name: party?.name ?? "새벽 토익",
-    dDay: days ?? "—",
-    summary: `${count} / ${party?.capacity ?? 6}명${days === null ? "" : ` · D-${days}`}`,
+    dDay: label,
+    summary: `${count} / ${party?.capacity ?? 6}명${days === null ? "" : ` · ${label}`}`,
   };
 }
 export function useMembers(): Member[] {

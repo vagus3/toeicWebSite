@@ -52,6 +52,15 @@ export function toStudyDate(date: Date) {
   return `${y}-${m}-${d}`;
 }
 
+const DOW_KO = ["일", "월", "화", "수", "목", "금", "토"];
+
+/** "2026-10-25" → "10/25(일) 시험". 날짜가 없으면 "시험일 미정" */
+export function examLabel(examDate: string | null) {
+  if (!examDate) return "시험일 미정";
+  const d = new Date(`${examDate}T12:00:00`);
+  return `${d.getMonth() + 1}/${d.getDate()}(${DOW_KO[d.getDay()]}) 시험`;
+}
+
 export function dDay(today: Date, target: Date) {
   const ms =
     Date.UTC(target.getFullYear(), target.getMonth(), target.getDate()) -

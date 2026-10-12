@@ -53,7 +53,7 @@ function MemberWeek({ member }: { member: Member }) {
         <StatRow
           label="교재"
           value={bookPercent(member)}
-          display={`${member.book.done}/${member.book.total}`}
+          display={member.book.total ? `${member.book.done}/${member.book.total}` : `${member.book.done}일`}
           barClassName="bg-accent-400"
         />
       </div>

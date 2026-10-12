@@ -20,7 +20,7 @@ import {
   type StudyLog,
   type StudySnapshot,
 } from "./study-model";
-import { toStudyDate } from "./utils";
+import { examLabel, toStudyDate } from "./utils";
 
 export function demoSnapshot(): StudySnapshot {
   return {
@@ -170,9 +170,7 @@ export async function loadStudyCore(
       brand: "새벽 토익",
       capacity: party.capacity,
       examDate: party.exam_date,
-      examLabel: party.exam_date
-        ? `${party.exam_date} 정기시험`
-        : "시험일 미정",
+      examLabel: examLabel(party.exam_date),
       driveRoot: party.name,
       inviteUrl: `/invite/${inviteResult.data}`,
       defaultChatRoomId: roomResult.data?.id ?? "",
@@ -257,7 +255,8 @@ export async function loadStudyDetail(
       return [
         p.id,
         {
-          book: { done: bookDays, total: Math.max(24, bookDays) },
+          // 교재 목표(쪽수·일수)는 DB에 없다. 0이면 화면은 "N일"로만 보여 준다.
+          book: { done: bookDays, total: 0 },
           score: scores.at(-1)?.score ?? null,
           streak: consecutiveDays(studyLogs, p.id, studyDate),
         },

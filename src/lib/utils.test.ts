@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cn, dDay, weekTestLabel } from "./utils";
+import { cn, dDay, examLabel, weekTestLabel } from "./utils";
 
 describe("cn", () => {
   it("글자 크기 토큰과 색상 클래스를 둘 다 유지한다", () => {
@@ -17,4 +17,9 @@ describe("dates", () => {
   it("10/8(목) 기준 주간 테스트일은 10/10(토)", () => {
     expect(weekTestLabel(new Date(2026, 9, 8))).toBe("10/10");
   });
+});
+
+describe("examLabel", () => {
+  it("날짜를 요일과 함께 보여 준다", () => expect(examLabel("2026-10-25")).toBe("10/25(일) 시험"));
+  it("시험일이 없으면 미정", () => expect(examLabel(null)).toBe("시험일 미정"));
 });

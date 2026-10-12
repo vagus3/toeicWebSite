@@ -23,7 +23,7 @@ export const PARTY: Party = {
   name: "새벽 토익 4인방",
   brand: "새벽 토익",
   capacity: 6,
-  examLabel: "10/25(일) 정기시험",
+  examLabel: "10/25(일) 시험",
   examDate: new Date(2026, 9, 25),
   driveRoot: "새벽토익",
   inviteUrl: "https://toeic-study.vercel.app/invite/dawn-4",

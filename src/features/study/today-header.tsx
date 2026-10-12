@@ -45,7 +45,7 @@ export function TodayHeaderDesktop() {
       <div className="flex flex-col gap-1">
         <span className="text-meta text-muted">{party?.examLabel}</span>
         <span className="text-display leading-none font-medium tracking-display">
-          D-{dDay}
+          {dDay}
         </span>
       </div>
       <div className="flex flex-col gap-1 pb-1.5">
@@ -71,7 +71,7 @@ export function TodayHeaderMobile() {
         <span className="text-meta text-muted">{party?.examLabel}</span>
         <div className="flex items-baseline gap-2.5">
           <span className="text-hero leading-none font-medium tracking-display">
-            D-{dDay}
+            {dDay}
           </span>
           <span className="text-meta text-accent-300">
             {latest} → 목표 {me.target}

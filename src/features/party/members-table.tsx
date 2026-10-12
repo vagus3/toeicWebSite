@@ -50,7 +50,7 @@ export function MembersTable() {
                   </span>
                 </td>
                 <td>
-                  {m.book.done}/{m.book.total}
+                  {m.book.total ? `${m.book.done}/${m.book.total}` : `${m.book.done}일`}
                 </td>
                 <td>{m.score ?? "—"}</td>
                 <td>{m.streak}일</td>
