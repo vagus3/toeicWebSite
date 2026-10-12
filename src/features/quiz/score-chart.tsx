@@ -11,9 +11,7 @@ import {
 } from "recharts";
 import { useStudyStore } from "@/stores/study-store";
 import type { ScoreEntry } from "@/types";
-
-/** 점수 축 범위 — 시안의 600~820 매핑 */
-const DOMAIN: [number, number] = [0, 990];
+import { scoreDomain } from "./score-domain";
 
 function ScoreTooltip({
   active,
@@ -32,9 +30,10 @@ function ScoreTooltip({
   );
 }
 
-/** 내 점수 추이 — 목표선(점선) + 주간 점수 라인 */
+/** 내 점수 추이 — 목표선(점선·라벨) + 주간 점수 라인, 아래에 첫 기록과 최근 점수 */
 export function ScoreChart({ scores }: { scores: ScoreEntry[] }) {
   const me = useStudyStore((s) => s.me);
+  const latest = scores.at(-1);
   return (
     <figure className="m-0 flex flex-col gap-1.5">
       <div className="aspect-score-chart w-full">
@@ -44,13 +43,19 @@ export function ScoreChart({ scores }: { scores: ScoreEntry[] }) {
             margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
           >
             <XAxis dataKey="label" hide />
-            <YAxis domain={DOMAIN} hide />
+            <YAxis domain={scoreDomain(scores, me.target)} hide />
             <ReferenceLine
               y={me.target}
               stroke="var(--color-accent)"
               strokeDasharray="3 4"
               strokeOpacity={0.5}
               ifOverflow="extendDomain"
+              label={{
+                value: `목표 ${me.target}`,
+                position: "insideTopRight",
+                fill: "var(--color-accent)",
+                className: "text-caption",
+              }}
             />
             <Tooltip
               content={({ active, payload }) => (
@@ -77,7 +82,10 @@ export function ScoreChart({ scores }: { scores: ScoreEntry[] }) {
       </div>
       <figcaption className="flex justify-between text-caption text-neutral-500">
         <span>{scores[0]?.label}</span>
-        <span>최근</span>
+        <span>
+          최근{" "}
+          {latest && <b className="font-medium text-accent">{latest.value}점</b>}
+        </span>
       </figcaption>
     </figure>
   );

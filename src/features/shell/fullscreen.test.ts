@@ -16,6 +16,14 @@ describe("isFullscreenPath", () => {
     expect(isFullscreenPath("/partyroom")).toBe(false);
   });
 
+  it("풀이 화면은 전체 화면이고 목록 화면은 아니다", () => {
+    expect(isFullscreenPath("/quizzes/rc")).toBe(true);
+    expect(isFullscreenPath("/quizzes/hackers")).toBe(true);
+    expect(isFullscreenPath("/quizzes/hackers/lc")).toBe(true);
+    expect(isFullscreenPath("/quizzes/review/retry")).toBe(true);
+    expect(isFullscreenPath("/quizzes/review")).toBe(false);
+  });
+
   it("질문 상세는 전체 화면이고 질문 목록은 아니다", () => {
     expect(isFullscreenPath("/qna/t1")).toBe(true);
     expect(isFullscreenPath("/qna")).toBe(false);

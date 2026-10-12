@@ -8,7 +8,7 @@ import { Suspense, useState } from "react";
 import { PageTitle } from "@/components/shared/page-title";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { ReportRowsTable } from "@/features/quiz/report-rows-table";
+import { ReportRowsView } from "@/features/quiz/report-rows-grid";
 import { EvidenceFull, EvidenceThumb, evidenceUrl } from "@/features/study/evidence-photo";
 import { TASKS } from "@/lib/demo-data";
 import { useIsMobile } from "@/lib/hooks/use-media-query";
@@ -86,7 +86,7 @@ function RecordDetail({ item, name, demo, mine }: { item: RecordItem; name: stri
             </span>
             <span className="text-muted">문제 날짜 {item.report.testDate}</span>
           </div>
-          <ReportRowsTable rows={item.report.rows} />
+          <ReportRowsView rows={item.report.rows} />
           {/* 오답노트는 본인만 볼 수 있어 내 기록에서만 연결한다 */}
           {mine && !demo && item.report.rows.some((r) => r.result === "incorrect") && (
             <Link href={ROUTES.review} className="text-meta text-accent underline">

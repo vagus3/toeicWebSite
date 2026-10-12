@@ -23,6 +23,7 @@ export function QuizRunner() {
   const [score, setScore] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const saving = useStudyStore((s) => s.saving);
+  const openQuestion = useStudyStore((s) => s.openQuestion);
 
   const q = QUIZ[index];
   const answered = pick !== null;
@@ -104,6 +105,20 @@ export function QuizRunner() {
           <span className="text-meta leading-reading md:text-body">
             {q.why}
           </span>
+          {/* 해설이 더 궁금하면 문제를 채운 질문으로 바로 올린다. 풀던 퀴즈는 그대로 둔다 */}
+          <Button
+            variant="ghost"
+            className="self-start text-meta"
+            onClick={() =>
+              openQuestion({
+                tag: "단어",
+                title: `단어 연습 문제: ${q.text}\n내가 고른 답: ${q.opts[pick]} · 정답: ${q.opts[q.answer]}\n궁금한 점: `,
+                stay: true,
+              })
+            }
+          >
+            질문 창구에 올리기
+          </Button>
         </div>
       )}
 

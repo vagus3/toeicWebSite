@@ -2,7 +2,8 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useState } from "react";
+import { FilePickerButton } from "@/components/shared/file-picker-button";
 import { PageTitle } from "@/components/shared/page-title";
 import { Button } from "@/components/ui/button";
 import { prepareReportImages, reportFileErrorMessage } from "@/features/quiz/pdf-to-image";
@@ -10,15 +11,9 @@ import { QUIZ } from "@/lib/demo-data";
 import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useStudyStore } from "@/stores/study-store";
-import { buildReviewItems, type ReviewItem, type ReviewSource } from "./review-model";
+import { buildReviewItems, SOURCE_LABEL, type ReviewItem, type ReviewSource } from "./review-model";
 import { reviewQueryKey, useReviewItems, useToggleReviewed } from "./use-review";
 
-const SOURCE_LABEL: Record<ReviewSource, string> = {
-  daily_rc: "일일 RC",
-  hackers_rc: "해커스 RC",
-  hackers_lc: "해커스 LC",
-  word: "단어",
-};
 const SOURCES = Object.keys(SOURCE_LABEL) as ReviewSource[];
 const STATUS = { pending: "복습 전", reviewed: "복습 완료", all: "전체" } as const;
 type Status = keyof typeof STATUS;
@@ -32,8 +27,13 @@ function dayLabel(date: string) {
 }
 const isHackers = (source: ReviewSource) => source === "hackers_rc" || source === "hackers_lc";
 
+/** 한 문제씩 다시 풀 수 있는 문항 — 복습 전이고 보기가 있는 문제 (해커스는 결과지로 문제를 채운 뒤) */
+export function canRetry(item: ReviewItem) {
+  return !item.reviewed && item.options.length > 0;
+}
+
 /** 데모 모드에서 화면 구성을 보여주기 위한 예시 오답 */
-function demoItems(studyDate: string) {
+export function demoItems(studyDate: string) {
   return buildReviewItems({
     dailyRc: [],
     word: [{ attemptId: "demo-word", takenOn: studyDate, answers: QUIZ.map((q, i) => (i === 1 ? (q.answer + 1) % 4 : q.answer)) }],
@@ -162,7 +162,6 @@ function FillFromReport({
   hasMissing: boolean;
   demo: boolean;
 }) {
-  const input = useRef<HTMLInputElement>(null);
   const client = useQueryClient();
   const partyId = useStudyStore((s) => s.party?.id);
   const [busy, setBusy] = useState(false);
@@ -207,26 +206,15 @@ function FillFromReport({
   }
   return (
     <div className="flex flex-col gap-1.5">
-      <input
-        ref={input}
-        type="file"
-        accept="application/pdf,.pdf,image/png,image/jpeg,image/webp"
-        className="sr-only"
-        tabIndex={-1}
-        aria-hidden
-        onChange={(e) => {
-          void fill(e.target.files?.[0]);
-          e.target.value = "";
-        }}
-      />
-      <Button
+      <FilePickerButton
         variant={hasMissing ? "secondary" : "ghost"}
         className="self-start text-meta"
+        accept="application/pdf,.pdf,image/png,image/jpeg,image/webp"
         disabled={busy || demo}
-        onClick={() => input.current?.click()}
+        onSelect={(file) => void fill(file)}
       >
         {busy ? "결과지 읽는 중…" : hasMissing ? "결과지 PDF로 문제·해설 채우기" : "결과지로 다시 채우기"}
-      </Button>
+      </FilePickerButton>
       {hasMissing && (
         <p className="m-0 text-caption text-muted">
           결과지 PDF 전체(문제가 있는 쪽 포함)가 Groq로 전송돼요. 채운 문제·해설은 나만 볼 수 있어요.
@@ -257,6 +245,9 @@ export function ReviewBoard() {
     ? (query.data?.items ?? [])
     : demoItems(studyDate).map((i) => ({ ...i, reviewed: demoReviewed.has(i.key) }));
   const pending = items.filter((i) => !i.reviewed).length;
+  const retryable = items.filter(
+    (i) => canRetry(i) && (!source || i.source === source),
+  ).length;
   const visible = items.filter(
     (i) =>
       (!source || i.source === source) &&
@@ -290,13 +281,14 @@ export function ReviewBoard() {
       </div>
 
       <div className="flex flex-col gap-2.5">
-        <div className="flex flex-wrap gap-2">
+        {/* 출처 칩은 모바일에서 한 줄로 가로로 넘겨 보고, 데스크톱은 줄바꿈한다 */}
+        <div className="-mx-5 flex gap-2 overflow-x-auto px-5 md:mx-0 md:flex-wrap md:px-0">
           {(["", ...SOURCES] as const).map((s) => (
             <button
               key={s || "all"}
               type="button"
               aria-pressed={source === s}
-              className={chip(source === s)}
+              className={cn(chip(source === s), "shrink-0")}
               onClick={() => {
                 setSource(s);
                 resetSticky();
@@ -307,29 +299,40 @@ export function ReviewBoard() {
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {(Object.keys(STATUS) as Status[]).map((s) => (
-            <button
-              key={s}
-              type="button"
-              aria-pressed={status === s}
-              className={chip(status === s)}
-              onClick={() => {
-                setStatus(s);
-                resetSticky();
-              }}
-            >
-              {STATUS[s]}
-            </button>
-          ))}
+          <div role="radiogroup" aria-label="복습 상태" className="seg">
+            {(Object.keys(STATUS) as Status[]).map((s) => (
+              <label key={s} className="seg-opt">
+                <input
+                  type="radio"
+                  name="review-status"
+                  value={s}
+                  checked={status === s}
+                  onChange={() => {
+                    setStatus(s);
+                    resetSticky();
+                  }}
+                />
+                {STATUS[s]}
+              </label>
+            ))}
+          </div>
           <Button
             variant={hideAnswers ? "secondary" : "ghost"}
             aria-pressed={hideAnswers}
             className="ml-auto text-meta"
             onClick={() => setHideAnswers(!hideAnswers)}
           >
-            {hideAnswers ? "정답 가리는 중 · 다시 풀기" : "정답 가리고 다시 풀기"}
+            {hideAnswers ? "정답 가리는 중" : "정답 가리기"}
           </Button>
         </div>
+        {/* 보기가 있는 복습 전 문제를 한 문제씩 전체 화면으로 다시 푼다 (보드 5b) */}
+        {retryable > 0 && (
+          <Button asChild variant="primary" className="self-start">
+            <Link href={source ? `${ROUTES.reviewRetry}?source=${source}` : ROUTES.reviewRetry}>
+              한 문제씩 다시 풀기 · {retryable}문제
+            </Link>
+          </Button>
+        )}
       </div>
 
       {live && query.isPending ? (

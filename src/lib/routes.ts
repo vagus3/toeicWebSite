@@ -12,6 +12,8 @@ export const ROUTES = {
   dailyRc: "/quizzes/rc",
   dailyQuiz: "/quizzes/daily",
   review: "/quizzes/review",
+  /** 오답노트 한 문제씩 다시 풀기 (?source=로 출처를 고른다) */
+  reviewRetry: "/quizzes/review/retry",
   qna: "/qna",
   qnaThread: (threadId: string) => `/qna/${threadId}`,
   upload: "/study/upload",

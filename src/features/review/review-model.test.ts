@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildReviewItems, reviewKey, type DailyRcAttempt } from "./review-model";
+import { buildReviewItems, questionTag, reviewKey, weakestSource, type DailyRcAttempt } from "./review-model";
 import type { QuizQuestion } from "@/types";
 
 const quiz: QuizQuestion[] = [
@@ -73,5 +73,30 @@ describe("오답노트 모으기", () => {
       "2026-10-12/daily_rc/1", "2026-10-12/word/1",
       "2026-10-11/daily_rc/1", "2026-10-11/daily_rc/2", "2026-10-11/daily_rc/3",
     ]);
+  });
+});
+
+describe("질문 창구 영역 고르기", () => {
+  it("일일 RC는 Part 표시를, 해커스는 문항 번호를 따른다", () => {
+    expect(questionTag({ source: "daily_rc", detail: "Part 6 · 문맥", number: 2 })).toBe("RC Part 6");
+    expect(questionTag({ source: "hackers_rc", detail: "112번", number: 112 })).toBe("RC Part 5");
+    expect(questionTag({ source: "hackers_rc", detail: "160번", number: 160 })).toBe("RC Part 7");
+    expect(questionTag({ source: "hackers_lc", detail: "20번", number: 20 })).toBe("LC Part 2");
+    expect(questionTag({ source: "word", detail: "단어 · 빈칸 채우기", number: 1 })).toBe("단어");
+  });
+});
+
+describe("약한 영역", () => {
+  it("복습 전 오답이 가장 많은 출처를 고른다", () => {
+    expect(weakestSource([
+      { source: "word", reviewed: false },
+      { source: "hackers_rc", reviewed: false },
+      { source: "hackers_rc", reviewed: false },
+      { source: "hackers_rc", reviewed: true },
+    ])).toEqual({ source: "hackers_rc", count: 2 });
+  });
+
+  it("복습할 오답이 없으면 null", () => {
+    expect(weakestSource([{ source: "word", reviewed: true }])).toBeNull();
   });
 });

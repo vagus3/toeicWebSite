@@ -4,7 +4,14 @@ import { ROUTES } from "@/lib/routes";
  * 탭바·헤더를 숨기고 화면 전체를 쓰는 경로. 화면 안의 닫기(X)·뒤로(‹)로 돌아간다.
  * 이 경로의 화면은 ScreenHeader(pt-safe)와 PinnedFooter(pb-safe)로 안전 영역을 직접 맡는다.
  */
-const FULLSCREEN_ROUTES: readonly string[] = [ROUTES.upload, ROUTES.dailyQuiz];
+const FULLSCREEN_ROUTES: readonly string[] = [
+  ROUTES.upload,
+  ROUTES.dailyQuiz,
+  ROUTES.dailyRc,
+  // 해커스 RC(/quizzes/hackers)는 LC(/quizzes/hackers/lc)도 하위 경로로 함께 덮는다
+  ROUTES.hackersRc,
+  ROUTES.reviewRetry,
+];
 
 /** 이 경로 아래는 모두 전체 화면 — 파티 채팅방, 질문 상세 (질문 목록 /qna는 아님) */
 const FULLSCREEN_PREFIXES: readonly string[] = ["/party/", "/qna/"];

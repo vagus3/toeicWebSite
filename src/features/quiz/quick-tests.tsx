@@ -28,7 +28,7 @@ export function QuickTests() {
       />
       <ActionCard
         kicker="일일 RC · 해커스 풀이"
-        title="해커스 채점표 제출"
+        title="해커스 RC 채점표 제출"
         action={<Button asChild variant="primary" className="text-meta"><Link href={ROUTES.hackersRc}>풀기 / 제출</Link></Button>}
       />
       <ActionCard

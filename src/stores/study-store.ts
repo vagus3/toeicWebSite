@@ -21,17 +21,28 @@ type StudyInput<T = StudyAction> = T extends StudyAction
   : never;
 
 export type Modal = "upload" | "score" | "question" | null;
+
+/**
+ * 질문하기를 다른 화면에서 열 때 미리 채울 내용 (퀴즈·AI RC 해설의 "질문 창구에 올리기").
+ * stay면 질문을 올린 뒤 질문 상세로 옮기지 않고 그 자리에 남는다 (풀던 문제를 잃지 않게).
+ */
+export interface QuestionDraft {
+  tag: Extract<StudyAction, { action: "question" }>["tag"];
+  title: string;
+  stay?: boolean;
+}
 interface StudyState extends StudyCore, StudyDetail {
   /** 상세 기록이 한 번이라도 도착했는지. false인 동안 상세를 쓰는 화면은 로딩 상태를 보인다. */
   detailReady: boolean;
   detailError: boolean;
   modal: Modal;
   uploadSelection: StudyCategory | null;
+  questionDraft: QuestionDraft | null;
   saving: boolean;
   openUpload: (category?: StudyCategory) => void;
   selectUpload: (category: StudyCategory) => void;
   openScore: () => void;
-  openQuestion: () => void;
+  openQuestion: (draft?: QuestionDraft) => void;
   closeModal: () => void;
   completeTask: (category: StudyCategory) => void;
   addScore: (lc: number, rc: number, label: string) => Promise<boolean>;
@@ -162,6 +173,7 @@ export function createStudyStore(initial: StudySnapshot) {
       detailError: false,
       modal: null,
       uploadSelection: TASKS.find((t) => !core.done[t.id])?.id ?? TASKS[0].id,
+      questionDraft: null,
       saving: false,
       refresh,
       loadDetail: async () => {
@@ -180,8 +192,8 @@ export function createStudyStore(initial: StudySnapshot) {
         set({ uploadSelection: category });
       },
       openScore: () => set({ modal: "score" }),
-      openQuestion: () => set({ modal: "question" }),
-      closeModal: () => set({ modal: null }),
+      openQuestion: (draft) => set({ modal: "question", questionDraft: draft ?? null }),
+      closeModal: () => set({ modal: null, questionDraft: null }),
       completeTask: (category) =>
         set((s) => ({ done: { ...s.done, [category]: true } })),
       addScore: async (lc, rc, label) => {

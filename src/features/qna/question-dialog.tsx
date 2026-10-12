@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ export function QuestionDialog() {
   const mode = useStudyStore((s) => s.mode);
   const me = useStudyStore((s) => s.me);
   const saveQuestion = useStudyStore((s) => s.saveQuestion);
+  const draft = useStudyStore((s) => s.questionDraft);
   const router = useRouter();
 
   const { register, handleSubmit, reset, formState } = useForm<QuestionForm>({
@@ -38,12 +40,18 @@ export function QuestionDialog() {
     defaultValues: { tag: QUESTION_TAGS[0], title: "" },
   });
 
+  // 퀴즈 해설 등에서 내용을 채워 열면 그 내용으로 시작한다. 빈 채로 열면 쓰던 내용을 그대로 둔다.
+  useEffect(() => {
+    if (open && draft) reset({ tag: draft.tag, title: draft.title });
+  }, [open, draft, reset]);
+
   const ask = useMutation({
     mutationFn: async (input: QuestionForm) => {
+      const stay = Boolean(draft?.stay);
       if (mode === "live") {
         const id = await saveQuestion(input.tag, input.title);
         if (id === null) throw new Error("save_failed");
-        return { id, demo: false };
+        return { id, demo: false, stay };
       }
       const id = crypto.randomUUID();
       addThread({
@@ -54,17 +62,20 @@ export function QuestionDialog() {
         ai: "",
         replies: [],
       });
-      return { id, demo: true };
+      return { id, demo: true, stay };
     },
-    // 올린 질문의 상세로 가서 AI 첫 답변을 바로 보게 한다
-    onSuccess: ({ id, demo }) => {
+    // 보통은 올린 질문의 상세로 가서 AI 첫 답변을 보게 한다.
+    // 문제를 풀다가 올렸으면(stay) 풀던 화면에 남는다.
+    onSuccess: ({ id, demo, stay }) => {
       reset();
       flash(
         demo
           ? "데모 질문을 올렸어요. AI 대화는 로그인 후 사용할 수 있어요"
-          : "질문을 올렸어요",
+          : stay
+            ? "질문을 올렸어요. 질문 창구에서 AI 답변을 볼 수 있어요"
+            : "질문을 올렸어요",
       );
-      router.push(id ? ROUTES.qnaThread(id) : ROUTES.qna);
+      if (!stay) router.push(id ? ROUTES.qnaThread(id) : ROUTES.qna);
     },
     onError: () =>
       flash("질문을 저장하지 못했어요. 잠시 후 다시 시도해 주세요"),

@@ -1,10 +1,51 @@
 import { z } from "zod";
 import type { RcQuestion } from "@/features/quiz/rc-schema";
 import type { HackersCategory, ReportRow } from "@/features/quiz/hackers-schema";
+import type { QUESTION_TAGS } from "@/features/qna/ask-schema";
 import type { QuizQuestion } from "@/types";
 
 export const REVIEW_SOURCES = ["daily_rc", "word", "hackers_rc", "hackers_lc"] as const;
 export type ReviewSource = (typeof REVIEW_SOURCES)[number];
+
+export const SOURCE_LABEL: Record<ReviewSource, string> = {
+  daily_rc: "일일 RC",
+  hackers_rc: "해커스 RC",
+  hackers_lc: "해커스 LC",
+  word: "단어",
+};
+
+type QuestionTag = (typeof QUESTION_TAGS)[number];
+
+/**
+ * 오답을 질문 창구에 올릴 때 미리 고를 영역. 일일 RC는 "Part n" 표시에서,
+ * 해커스는 실제 문항 번호에서 파트를 읽는다 (RC 101–130 Part 5 · 131–146 Part 6 · 147– Part 7,
+ * LC 1–6 Part 1 · 7–31 Part 2 · 32–70 Part 3 · 71– Part 4). 질문하기 창에서 바꿀 수 있다.
+ */
+export function questionTag(item: Pick<ReviewItem, "source" | "detail" | "number">): QuestionTag {
+  if (item.source === "word") return "단어";
+  if (item.source === "daily_rc") {
+    const part = /Part ([567])/.exec(item.detail)?.[1];
+    return part ? (`RC Part ${part}` as QuestionTag) : "RC Part 5";
+  }
+  const n = item.number;
+  if (item.source === "hackers_rc")
+    return n >= 147 ? "RC Part 7" : n >= 131 ? "RC Part 6" : "RC Part 5";
+  return n <= 6 ? "LC Part 1" : n <= 31 ? "LC Part 2" : n <= 70 ? "LC Part 3" : "LC Part 4";
+}
+
+/**
+ * 복습 전 오답이 가장 많은 출처 — 테스트 화면의 "약한 영역" 통계.
+ * 같은 수면 먼저 나온 출처를 고른다. 복습할 오답이 없으면 null.
+ */
+export function weakestSource(items: { source: ReviewSource; reviewed: boolean }[]) {
+  const counts = new Map<ReviewSource, number>();
+  for (const item of items)
+    if (!item.reviewed) counts.set(item.source, (counts.get(item.source) ?? 0) + 1);
+  let weakest: { source: ReviewSource; count: number } | null = null;
+  for (const [source, count] of counts)
+    if (!weakest || count > weakest.count) weakest = { source, count };
+  return weakest;
+}
 
 /** 해커스 결과지에서 AI가 뽑은 틀린 문제 하나 */
 export const reviewContentSchema = z.object({
