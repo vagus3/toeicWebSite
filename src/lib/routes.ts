@@ -13,6 +13,7 @@ export const ROUTES = {
   dailyQuiz: "/quizzes/daily",
   review: "/quizzes/review",
   qna: "/qna",
+  qnaThread: (threadId: string) => `/qna/${threadId}`,
   upload: "/study/upload",
   /** 내 메뉴 — 프로필·파티·Drive·알림·화면·로그아웃 */
   me: "/me",

@@ -178,6 +178,7 @@ export const THREADS: QnaThread[] = [
     who: "서연 · 08:40",
     title: "“be subject to”랑 “be subjected to” 차이가 뭐예요? 교재 p.148 23번",
     ai: "be subject to + 명사는 “~의 대상이다, ~하기 쉽다”(형용사적). be subjected to는 “~을 당하다”(수동). 23번은 일정 변경 가능성을 말하니 subject to가 맞아요.",
+    aiConfirmedBy: [{ id: "jihyun", name: "지현" }],
     replies: [
       {
         initial: "지",

@@ -140,6 +140,35 @@ export async function POST(request: Request) {
           });
         break;
       }
+      case "confirm-ai": {
+        const { data: question } = await supabase
+          .from("questions")
+          .select("id")
+          .eq("id", input.threadId)
+          .eq("party_id", input.partyId)
+          .maybeSingle();
+        if (!question) return apiError(403, "forbidden");
+        // 실제로 있는 AI 답변인지·본인 이름인지는 RLS가 검사한다
+        const confirmations = supabase.from("question_ai_confirmations");
+        if (input.confirmed) {
+          const inserted = await confirmations.insert({
+            question_id: input.threadId,
+            turn_id: input.turnId,
+            user_id: user.id,
+          });
+          // 이미 확인한 답변(유니크 위반)은 그대로 성공으로 본다
+          result = inserted.error?.code === "23505" ? { error: null } : inserted;
+        } else {
+          const mine = confirmations
+            .delete()
+            .eq("question_id", input.threadId)
+            .eq("user_id", user.id);
+          result = await (input.turnId
+            ? mine.eq("turn_id", input.turnId)
+            : mine.is("turn_id", null));
+        }
+        break;
+      }
       case "cheer": {
         const { data: log } = await supabase
           .from("study_logs")

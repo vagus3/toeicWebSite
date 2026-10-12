@@ -95,3 +95,19 @@ describe("질문별 AI 대화", () => {
     expect(mocks.answer).not.toHaveBeenCalled();
   });
 });
+describe("AI 답변 확인", () => {
+  it("첫 AI 답변에 본인 확인을 남긴다", async () => {
+    expect((await POST(request("confirm-ai", { turnId: null, confirmed: true }))).status).toBe(200);
+    expect(mocks.insert).toHaveBeenCalledWith({ question_id: threadId, turn_id: null, user_id: "caller" });
+    expect(mocks.answer).not.toHaveBeenCalled();
+  });
+  it("이미 확인한 답변이면 그대로 성공으로 본다", async () => {
+    mocks.insert.mockResolvedValue({ error: { code: "23505", message: "duplicate key" } });
+    expect((await POST(request("confirm-ai", { turnId: null, confirmed: true }))).status).toBe(200);
+  });
+  it("다른 파티 질문에는 확인을 남기지 않는다", async () => {
+    mocks.question.mockResolvedValue({ data: null, error: null });
+    expect((await POST(request("confirm-ai", { turnId: null, confirmed: true }))).status).toBe(403);
+    expect(mocks.insert).not.toHaveBeenCalled();
+  });
+});

@@ -16,6 +16,11 @@ describe("isFullscreenPath", () => {
     expect(isFullscreenPath("/partyroom")).toBe(false);
   });
 
+  it("질문 상세는 전체 화면이고 질문 목록은 아니다", () => {
+    expect(isFullscreenPath("/qna/t1")).toBe(true);
+    expect(isFullscreenPath("/qna")).toBe(false);
+  });
+
   it("이름만 비슷한 경로는 전체 화면이 아니다", () => {
     expect(isFullscreenPath("/study/uploads")).toBe(false);
     expect(isFullscreenPath("/quizzes/daily-archive")).toBe(false);

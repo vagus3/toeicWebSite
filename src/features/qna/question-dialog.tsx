@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FieldError } from "@/components/ui/field-error";
+import { ROUTES } from "@/lib/routes";
 import { useModal, useStudyStore } from "@/stores/study-store";
 import { useToast } from "@/stores/toast-store";
 import {
@@ -29,6 +31,7 @@ export function QuestionDialog() {
   const mode = useStudyStore((s) => s.mode);
   const me = useStudyStore((s) => s.me);
   const saveQuestion = useStudyStore((s) => s.saveQuestion);
+  const router = useRouter();
 
   const { register, handleSubmit, reset, formState } = useForm<QuestionForm>({
     resolver: zodResolver(askRequestSchema),
@@ -38,29 +41,30 @@ export function QuestionDialog() {
   const ask = useMutation({
     mutationFn: async (input: QuestionForm) => {
       if (mode === "live") {
-        if (!(await saveQuestion(input.tag, input.title)))
-          throw new Error("save_failed");
-        return null;
+        const id = await saveQuestion(input.tag, input.title);
+        if (id === null) throw new Error("save_failed");
+        return { id, demo: false };
       }
-      return { answer: "" };
-    },
-    onSuccess: (result, input) => {
-      if (!result) {
-        reset();
-        flash("질문을 저장했어요");
-        return;
-      }
-      const { answer } = result;
+      const id = crypto.randomUUID();
       addThread({
-        id: crypto.randomUUID(),
+        id,
         tag: input.tag,
         who: `${me.name} · 방금`,
         title: input.title,
-        ai: answer,
+        ai: "",
         replies: [],
       });
+      return { id, demo: true };
+    },
+    // 올린 질문의 상세로 가서 AI 첫 답변을 바로 보게 한다
+    onSuccess: ({ id, demo }) => {
       reset();
-      flash("데모 질문을 올렸어요. AI 대화는 로그인 후 사용할 수 있어요");
+      flash(
+        demo
+          ? "데모 질문을 올렸어요. AI 대화는 로그인 후 사용할 수 있어요"
+          : "질문을 올렸어요",
+      );
+      router.push(id ? ROUTES.qnaThread(id) : ROUTES.qna);
     },
     onError: () =>
       flash("질문을 저장하지 못했어요. 잠시 후 다시 시도해 주세요"),

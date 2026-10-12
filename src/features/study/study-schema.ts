@@ -28,6 +28,14 @@ export const studyActionSchema = z.discriminatedUnion("action", [
     threadId: z.uuid(),
     text: z.string().trim().min(1).max(1000),
   }),
+  z.object({
+    action: z.literal("confirm-ai"),
+    partyId,
+    threadId: z.uuid(),
+    /** null이면 질문을 올릴 때 만든 첫 AI 답변, 아니면 이어진 AI 대화의 답변 */
+    turnId: z.uuid().nullable(),
+    confirmed: z.boolean(),
+  }),
   z.object({ action: z.literal("cheer"), partyId, logId: z.uuid() }),
   z.object({ action: z.literal("nudge"), partyId, memberId: z.uuid() }),
   z.object({

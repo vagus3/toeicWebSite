@@ -124,6 +124,7 @@
   --spacing-control-lg: 44px;
   --spacing-control-xl: 48px;
   --spacing-toast-mobile: 100px;
+  --spacing-toast-top: 64px;
   --spacing-page-x: clamp(20px, 4vw, 48px);
   --spacing-auth-x: clamp(24px, 6vw, 80px);
   --spacing-tabbar: 88px;
@@ -641,4 +642,8 @@
 }
 @utility pt-safe {
   padding-top: env(safe-area-inset-top);
+}
+/* 전체 화면의 토스트는 헤더 아래에 띄운다. 하단 고정 영역(입력창·버튼)은 화면마다 높이가 달라 가리기 쉽다 */
+@utility top-toast-safe {
+  top: calc(env(safe-area-inset-top) + var(--spacing-toast-top));
 }

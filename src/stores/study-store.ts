@@ -27,7 +27,6 @@ interface StudyState extends StudyCore, StudyDetail {
   detailError: boolean;
   modal: Modal;
   uploadSelection: StudyCategory | null;
-  activeThreadId: string;
   saving: boolean;
   openUpload: (category?: StudyCategory) => void;
   selectUpload: (category: StudyCategory) => void;
@@ -43,11 +42,17 @@ interface StudyState extends StudyCore, StudyDetail {
   addReply: (threadId: string, text: string) => Promise<boolean>;
   addThread: (thread: QnaThread) => void;
   askAi: (threadId: string, prompt: string) => Promise<boolean>;
+  /** AI 답변 확인·취소. turnId가 null이면 첫 AI 답변 */
+  confirmAi: (
+    threadId: string,
+    turnId: string | null,
+    confirmed: boolean,
+  ) => Promise<boolean>;
+  /** 저장하면 새 질문의 id를 돌려준다 (상세 화면으로 이동). 실패하면 null, id를 못 찾으면 "" */
   saveQuestion: (
     tag: Extract<StudyAction, { action: "question" }>["tag"],
     title: string,
-  ) => Promise<boolean>;
-  setActiveThread: (id: string) => void;
+  ) => Promise<string | null>;
   refresh: () => Promise<void>;
   loadDetail: () => Promise<void>;
 }
@@ -113,7 +118,6 @@ export function createStudyStore(initial: StudySnapshot) {
           members: withStats(get().members, next.memberStats),
           detailReady: true,
           detailError: false,
-          activeThreadId: get().activeThreadId || next.threads[0]?.id || "",
         });
       } catch (error) {
         if (version === detailVersion) set({ detailError: true });
@@ -158,7 +162,6 @@ export function createStudyStore(initial: StudySnapshot) {
       detailError: false,
       modal: null,
       uploadSelection: TASKS.find((t) => !core.done[t.id])?.id ?? TASKS[0].id,
-      activeThreadId: data.threads[0]?.id ?? "",
       saving: false,
       refresh,
       loadDetail: async () => {
@@ -179,7 +182,6 @@ export function createStudyStore(initial: StudySnapshot) {
       openScore: () => set({ modal: "score" }),
       openQuestion: () => set({ modal: "question" }),
       closeModal: () => set({ modal: null }),
-      setActiveThread: (activeThreadId) => set({ activeThreadId }),
       completeTask: (category) =>
         set((s) => ({ done: { ...s.done, [category]: true } })),
       addScore: async (lc, rc, label) => {
@@ -234,17 +236,42 @@ export function createStudyStore(initial: StudySnapshot) {
         }));
         return true;
       },
-      saveQuestion: async (tag, title) => {
-        if (!(await save({ action: "question", tag, title }))) return false;
-        set({ modal: null, activeThreadId: get().threads[0]?.id ?? "" });
+      confirmAi: async (threadId, turnId, confirmed) => {
+        if (get().mode === "live")
+          return save({ action: "confirm-ai", threadId, turnId, confirmed });
+        const me = get().me;
+        const toggle = (people: { id: string; name: string }[] = []) => {
+          const others = people.filter((p) => p.id !== me.id);
+          return confirmed ? [...others, { id: me.id, name: me.name }] : others;
+        };
+        set((s) => ({
+          threads: s.threads.map((t) =>
+            t.id !== threadId
+              ? t
+              : turnId === null
+                ? { ...t, aiConfirmedBy: toggle(t.aiConfirmedBy) }
+                : {
+                    ...t,
+                    aiTurns: t.aiTurns?.map((turn) =>
+                      turn.id === turnId
+                        ? { ...turn, confirmedBy: toggle(turn.confirmedBy) }
+                        : turn,
+                    ),
+                  },
+          ),
+        }));
         return true;
       },
+      saveQuestion: async (tag, title) => {
+        if (!(await save({ action: "question", tag, title }))) return null;
+        set({ modal: null });
+        // 질문은 최신순이라 같은 제목 중 맨 앞이 방금 올린 질문이다.
+        // 저장은 됐는데 목록 갱신이 늦어 못 찾으면 빈 문자열(목록으로 이동)을 돌려준다.
+        const saved = title.trim();
+        return get().threads.find((t) => t.title === saved)?.id ?? "";
+      },
       addThread: (thread) =>
-        set((s) => ({
-          threads: [thread, ...s.threads],
-          activeThreadId: thread.id,
-          modal: null,
-        })),
+        set((s) => ({ threads: [thread, ...s.threads], modal: null })),
     };
   });
 }

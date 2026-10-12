@@ -220,8 +220,10 @@ export async function loadStudyDetail(
     readAll((from, to) =>
       supabase
         .from("questions")
+        // AI 대화는 외래 키 이름으로 콕 집는다. 확인 표(question_ai_confirmations)도 질문과 AI 대화를
+        // 함께 참조해서, 이름만 쓰면 PostgREST가 관계를 하나로 고르지 못할 수 있다.
         .select(
-          "id, user_id, tag, title, ai_answer, created_at, question_replies(id, user_id, body, created_at), question_ai_turns(id, user_id, prompt, answer, created_at)",
+          "id, user_id, tag, title, ai_answer, created_at, question_replies(id, user_id, body, created_at), question_ai_turns!question_ai_turns_question_id_fkey(id, user_id, prompt, answer, created_at), question_ai_confirmations(user_id, turn_id)",
         )
         .eq("party_id", partyId)
         .order("created_at", { ascending: false })
@@ -298,27 +300,38 @@ export async function loadStudyDetail(
       (l) =>
         reactionResult.data?.filter((r) => r.study_log_id === l.id).length ?? 0,
     ),
-    threads: questions.map((q) => ({
-      id: q.id,
-      tag: q.tag,
-      title: q.title,
-      who: names.get(q.user_id) ?? "파티원",
-      ai: q.ai_answer ?? "",
-      aiTurns: [...q.question_ai_turns]
-        .sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id))
-        .map((turn) => ({
-          id: turn.id,
-          name: names.get(turn.user_id) ?? "파티원",
-          prompt: turn.prompt,
-          answer: turn.answer,
-        })),
-      replies: [...q.question_replies]
-        .sort((a, b) => a.created_at.localeCompare(b.created_at))
-        .map((r) => ({
-          name: names.get(r.user_id) ?? "파티원",
-          initial: (names.get(r.user_id) ?? "파").slice(0, 1),
-          text: r.body,
-        })),
-    })),
+    threads: questions.map((q) => {
+      const confirmations: { user_id: string; turn_id: string | null }[] =
+        q.question_ai_confirmations ?? [];
+      // turnId가 null이면 첫 AI 답변의 확인
+      const confirmedBy = (turnId: string | null) =>
+        confirmations
+          .filter((c) => c.turn_id === turnId)
+          .map((c) => ({ id: c.user_id, name: names.get(c.user_id) ?? "파티원" }));
+      return {
+        id: q.id,
+        tag: q.tag,
+        title: q.title,
+        who: names.get(q.user_id) ?? "파티원",
+        ai: q.ai_answer ?? "",
+        aiConfirmedBy: confirmedBy(null),
+        aiTurns: [...q.question_ai_turns]
+          .sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id))
+          .map((turn) => ({
+            id: turn.id,
+            name: names.get(turn.user_id) ?? "파티원",
+            prompt: turn.prompt,
+            answer: turn.answer,
+            confirmedBy: confirmedBy(turn.id),
+          })),
+        replies: [...q.question_replies]
+          .sort((a, b) => a.created_at.localeCompare(b.created_at))
+          .map((r) => ({
+            name: names.get(r.user_id) ?? "파티원",
+            initial: (names.get(r.user_id) ?? "파").slice(0, 1),
+            text: r.body,
+          })),
+      };
+    }),
   };
 }

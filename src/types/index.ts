@@ -69,6 +69,8 @@ export interface QnaAiTurn {
   name: string;
   prompt: string;
   answer: string;
+  /** 이 AI 답변을 확인한 파티원 */
+  confirmedBy?: { id: string; name: string }[];
 }
 
 export interface QnaThread {
@@ -79,6 +81,8 @@ export interface QnaThread {
   ai: string;
   replies: QnaReply[];
   aiTurns?: QnaAiTurn[];
+  /** 첫 AI 답변을 확인한 파티원 */
+  aiConfirmedBy?: { id: string; name: string }[];
 }
 
 export interface QuizQuestion {

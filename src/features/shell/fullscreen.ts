@@ -6,8 +6,8 @@ import { ROUTES } from "@/lib/routes";
  */
 const FULLSCREEN_ROUTES: readonly string[] = [ROUTES.upload, ROUTES.dailyQuiz];
 
-/** 이 경로 아래는 모두 전체 화면 (/party/<파티>/chat/<방>) */
-const FULLSCREEN_PREFIXES: readonly string[] = ["/party/"];
+/** 이 경로 아래는 모두 전체 화면 — 파티 채팅방, 질문 상세 (질문 목록 /qna는 아님) */
+const FULLSCREEN_PREFIXES: readonly string[] = ["/party/", "/qna/"];
 
 /** 경로 경계까지 맞춰 비교한다. `/study/uploads`처럼 이름만 같은 경로는 제외한다. */
 export function isFullscreenPath(pathname: string) {
