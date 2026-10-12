@@ -7,7 +7,7 @@ export const ROUTES = {
   quizzes: "/quizzes",
   hackersLc: "/quizzes/hackers/lc",
   hackersRc: "/quizzes/hackers",
-  dailyRc: "/quizzes/rc",
+  hackersWord: "/quizzes/hackers/word",
   dailyQuiz: "/quizzes/daily",
   review: "/quizzes/review",
   /** 오답노트 한 문제씩 다시 풀기 (?source=로 출처를 고른다) */

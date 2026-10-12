@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { ReportRow } from "./hackers-schema";
+import { hasChoiceAnswers, type ReportRow } from "./hackers-schema";
 
 const CHOICES = ["A", "B", "C", "D"] as const;
 type Choice = ReportRow["selected"];
@@ -91,11 +91,13 @@ function ResultRow({
  */
 export function ReportRowEditorList({
   rows,
+  writtenAnswers = false,
   disabled,
   onChange,
   onRemove,
 }: {
   rows: ReportRow[];
+  writtenAnswers?: boolean;
   disabled: boolean;
   onChange: (index: number, patch: Partial<ReportRow>) => void;
   onRemove: (index: number) => void;
@@ -130,6 +132,12 @@ export function ReportRowEditorList({
                 삭제
               </Button>
             </div>
+            {writtenAnswers ? (["selected", "correctAnswer"] as const).map((field) => (
+              <label key={field} className="flex flex-col gap-1 text-meta">
+                {field === "selected" ? "내 답" : "정답"}
+                <input aria-label={`${row.number}번 ${field === "selected" ? "내 답" : "정답"}`} className="input" value={row[field] ?? ""} maxLength={200} disabled={disabled} onChange={(e) => onChange(i, { [field]: e.target.value || null })} />
+              </label>
+            )) : <>
             <LetterRow
               label="내 답"
               value={row.selected}
@@ -142,8 +150,9 @@ export function ReportRowEditorList({
               disabled={disabled}
               onChange={(next) => onChange(i, { correctAnswer: next })}
             />
+            </>}
             {/* 내 답·정답이 다 있으면 정오는 자동으로 정해진다 */}
-            {!(row.selected && row.correctAnswer) && (
+            {!hasChoiceAnswers(row) && (
               <ResultRow
                 value={row.result}
                 disabled={disabled}

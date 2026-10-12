@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+/** 출제 기능 종료 전 저장된 RC 응시 기록을 오답노트에서 읽기 위한 형식. */
 const text = z.string().trim().min(1);
 export const rcQuestionSchema = z.object({
   part: z.union([z.literal(5), z.literal(6), z.literal(7)]),
@@ -17,14 +18,4 @@ export const rcQuestionSchema = z.object({
 export const rcSetSchema = z.object({
   questions: z.array(rcQuestionSchema).length(3).refine((qs) => qs.every((q, i) => q.part === i + 5), "parts_5_6_7_required"),
 });
-export const rcRequestSchema = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("start"), partyId: z.uuid() }),
-  z.object({ action: z.literal("submit"), partyId: z.uuid(), setId: z.uuid(), answers: z.array(z.number().int().min(0).max(3)).length(3) }),
-]);
 export type RcQuestion = z.infer<typeof rcQuestionSchema>;
-export type RcPublicQuestion = Omit<RcQuestion, "answer" | "why">;
-export type RcResult = { score: number; answers: number[]; questions: RcQuestion[] };
-export type RcSession = { setId: string; studyDate: string; questions: RcPublicQuestion[]; result: RcResult | null };
-export function publicRcQuestions(questions: RcQuestion[]): RcPublicQuestion[] {
-  return questions.map(({ part, skill, passage, text, opts }) => ({ part, skill, passage, text, opts }));
-}

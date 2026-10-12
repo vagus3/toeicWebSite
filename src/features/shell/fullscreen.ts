@@ -7,7 +7,7 @@ import { ROUTES } from "@/lib/routes";
 const FULLSCREEN_ROUTES: readonly string[] = [
   ROUTES.upload,
   ROUTES.dailyQuiz,
-  ROUTES.dailyRc,
+  "/quizzes/rc",
   // 해커스 RC(/quizzes/hackers)는 LC(/quizzes/hackers/lc)도 하위 경로로 함께 덮는다
   ROUTES.hackersRc,
   ROUTES.reviewRetry,

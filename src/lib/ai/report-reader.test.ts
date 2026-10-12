@@ -6,6 +6,15 @@ const fetchMock = vi.fn();
 beforeEach(() => { vi.stubEnv("GROQ_API_KEY","test-key"); vi.stubEnv("GROQ_VISION_MODEL",""); vi.stubGlobal("fetch",fetchMock); fetchMock.mockReset(); });
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 describe("채점표 이미지 읽기", () => {
+  it("단어 주관식을 그대로 읽고 문자열 비교나 미채점 시험지의 임의 채점을 금지한다", async () => {
+    fetchMock.mockResolvedValue(Response.json({ choices:[{ message:{ content:JSON.stringify({recognized:true,testDate:null,total:1,correct:1,rows:[{number:1,selected:"고용하다",correctAnswer:"채용하다",result:"correct"}]}) } }] }));
+    const result=await readHackersReport([{ bytes:png,mime:"image/png" }],"word");
+    expect(result.rows[0]).toMatchObject({ selected:"고용하다",correctAnswer:"채용하다",result:"correct" });
+    const instruction=JSON.parse(fetchMock.mock.calls[0][1].body).messages[0].content[0].text;
+    expect(instruction).toContain("vocabulary test");
+    expect(instruction).toContain("do not grade them by string equality");
+    expect(instruction).toContain("NOT a grading report");
+  });
   it("MIME뿐 아니라 파일 헤더와 크기를 검사한다", () => {
     expect(isReportImage(png,"image/png")).toBe(true);
     expect(isReportImage(png,"image/jpeg")).toBe(false);

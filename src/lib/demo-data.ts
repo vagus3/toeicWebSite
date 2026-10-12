@@ -46,9 +46,9 @@ export const TASKS: StudyTask[] = [
     id: "word",
     short: "단어",
     big: "50개",
-    sub: "단어 테스트 · 자동 인증",
+    sub: "해커스 단어 시험 · 결과 제출",
     label: "단어 50개",
-    mobileSub: "단어 테스트 · 자동 인증",
+    mobileSub: "해커스 단어 시험 · 결과 제출",
   },
   {
     id: "lc",

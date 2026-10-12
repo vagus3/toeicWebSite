@@ -8,6 +8,7 @@ import { Suspense, useState } from "react";
 import { PageTitle } from "@/components/shared/page-title";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { HACKERS_LABELS } from "@/features/quiz/hackers-schema";
 import { ReportRowsView } from "@/features/quiz/report-rows-grid";
 import { EvidenceFull, EvidenceThumb, evidenceUrl } from "@/features/study/evidence-photo";
 import { TASKS } from "@/lib/demo-data";
@@ -80,11 +81,11 @@ function RecordDetail({ item, name, demo, mine }: { item: RecordItem; name: stri
       {item.report && (
         <section className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2 text-meta">
-            <b className="font-medium">해커스 {item.report.category.toUpperCase()} 채점표</b>
+            <b className="font-medium">해커스 {HACKERS_LABELS[item.report.category]} 채점표</b>
             <span className="tag tag-accent">
               {item.report.correct}/{item.report.total}
             </span>
-            <span className="text-muted">문제 날짜 {item.report.testDate}</span>
+            <span className="text-muted">{item.report.category === "word" ? "응시 날짜" : "문제 날짜"} {item.report.testDate}</span>
           </div>
           <ReportRowsView rows={item.report.rows} />
           {/* 오답노트는 본인만 볼 수 있어 내 기록에서만 연결한다 */}

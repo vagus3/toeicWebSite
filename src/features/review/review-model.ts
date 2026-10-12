@@ -4,13 +4,14 @@ import type { HackersCategory, ReportRow } from "@/features/quiz/hackers-schema"
 import type { QUESTION_TAGS } from "@/features/qna/ask-schema";
 import type { QuizQuestion } from "@/types";
 
-export const REVIEW_SOURCES = ["daily_rc", "word", "hackers_rc", "hackers_lc"] as const;
+export const REVIEW_SOURCES = ["daily_rc", "word", "hackers_rc", "hackers_lc", "hackers_word"] as const;
 export type ReviewSource = (typeof REVIEW_SOURCES)[number];
 
 export const SOURCE_LABEL: Record<ReviewSource, string> = {
   daily_rc: "일일 RC",
   hackers_rc: "해커스 RC",
   hackers_lc: "해커스 LC",
+  hackers_word: "해커스 단어",
   word: "단어",
 };
 
@@ -22,7 +23,7 @@ type QuestionTag = (typeof QUESTION_TAGS)[number];
  * LC 1–6 Part 1 · 7–31 Part 2 · 32–70 Part 3 · 71– Part 4). 질문하기 창에서 바꿀 수 있다.
  */
 export function questionTag(item: Pick<ReviewItem, "source" | "detail" | "number">): QuestionTag {
-  if (item.source === "word") return "단어";
+  if (item.source === "word" || item.source === "hackers_word") return "단어";
   if (item.source === "daily_rc") {
     const part = /Part ([567])/.exec(item.detail)?.[1];
     return part ? (`RC Part ${part}` as QuestionTag) : "RC Part 5";
@@ -87,6 +88,9 @@ export interface ReviewItem {
   /** 보기 순서(0=A). 고르지 않았거나 알 수 없으면 null */
   myAnswer: number | null;
   correctAnswer: number | null;
+  /** 단어 주관식 답. 객관식의 보기 번호와 분리해 그대로 표시한다. */
+  myAnswerText?: string | null;
+  correctAnswerText?: string | null;
   explanation: string;
   /** generated: 일일 RC·단어 문제와 함께 만든 해설 */
   explanationSource: "printed" | "ai" | "generated";
@@ -107,8 +111,9 @@ export type ReviewNoteRow = {
   reviewed_at: string | null;
 };
 
-const SOURCE_ORDER: Record<ReviewSource, number> = { daily_rc: 0, hackers_rc: 1, hackers_lc: 2, word: 3 };
+const SOURCE_ORDER: Record<ReviewSource, number> = { daily_rc: 0, hackers_rc: 1, hackers_lc: 2, hackers_word: 3, word: 4 };
 const LETTER_INDEX: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
+const answerIndex = (answer: string | null) => answer !== null && Object.hasOwn(LETTER_INDEX, answer) ? LETTER_INDEX[answer] : null;
 
 export function reviewKey(source: ReviewSource, sourceRef: string, number: number) {
   return `${source}:${sourceRef}:${number}`;
@@ -153,7 +158,7 @@ export function buildReviewItems(input: {
   });
 
   for (const report of input.hackers) {
-    const source: ReviewSource = report.category === "lc" ? "hackers_lc" : "hackers_rc";
+    const source: ReviewSource = `hackers_${report.category}`;
     for (const row of report.rows) {
       if (row.result !== "incorrect") continue;
       const key = reviewKey(source, report.reportId, row.number);
@@ -163,8 +168,9 @@ export function buildReviewItems(input: {
         key, source, sourceRef: report.reportId, number: row.number, date: report.testDate,
         detail: `${row.number}번`, passage: content?.passage ?? "", question: content?.question ?? "",
         options: content?.options ?? [], script: content?.script ?? "",
-        myAnswer: row.selected ? LETTER_INDEX[row.selected] : null,
-        correctAnswer: row.correctAnswer ? LETTER_INDEX[row.correctAnswer] : null,
+        myAnswer: answerIndex(row.selected),
+        correctAnswer: answerIndex(row.correctAnswer),
+        ...(report.category === "word" ? { myAnswerText: row.selected, correctAnswerText: row.correctAnswer } : {}),
         explanation: content?.explanation ?? "", explanationSource: content?.explanationSource ?? "printed",
         hasContent: Boolean(content && hasReviewContent(content)), reviewed: reviewed(key),
       });

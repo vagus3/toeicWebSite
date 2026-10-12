@@ -1,16 +1,13 @@
 import type { ScoreEntry } from "@/types";
 
-/**
- * 점수 그래프의 세로 범위. 0~990 전체를 쓰면 몇십 점 변화가 평평한 선이 된다.
- * 점수와 목표가 모두 보이게 최소·최대에 여유(범위의 15%, 최소 40점)를 두고 10점 단위로 맞춘다.
- */
-export function scoreDomain(scores: ScoreEntry[], target: number): [number, number] {
-  const values = [...scores.map((s) => s.value), target];
+/** 실제 기록 주변을 확대하되 작은 차이는 최소 100점 범위로 보여준다. */
+export function scoreDomain(scores: ScoreEntry[]): [number, number] {
+  if (!scores.length) return [0, 990];
+  const values = scores.map((score) => score.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
-  const pad = Math.max(40, Math.round((max - min) * 0.15));
-  return [
-    Math.max(0, Math.floor((min - pad) / 10) * 10),
-    Math.min(990, Math.ceil((max + pad) / 10) * 10),
-  ];
+  const padding = Math.max(20, (max - min) * 0.15);
+  const span = Math.min(990, Math.max(100, max - min + padding * 2));
+  const lower = Math.max(0, Math.min(990 - span, (min + max - span) / 2));
+  return [Math.floor(lower / 10) * 10, Math.min(990, Math.ceil((lower + span) / 10) * 10)];
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { MAX_REPORT_PAGES, reportRowSchema } from "@/features/quiz/hackers-schema";
+import { hackersCategorySchema, MAX_REPORT_PAGES, reportRowSchema } from "@/features/quiz/hackers-schema";
 import { apiError, limitRequest, requireSession } from "@/lib/api";
 import {
   extractHackersWrongItems,
@@ -47,7 +47,9 @@ export async function POST(request: Request) {
   if (!(process.env.GROQ_API_KEY || process.env.GROQ_KEY)) return apiError(503, "ai_not_configured");
   const admin = getSupabaseAdminClient();
   if (!admin) return apiError(503, "not_configured");
-  const category = report.category === "lc" ? "lc" : "rc";
+  const parsedCategory = hackersCategorySchema.safeParse(report.category);
+  if (!parsedCategory.success) return apiError(400, "invalid_request");
+  const category = parsedCategory.data;
   let extracted: Awaited<ReturnType<typeof extractHackersWrongItems>>;
   try {
     extracted = await extractHackersWrongItems(images, category, wrong);

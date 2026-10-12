@@ -25,7 +25,7 @@ function dayLabel(date: string) {
   const d = new Date(`${date}T12:00:00`);
   return `${d.getMonth() + 1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`;
 }
-const isHackers = (source: ReviewSource) => source === "hackers_rc" || source === "hackers_lc";
+const isHackers = (source: ReviewSource) => source.startsWith("hackers_");
 
 /** 한 문제씩 다시 풀 수 있는 문항 — 복습 전이고 보기가 있는 문제 (해커스는 결과지로 문제를 채운 뒤) */
 export function canRetry(item: ReviewItem) {
@@ -127,7 +127,7 @@ function ReviewItemCard({
       ) : (
         shown && (
           <p className="m-0 text-meta">
-            내 답 {letter(item.myAnswer)} · 정답 {letter(item.correctAnswer)}
+            내 답 {item.myAnswerText ?? letter(item.myAnswer)} · 정답 {item.correctAnswerText ?? letter(item.correctAnswer)}
           </p>
         )
       )}
@@ -346,7 +346,7 @@ export function ReviewBoard() {
         </div>
       ) : !items.length ? (
         <p className="text-muted">
-          아직 틀린 문제가 없어요. 일일 RC·단어 테스트를 풀거나 해커스 채점표를 제출하면 틀린 문제가 여기에 모여요.
+          아직 틀린 문제가 없어요. 단어·LC·RC 채점표를 제출하면 틀린 문제가 여기에 모여요.
         </p>
       ) : !visible.length ? (
         <p className="text-muted">
@@ -390,7 +390,7 @@ export function ReviewBoard() {
       )}
       {items.length > 0 && (
         <p className="text-caption text-muted">
-          일일 RC·단어 문제와 AI 해설은 AI가 만든 것이라 오류가 있을 수 있어요. 의문이 생기면 질문 창구에서 파티원과 확인해 주세요.
+          AI 해설은 오류가 있을 수 있어요. 의문이 생기면 질문 창구에서 파티원과 확인해 주세요.
         </p>
       )}
     </div>

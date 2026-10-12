@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { TaskStatusIcon } from "@/features/study/task-status-icon";
 import { SOURCE_LABEL, weakestSource } from "@/features/review/review-model";
 import { useReviewItems } from "@/features/review/use-review";
-import { QUIZ } from "@/lib/demo-data";
 import { ROUTES } from "@/lib/routes";
 import { useStudyStore } from "@/stores/study-store";
 // recharts(약 350KB)는 점수 그래프를 여는 화면에서만 받는다 — 다른 화면의 첫 실행을 무겁게 하지 않도록
@@ -30,7 +29,7 @@ function TodayTests() {
   );
   const go = (href: string, label: string) => (
     <Button asChild variant="primary">
-      <Link href={href}>{label}</Link>
+      <Link href={href} prefetch={false}>{label}</Link>
     </Button>
   );
   return (
@@ -60,19 +59,10 @@ function TodayTests() {
         className={CARD}
         titleClassName={TITLE}
         leading={status(done.word)}
-        kicker="일일 · 연습 문제"
-        title={`단어 연습 · ${QUIZ.length}문항`}
-        description="끝나면 결과 저장 · 단어 자동 인증"
-        action={go(ROUTES.dailyQuiz, "시작")}
-      />
-      <ActionCard
-        className={CARD}
-        titleClassName={TITLE}
-        leading={status(done.rc)}
-        kicker="일일 · Groq AI 출제"
-        title="AI RC · Part 5·6·7 각 1문항"
-        description="하루 3문항 · 지문·해설 제공 · RC 자동 인증"
-        action={go(ROUTES.dailyRc, "시작 / 결과")}
+        kicker="일일 단어 · 해커스에서 시험 응시"
+        title="해커스 단어 시험 결과 제출"
+        description="교재·Day 범위를 골라 응시 · PDF·스크린샷 제출 · 단어 인증"
+        action={go(ROUTES.hackersWord, "풀기 / 제출")}
       />
     </section>
   );
@@ -83,7 +73,6 @@ export function TestOverview() {
   const me = useStudyStore((s) => s.me);
   const openScore = useStudyStore((s) => s.openScore);
   const scores = useStudyStore((s) => s.scores);
-  const quizScore = useStudyStore((s) => s.quizScore);
   const review = useReviewItems();
   const items = review.data?.items ?? [];
   const pendingReview = items.filter((i) => !i.reviewed).length;
@@ -152,7 +141,7 @@ export function TestOverview() {
           <ScoreChart scores={scores} />
         ) : (
           <p className="m-0 text-meta text-muted">
-            아직 점수 기록이 없어요. 단어 테스트나 해커스 채점표를 제출하면 추이가 그려져요.
+            아직 점수 기록이 없어요. 주간 모의고사 점수를 입력하면 추이가 그려져요.
           </p>
         )}
         <ul className="m-0 flex list-none flex-wrap gap-2.5 p-0">
@@ -180,14 +169,7 @@ export function TestOverview() {
             </div>
           </div>
         )}
-        {quizScore !== null && (
-          <div className="card elev-sm gap-0.5 p-3.5">
-            <span className="text-label text-muted">방금 일일 테스트</span>
-            <span className="text-stat font-medium">
-              {quizScore} / {QUIZ.length}
-            </span>
-          </div>
-        )}
+
       </div>
     </div>
   );

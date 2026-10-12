@@ -4,10 +4,20 @@ const ids = { submissionId: "11111111-1111-4111-8111-111111111111", partyId: "22
 const row = { number: 1, selected: "A", correctAnswer: "B", result: "correct" };
 const base = { ...ids, testDate: "2026-10-12", total: 1, correct: 0, method: "ocr-reviewed", rows: [row] };
 describe("해커스 채점표 검증", () => {
-  it("기존 요청은 RC를 유지하고 LC 분류도 허용한다", () => {
+  it("기존 요청은 RC를 유지하고 LC·단어 분류도 허용한다", () => {
     expect(confirmedReportSchema.parse(base).category).toBe("rc");
     expect(confirmedReportSchema.parse({...base,category:"lc"}).category).toBe("lc");
-    expect(confirmedReportSchema.safeParse({...base,category:"word"}).success).toBe(false);
+    expect(confirmedReportSchema.parse({...base,category:"word"}).category).toBe("word");
+    expect(confirmedReportSchema.safeParse({...base,category:"book"}).success).toBe(false);
+  });
+  it("단어 주관식은 원본 정오를 유지하고 LC·RC의 서술형 답은 거절한다", () => {
+    const written = { ...base, correct: 1, rows: [{ number: 1, selected: "고용하다", correctAnswer: "채용하다", result: "correct" }] };
+    expect(confirmedReportSchema.parse({ ...written, category: "word" }).rows[0].result).toBe("correct");
+    expect(confirmedReportSchema.safeParse({ ...written, category: "rc" }).success).toBe(false);
+    expect(confirmedReportSchema.safeParse({ ...written, category: "lc" }).success).toBe(false);
+    const unknown = ocrReportSchema.parse({ recognized: true, testDate: null, total: 1, correct: null,
+      rows: [{ number: 1, selected: "employ", correctAnswer: "employ", result: "unknown" }] });
+    expect(summarizeOcr(unknown).correct).toBeNull();
   });
   it("선택 답과 정답이 있으면 정오를 계산한다", () => {
     expect(confirmedReportSchema.parse(base).rows[0].result).toBe("incorrect");

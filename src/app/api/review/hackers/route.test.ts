@@ -47,6 +47,13 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe("결과지로 해커스 오답 채우기", () => {
+  it("단어 주관식 오답을 단어 출처로 추출·저장한다", async () => {
+    m.report.mockResolvedValue({ data: { id: reportId, party_id: "party", category: "word",
+      rows: [{ number: 2, selected: "employer", correctAnswer: "employee", result: "incorrect" }] }, error: null });
+    expect((await POST(request())).status).toBe(200);
+    expect(m.extract.mock.calls[0][1]).toBe("word");
+    expect(m.upsert.mock.calls[0][0][0].source).toBe("hackers_word");
+  });
   it("내 채점표의 틀린 번호만 추출하고, 복습 상태는 건드리지 않고 저장한다", async () => {
     const response = await POST(request());
     expect(response.status).toBe(200);
