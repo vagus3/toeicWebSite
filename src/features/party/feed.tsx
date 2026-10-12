@@ -28,6 +28,11 @@ export function Feed({ className }: { className?: string }) {
           기록 전체 보기
         </Link>
       </div>
+      {feed.length === 0 && (
+        <p className="m-0 text-meta text-muted">
+          아직 올라온 인증이 없어요. 오늘 항목을 인증하면 여기에 보여요.
+        </p>
+      )}
       {feed.map((f, i) => (
         <article key={f.id} className="flex gap-2.5">
           <Avatar initial={f.initial} />

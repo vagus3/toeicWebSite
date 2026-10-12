@@ -1,5 +1,3 @@
-import { PARTY } from "@/lib/demo-data";
-
 export const ROUTES = {
   login: "/login",
   signup: "/signup",
@@ -21,6 +19,5 @@ export const ROUTES = {
   me: "/me",
   /** 현재 파티 채팅방으로 보내는 고정 주소 (홈 화면 앱 바로가기용) */
   chatShortcut: "/chat",
-  chat: (partyId: string = PARTY.id, roomId: string = PARTY.defaultChatRoomId) =>
-    `/party/${partyId}/chat/${roomId}`,
+  chat: (partyId: string, roomId: string) => `/party/${partyId}/chat/${roomId}`,
 } as const;

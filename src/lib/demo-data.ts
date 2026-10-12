@@ -39,38 +39,40 @@ export const ME = {
   inviter: "형규",
 };
 
+// 항목 정의는 모든 파티가 같이 쓴다. 날짜·진도(Day, Part 범위, 페이지)는 DB에 없어서 넣지 않는다.
+// 진도가 필요하면 파티별 하루 과제 데이터를 따로 만들어 여기서 읽는다.
 export const TASKS: StudyTask[] = [
   {
     id: "word",
     short: "단어",
     big: "50개",
-    sub: "Day 12 · 일일 테스트",
+    sub: "단어 테스트 · 자동 인증",
     label: "단어 50개",
-    mobileSub: "Day 12 · 일일 테스트",
+    mobileSub: "단어 테스트 · 자동 인증",
   },
   {
     id: "lc",
     short: "LC",
     big: "15문제",
-    sub: "Part 3 · 12/15",
+    sub: "듣기 · 해커스 LC 또는 사진",
     label: "LC 15문제",
-    mobileSub: "Part 3 · 12/15",
+    mobileSub: "듣기 · 해커스 LC 또는 사진",
   },
   {
     id: "rc",
     short: "RC",
     big: "15문제",
-    sub: "Part 5–6",
+    sub: "독해 · 해커스 RC 또는 사진",
     label: "RC 15문제",
-    mobileSub: "Part 5–6",
+    mobileSub: "독해 · 해커스 RC 또는 사진",
   },
   {
     id: "book",
     short: "교재",
-    big: "Ch.9",
-    sub: "해커스 RC · p.212–236",
-    label: "교재 Ch.9 · p.212–236",
-    mobileSub: "해커스 RC · 9/24",
+    big: "풀이",
+    sub: "교재 문제 풀이 사진",
+    label: "교재 풀이",
+    mobileSub: "교재 문제 풀이 사진",
   },
 ];
 

@@ -46,7 +46,8 @@ export const NAV_ITEMS: NavItem[] = [
     match: [ROUTES.qna],
   },
   // 모바일은 헤더의 채팅 아이콘으로 진입
-  { href: ROUTES.chat(), label: "파티 채팅", icon: ChatTeardropText, match: ["/party/"] },
+  // 현재 파티의 채팅방으로 보내는 주소 (파티 id를 여기서 고정하면 다른 파티에서 404가 난다)
+  { href: ROUTES.chatShortcut, label: "파티 채팅", icon: ChatTeardropText, match: ["/party/"] },
 ];
 
 export const TAB_ITEMS = NAV_ITEMS.filter((item) => item.tabLabel);

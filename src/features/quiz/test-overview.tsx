@@ -148,7 +148,13 @@ export function TestOverview() {
           <SectionTitle>내 점수 추이</SectionTitle>
           <span className="text-label text-muted">목표 {me.target}</span>
         </div>
-        <ScoreChart scores={scores} />
+        {scores.length > 0 ? (
+          <ScoreChart scores={scores} />
+        ) : (
+          <p className="m-0 text-meta text-muted">
+            아직 점수 기록이 없어요. 단어 테스트나 해커스 채점표를 제출하면 추이가 그려져요.
+          </p>
+        )}
         <ul className="m-0 flex list-none flex-wrap gap-2.5 p-0">
           {scores.map((s, i) => (
             <li key={`${s.label}-${i}`} className="tag tag-neutral">

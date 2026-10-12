@@ -10,7 +10,8 @@ export default function ChatShortcutPage() {
   const router = useRouter();
   const party = useStudyStore((s) => s.party);
   useEffect(() => {
-    router.replace(ROUTES.chat(party?.id, party?.defaultChatRoomId));
+    // 파티가 없으면 파티 만들기·참가가 있는 홈으로 보낸다
+    router.replace(party ? ROUTES.chat(party.id, party.defaultChatRoomId) : ROUTES.dashboard);
   }, [party, router]);
   return (
     <p role="status" className="text-meta text-muted">

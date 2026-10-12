@@ -21,7 +21,6 @@ function useIsFullscreenRoute() {
 export function MobileHeader() {
   const pathname = usePathname();
   const party = usePartySummary();
-  const activeParty = useStudyStore((s) => s.party);
   const me = useStudyStore((s) => s.me);
   if (isFullscreenPath(pathname)) return null;
   const onMe = pathname === ROUTES.me;
@@ -31,7 +30,7 @@ export function MobileHeader() {
       <span className="min-w-0 truncate text-base font-medium">{party.name}</span>
       <span className="flex shrink-0 items-center gap-1">
         <IconLink
-          href={ROUTES.chat(activeParty?.id, activeParty?.defaultChatRoomId)}
+          href={ROUTES.chatShortcut}
           label="파티 채팅"
           icon={ChatTeardropText}
         />
