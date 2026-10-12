@@ -74,3 +74,14 @@ export async function answerTutorConversation(
 export async function answerInitialQuestion(tag: string, question: string) {
   return complete([{ role: "user", content: `[${tag}] ${question}` }]);
 }
+
+const CHAT_INSTRUCTION =
+  "이 답변은 파티 채팅방에 바로 올라가. 핵심만 10줄 이내로 짧게 답하고, 더 깊은 설명이 필요하면 질문 창구에 올려 보라고 마지막에 한 줄로 안내해.";
+
+/** 채팅 @AI 질문 — 질문 원문만 전달한다. 채팅의 다른 메시지·계정 정보는 보내지 않는다. */
+export async function answerChatQuestion(prompt: string) {
+  return complete([
+    { role: "system", content: CHAT_INSTRUCTION },
+    { role: "user", content: prompt },
+  ]);
+}

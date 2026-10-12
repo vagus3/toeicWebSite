@@ -204,10 +204,36 @@ export const THREADS: QnaThread[] = [
   },
 ];
 
+/** 데모 채팅 메시지 기본값 (일반 텍스트) */
+const TEXT: Pick<ChatMessage, "roomId" | "kind" | "replyTo" | "logId" | "confirmedBy" | "cheeredBy"> = {
+  roomId: "general",
+  kind: "text",
+  replyTo: null,
+  logId: null,
+  confirmedBy: [],
+  cheeredBy: [],
+};
+
+/** 데모에서 @AI로 물었을 때 보여 주는 예시 답변 */
+export const DEMO_AI_ANSWER =
+  "데모에서는 실제 AI 대신 예시 답변을 보여 드려요. 파티에 로그인하면 Groq AI가 질문에 바로 답하고, 파티원이 답변을 확인할 수 있어요.";
+
 export const CHAT_MESSAGES: ChatMessage[] = [
   {
+    ...TEXT,
+    id: "m0",
+    senderId: "jihyun",
+    senderName: "지현",
+    initial: "지",
+    content: "RC 인증",
+    createdAt: "2026-10-08T06:12:00+09:00",
+    kind: "system",
+    logId: "f1",
+    cheeredBy: ["seoyeon", "minsu", "hyeonggyu"],
+  },
+  {
+    ...TEXT,
     id: "m1",
-    roomId: "general",
     senderId: "seoyeon",
     senderName: "서연",
     initial: "서",
@@ -215,8 +241,8 @@ export const CHAT_MESSAGES: ChatMessage[] = [
     createdAt: "2026-10-08T06:40:00+09:00",
   },
   {
+    ...TEXT,
     id: "m2",
-    roomId: "general",
     senderId: "hyeonggyu",
     senderName: "형규",
     initial: "형",
@@ -224,13 +250,35 @@ export const CHAT_MESSAGES: ChatMessage[] = [
     createdAt: "2026-10-08T06:52:00+09:00",
   },
   {
+    ...TEXT,
     id: "m3",
-    roomId: "general",
     senderId: "jihyun",
     senderName: "지현",
     initial: "지",
     content: "오늘 LC 몇 문제 풀었어? 다들 인증 ㄱㄱ",
     createdAt: "2026-10-08T07:05:00+09:00",
+  },
+  {
+    ...TEXT,
+    id: "m4",
+    senderId: "seoyeon",
+    senderName: "서연",
+    initial: "서",
+    content: "@AI be subject to랑 be subjected to 차이 짧게 알려줘",
+    createdAt: "2026-10-08T07:10:00+09:00",
+  },
+  {
+    ...TEXT,
+    id: "m5",
+    senderId: "seoyeon",
+    senderName: "서연",
+    initial: "서",
+    content:
+      "be subject to + 명사는 '~의 대상이다, ~하기 쉽다'이고, be subjected to는 '~을 당하다'(수동)예요.\nThe schedule is / subject to / change.\n구조: is subject to = ~될 수 있다, change = 명사.\n의미: 일정은 바뀔 수 있다.\n더 자세한 비교는 질문 창구에 올려 보세요.",
+    createdAt: "2026-10-08T07:10:20+09:00",
+    kind: "ai",
+    replyTo: "m4",
+    confirmedBy: [{ id: "jihyun", name: "지현" }],
   },
 ];
 

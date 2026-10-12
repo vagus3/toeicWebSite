@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-import { answerInitialQuestion, answerTutorConversation } from "./groq";
+import { answerChatQuestion, answerInitialQuestion, answerTutorConversation } from "./groq";
 const fetchMock = vi.fn();
 beforeEach(() => {
   vi.stubEnv("GROQ_API_KEY", "test-key");
@@ -65,6 +65,13 @@ describe("Groq AI 대화", () => {
   it("제공업체 오류 본문을 오류 메시지에 포함하지 않는다", async () => {
     fetchMock.mockResolvedValue(new Response("provider secret details", { status: 401 }));
     await expect(answerInitialQuestion("문법", "질문")).rejects.toThrow("ai_provider_failed");
+  });
+  it("채팅 질문은 짧게 답하라는 지시와 질문 원문만 보낸다", async () => {
+    expect(await answerChatQuestion("because와 because of 차이")).toBe("답변");
+    const messages = JSON.parse(fetchMock.mock.calls[0][1].body).messages;
+    expect(messages).toHaveLength(3);
+    expect(messages[1]).toEqual({ role: "system", content: expect.stringContaining("10줄 이내") });
+    expect(messages[2]).toEqual({ role: "user", content: "because와 because of 차이" });
   });
   it("비어 있는 응답을 실제 답변으로 취급하지 않는다", async () => {
     fetchMock.mockResolvedValue(Response.json({ choices: [{ message: { content: " " } }] }));

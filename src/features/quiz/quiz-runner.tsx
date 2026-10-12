@@ -3,7 +3,8 @@
 import { Sparkle, X } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { IconLink } from "@/components/shared/icon-link";
+import { PinnedFooter } from "@/components/shared/pinned-footer";
+import { ScreenHeader } from "@/components/shared/screen-header";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { QUIZ } from "@/lib/demo-data";
@@ -46,24 +47,20 @@ export function QuizRunner() {
   };
 
   return (
-    <div className="flex max-w-quiz flex-col gap-5 md:gap-5.5">
-      <div className="flex items-center gap-2.5 md:gap-3">
-        <IconLink
-          href={ROUTES.quizzes}
-          label="테스트로 돌아가기"
-          icon={X}
-          iconClassName="text-icon-md md:text-icon"
-        />
-        <ProgressBar
-          value={((index + (answered ? 1 : 0)) / QUIZ.length) * 100}
-          className="h-0.75 flex-1"
-          barClassName="duration-300"
-          label="문항 진행"
-        />
-        <span className="text-label text-muted md:text-meta">
-          {index + 1}/{QUIZ.length}
-        </span>
-      </div>
+    <div className="flex max-w-quiz flex-1 flex-col gap-5 md:gap-5.5">
+      <ScreenHeader
+        leading={{ href: ROUTES.quizzes, label: "테스트로 돌아가기", icon: X }}
+        title="단어 연습"
+        trailing={`${index + 1}/${QUIZ.length}`}
+        below={
+          <ProgressBar
+            value={((index + (answered ? 1 : 0)) / QUIZ.length) * 100}
+            className="h-0.75"
+            barClassName="duration-300"
+            label="문항 진행"
+          />
+        }
+      />
 
       <span className="tag tag-neutral self-start">
         단어 연습 · 빈칸 채우기
@@ -110,14 +107,16 @@ export function QuizRunner() {
         </div>
       )}
 
-      <Button
-        variant="primary"
-        className="h-control-xl w-full text-base md:h-control-lg md:w-auto md:self-start md:px-6 md:text-body"
-        onClick={next}
-        disabled={!answered || saving}
-      >
-        {isLast ? "결과 보기" : "다음 문제"}
-      </Button>
+      <PinnedFooter>
+        <Button
+          variant="primary"
+          className="h-control-xl w-full text-base md:h-control-lg md:w-auto md:self-start md:px-6 md:text-body"
+          onClick={next}
+          disabled={!answered || saving}
+        >
+          {isLast ? "결과 보기" : "다음 문제"}
+        </Button>
+      </PinnedFooter>
     </div>
   );
 }

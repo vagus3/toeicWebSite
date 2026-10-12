@@ -5,12 +5,14 @@ import { IconLink } from "./icon-link";
 
 interface ScreenHeaderProps {
   title: ReactNode;
+  /** 제목 아래 작은 글씨 (파티 이름 · 인원 등) */
+  subtitle?: ReactNode;
   /** 왼쪽 버튼: 닫기(X) 또는 뒤로(‹) */
   leading: { href: string; label: string; icon: Icon };
-  /** 오른쪽 자리 (완료 개수 등) */
+  /** 오른쪽 자리 (완료 개수, 알림 버튼 등) */
   trailing?: ReactNode;
-  /** 제목 아래 진행 막대 (퀴즈·RC 문항) */
-  progress?: ReactNode;
+  /** 둘째 줄 (문항 진행 막대, 보기 필터 등) */
+  below?: ReactNode;
   className?: string;
 }
 
@@ -20,9 +22,10 @@ interface ScreenHeaderProps {
  */
 export function ScreenHeader({
   title,
+  subtitle,
   leading,
   trailing,
-  progress,
+  below,
   className,
 }: ScreenHeaderProps) {
   return (
@@ -32,19 +35,28 @@ export function ScreenHeader({
         className,
       )}
     >
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2.5 pt-2 md:pt-0">
         <IconLink
           href={leading.href}
           label={leading.label}
           icon={leading.icon}
           iconClassName="text-icon-md md:text-icon"
         />
-        <h1 className="m-0 min-w-0 flex-1 truncate text-base font-medium tracking-normal">
-          {title}
-        </h1>
-        {trailing && <span className="shrink-0 text-label text-muted">{trailing}</span>}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <h1 className="m-0 truncate text-base font-medium tracking-normal">
+            {title}
+          </h1>
+          {subtitle && (
+            <span className="truncate text-label text-muted">{subtitle}</span>
+          )}
+        </div>
+        {trailing && (
+          <span className="flex shrink-0 items-center text-label text-muted">
+            {trailing}
+          </span>
+        )}
       </div>
-      {progress}
+      {below}
     </header>
   );
 }

@@ -3,7 +3,8 @@
 import { Camera, X } from "@phosphor-icons/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { IconLink } from "@/components/shared/icon-link";
+import { PinnedFooter } from "@/components/shared/pinned-footer";
+import { ScreenHeader } from "@/components/shared/screen-header";
 import { Button } from "@/components/ui/button";
 import { TASKS } from "@/lib/demo-data";
 import { ROUTES } from "@/lib/routes";
@@ -57,16 +58,12 @@ export function CaptureScreen() {
   };
 
   return (
-    <div className="flex flex-col gap-3.5 md:max-w-quiz">
-      <div className="flex items-center gap-2.5">
-        <IconLink href={ROUTES.dashboard} label="닫기" icon={X} />
-        <h1 className="m-0 flex-1 text-base font-medium tracking-normal">
-          {title}
-        </h1>
-        <span className="text-label text-muted">
-          {doneCount}/{TASKS.length} 완료
-        </span>
-      </div>
+    <div className="flex flex-1 flex-col gap-3.5 md:max-w-quiz">
+      <ScreenHeader
+        leading={{ href: ROUTES.dashboard, label: "닫기", icon: X }}
+        title={title}
+        trailing={`${doneCount}/${TASKS.length} 완료`}
+      />
       <span className="text-label text-muted">
         사진을 하나 이상 올리면 해당 항목이 인증돼요. 인증 후에도 추가할 수 있어요.
       </span>
@@ -124,16 +121,17 @@ export function CaptureScreen() {
         );
       })}
 
-      <div className="min-h-4 flex-1" />
-      <DriveSaveHint />
-      <Button
-        variant="primary"
-        className="h-control-xl w-full text-base"
-        onClick={onSubmit}
-        disabled={!photo.file || !selection || pending}
-      >
-        {pending ? "올리는 중…" : "인증 올리기"}
-      </Button>
+      <PinnedFooter>
+        <DriveSaveHint />
+        <Button
+          variant="primary"
+          className="h-control-xl w-full text-base"
+          onClick={onSubmit}
+          disabled={!photo.file || !selection || pending}
+        >
+          {pending ? "올리는 중…" : "인증 올리기"}
+        </Button>
+      </PinnedFooter>
     </div>
   );
 }

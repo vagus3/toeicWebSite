@@ -11,6 +11,11 @@ describe("isFullscreenPath", () => {
     expect(isFullscreenPath("/study/upload/camera")).toBe(true);
   });
 
+  it("파티 채팅방은 전체 화면이다", () => {
+    expect(isFullscreenPath("/party/dawn-4/chat/general")).toBe(true);
+    expect(isFullscreenPath("/partyroom")).toBe(false);
+  });
+
   it("이름만 비슷한 경로는 전체 화면이 아니다", () => {
     expect(isFullscreenPath("/study/uploads")).toBe(false);
     expect(isFullscreenPath("/quizzes/daily-archive")).toBe(false);

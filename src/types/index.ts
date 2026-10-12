@@ -88,6 +88,9 @@ export interface QuizQuestion {
   why: string;
 }
 
+/** text: 일반 메시지·@AI 질문, ai: AI 답변, system: 인증 알림·AI 실패 안내 */
+export type ChatMessageKind = "text" | "ai" | "system";
+
 export interface ChatMessage {
   id: string;
   roomId: string;
@@ -96,4 +99,13 @@ export interface ChatMessage {
   initial: string;
   content: string;
   createdAt: string;
+  kind: ChatMessageKind;
+  /** AI 답변·실패 안내가 가리키는 @AI 질문 */
+  replyTo: string | null;
+  /** 인증 알림이 가리키는 학습 기록 — 축하에 쓴다 */
+  logId: string | null;
+  /** AI 답변을 확인한 파티원 */
+  confirmedBy: { id: string; name: string }[];
+  /** 인증 알림을 축하한 파티원 id */
+  cheeredBy: string[];
 }
