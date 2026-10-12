@@ -24,7 +24,7 @@ export function Feed({ className }: { className?: string }) {
     >
       <div className="flex items-baseline justify-between gap-3">
         <SectionTitle>피드</SectionTitle>
-        <Link href={ROUTES.records} className="text-meta text-accent underline">
+        <Link href={ROUTES.records} prefetch={false} className="text-meta text-accent underline">
           기록 전체 보기
         </Link>
       </div>

@@ -37,6 +37,7 @@ export function MobileHeader() {
         />
         <Link
           href={ROUTES.me}
+          prefetch={false}
           aria-label="내 메뉴"
           aria-current={onMe ? "page" : undefined}
           className="grid size-control-lg place-items-center rounded-full"
@@ -58,6 +59,7 @@ function TabLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
     <Link
       href={item.href}
+      prefetch={false}
       aria-current={active ? "page" : undefined}
       className={cn(
         "flex flex-col items-center gap-0.5 text-micro no-underline",
@@ -92,6 +94,7 @@ export function MobileTabBar() {
       ))}
       <Link
         href={ROUTES.upload}
+        prefetch={false}
         aria-label="오늘 인증 촬영"
         className="grid size-camera place-items-center rounded-full border border-accent text-accent shadow-camera"
       >

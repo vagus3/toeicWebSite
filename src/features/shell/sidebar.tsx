@@ -28,6 +28,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
     <Link
       href={item.href}
+      prefetch={false}
       aria-current={active ? "page" : undefined}
       className={cn(
         "btn text-body",
@@ -123,6 +124,7 @@ export function Sidebar() {
         {/* 프로필 줄을 누르면 내 메뉴(파티 전환·Drive·알림·로그아웃)로 간다 */}
         <Link
           href={ROUTES.me}
+          prefetch={false}
           title="내 메뉴"
           aria-current={pathname === ROUTES.me ? "page" : undefined}
           className={cn(

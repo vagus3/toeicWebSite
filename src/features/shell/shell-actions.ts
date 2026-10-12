@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useStudyStore } from "@/stores/study-store";
 import { ROUTES } from "@/lib/routes";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useToast } from "@/stores/toast-store";
 
 export function useCopyInvite() {
@@ -41,6 +40,8 @@ export function useDriveFolder() {
 export function useLogout() {
   const router = useRouter();
   return async () => {
+    // Supabase 클라이언트는 로그아웃할 때만 받는다 (사이드바가 모든 화면에 있어서 정적 import하면 매번 실린다)
+    const { getSupabaseBrowserClient } = await import("@/lib/supabase/client");
     await getSupabaseBrowserClient()?.auth.signOut();
     router.push(ROUTES.login);
     router.refresh();

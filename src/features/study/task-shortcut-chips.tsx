@@ -18,7 +18,7 @@ export function TaskShortcutChips({
   return (
     <div className={cn("flex flex-wrap gap-1.5", className)}>
       {shortcuts.map((shortcut) => (
-        <Link key={shortcut.href} href={shortcut.href} className="tag tag-outline no-underline">
+        <Link key={shortcut.href} href={shortcut.href} prefetch={false} className="tag tag-outline no-underline">
           {shortcut.label} →
         </Link>
       ))}

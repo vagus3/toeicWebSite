@@ -18,7 +18,7 @@ export function IconLink({
 }: IconLinkProps) {
   return (
     <Button asChild size="icon" aria-label={label}>
-      <Link href={href}>
+      <Link href={href} prefetch={false}>
         <IconComponent className={iconClassName} />
       </Link>
     </Button>

@@ -1,10 +1,8 @@
 import { InstallGuide } from "@/features/pwa/install-guide";
-import { QuestionDialog } from "@/features/qna/question-dialog";
-import { ScoreDialog } from "@/features/quiz/score-dialog";
 import { MobileHeader, MobileTabBar } from "@/features/shell/mobile-chrome";
 import { MainFrame } from "@/features/shell/main-frame";
 import { Sidebar } from "@/features/shell/sidebar";
-import { UploadDialog } from "@/features/study/upload-dialog";
+import { ModalHost } from "@/features/shell/modal-host";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { StudyProvider } from "@/features/party/study-provider";
@@ -66,9 +64,7 @@ export default async function MainLayout({
         </MainFrame>
         <MobileTabBar />
         <InstallGuide />
-        <UploadDialog />
-        <ScoreDialog />
-        <QuestionDialog />
+        <ModalHost />
       </div>
     </StudyProvider>
   );

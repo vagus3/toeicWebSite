@@ -1,6 +1,7 @@
 "use client";
 
 import { LockSimple } from "@phosphor-icons/react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ActionCard } from "@/components/shared/action-card";
 import { PageTitle } from "@/components/shared/page-title";
@@ -12,7 +13,11 @@ import { useReviewItems } from "@/features/review/use-review";
 import { QUIZ } from "@/lib/demo-data";
 import { ROUTES } from "@/lib/routes";
 import { useStudyStore } from "@/stores/study-store";
-import { ScoreChart } from "./score-chart";
+// recharts(약 350KB)는 점수 그래프를 여는 화면에서만 받는다 — 다른 화면의 첫 실행을 무겁게 하지 않도록
+const ScoreChart = dynamic(
+  () => import("./score-chart").then((m) => m.ScoreChart),
+  { ssr: false, loading: () => null },
+);
 
 const CARD = "md:p-4";
 const TITLE = "text-body md:text-base";

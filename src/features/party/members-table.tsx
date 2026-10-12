@@ -19,7 +19,7 @@ export function MembersTable() {
       <div className="flex items-baseline justify-between">
         <SectionTitle>오늘 파티</SectionTitle>
         <Button asChild variant="ghost" className="text-meta">
-          <Link href={ROUTES.tracker}>트래커 전체 보기</Link>
+          <Link href={ROUTES.tracker} prefetch={false}>트래커 전체 보기</Link>
         </Button>
       </div>
       <div className="overflow-x-auto">

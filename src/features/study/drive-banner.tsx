@@ -35,7 +35,7 @@ export function DriveBanner({ inline = false }: { inline?: boolean }) {
       <span className="min-w-0 flex-1">
         인증 사진을 저장하려면 내 Google Drive를 연결해 주세요
       </span>
-      <Link href={ROUTES.me} className="shrink-0 text-accent underline">
+      <Link href={ROUTES.me} prefetch={false} className="shrink-0 text-accent underline">
         연결하기
       </Link>
     </p>

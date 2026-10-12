@@ -17,19 +17,19 @@ export function QuickTests() {
         title={`단어 Day 12 · ${QUIZ.length}문항`}
         action={
           <Button asChild variant="primary" className="text-meta">
-            <Link href={ROUTES.dailyQuiz}>시작</Link>
+            <Link href={ROUTES.dailyQuiz} prefetch={false}>시작</Link>
           </Button>
         }
       />
       <ActionCard
         kicker="일일 LC · 해커스 듣기 풀이"
         title="해커스 LC 채점표 제출"
-        action={<Button asChild variant="primary" className="text-meta"><Link href={ROUTES.hackersLc}>풀기 / 제출</Link></Button>}
+        action={<Button asChild variant="primary" className="text-meta"><Link href={ROUTES.hackersLc} prefetch={false}>풀기 / 제출</Link></Button>}
       />
       <ActionCard
         kicker="일일 RC · 해커스 풀이"
         title="해커스 RC 채점표 제출"
-        action={<Button asChild variant="primary" className="text-meta"><Link href={ROUTES.hackersRc}>풀기 / 제출</Link></Button>}
+        action={<Button asChild variant="primary" className="text-meta"><Link href={ROUTES.hackersRc} prefetch={false}>풀기 / 제출</Link></Button>}
       />
       <ActionCard
         kicker="주간 테스트 · 토"
