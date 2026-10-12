@@ -8,8 +8,10 @@ import {
   X,
   type Icon,
 } from "@phosphor-icons/react";
+import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/shared/brand-mark";
 import { Button } from "@/components/ui/button";
+import { isFullscreenPath } from "@/features/shell/fullscreen";
 import { useToast } from "@/stores/toast-store";
 import type { InstallPlatform } from "./install-detect";
 import { dismissInstallGuide, promptInstall, useInstallGuide } from "./install-state";
@@ -44,7 +46,9 @@ const DESCRIPTION = "앱처럼 바로 열고, 채팅·콕 찌르기 알림도 �
 export function InstallGuide() {
   const { platform, canPrompt } = useInstallGuide();
   const flash = useToast((s) => s.flash);
-  if (!platform || platform === "other") return null;
+  // 전체 화면(촬영·퀴즈·채팅 등)에서는 하단 고정 버튼·입력창을 가리지 않게 숨긴다
+  const fullscreen = isFullscreenPath(usePathname());
+  if (!platform || platform === "other" || fullscreen) return null;
 
   const install = async () => {
     if (!(await promptInstall())) return;

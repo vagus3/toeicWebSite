@@ -67,6 +67,33 @@ function getPlatform(): InstallPlatform | null {
   });
 }
 
+/** 닫은 기록과 상관없이, 설치 안내를 띄울 수 있는 기기인지 (iOS·Android이고 아직 설치 전) */
+function canShowGuide() {
+  return (
+    installGuidePlatform({
+      userAgent: navigator.userAgent,
+      maxTouchPoints: navigator.maxTouchPoints,
+      standalone: isStandalone(),
+      dismissed: false,
+    }) !== null
+  );
+}
+
+/** 내 메뉴의 "홈 화면에 추가하는 방법"을 보여 줄지 */
+export function useCanReopenInstallGuide() {
+  return useSyncExternalStore(subscribe, canShowGuide, () => false);
+}
+
+/** 닫았던 설치 안내를 다시 띄운다 */
+export function reopenInstallGuide() {
+  try {
+    localStorage.removeItem(DISMISS_KEY);
+  } catch {
+    // 저장소를 못 쓰면 닫은 기록도 남지 않으므로 그대로 둔다
+  }
+  notify();
+}
+
 export function dismissInstallGuide() {
   try {
     localStorage.setItem(DISMISS_KEY, "1");

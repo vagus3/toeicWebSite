@@ -31,7 +31,7 @@ export function useDriveFolder() {
       const status = response.ok ? await response.json() : null;
       if (status?.connected && status.folderUrl)
         window.location.assign(status.folderUrl);
-      else flash("화면의 내 Drive 연결에서 먼저 연결해 주세요");
+      else flash("내 메뉴에서 Drive를 먼저 연결해 주세요");
     } catch {
       flash("Drive 연결 상태를 확인하지 못했어요");
     }

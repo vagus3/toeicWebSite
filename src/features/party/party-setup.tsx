@@ -6,11 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { TextField } from "@/components/ui/text-field";
 import { requestJson } from "@/lib/http";
+import { cn } from "@/lib/utils";
 import { useStudyStore } from "@/stores/study-store";
-import { useCopyInvite, useLogout } from "@/features/shell/shell-actions";
+import { useLogout } from "@/features/shell/shell-actions";
 import { DriveControls } from "@/features/study/drive-controls";
-import { Select } from "radix-ui";
-import { CaretDown, Check } from "@phosphor-icons/react";
 
 function CreatePartyForm() {
   const router = useRouter();
@@ -93,70 +92,81 @@ export function PartySetup() {
   );
 }
 
-export function PartyControls() {
+/**
+ * 내 메뉴의 파티 목록. 고르면 바로 전환하고 홈으로 간다.
+ * 드롭다운(Select)은 화면 아래쪽에서 목록이 잘리기 쉬워 라디오 카드로 펼쳐 둔다.
+ */
+export function PartyList() {
   const router = useRouter();
   const parties = useStudyStore((s) => s.parties);
   const party = useStudyStore((s) => s.party);
-  const mode = useStudyStore((s) => s.mode);
-  const copyInvite = useCopyInvite();
-  const [open, setOpen] = useState(false);
-  const [pending, setPending] = useState(false);
+  const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState("");
-  if (mode === "demo") return null;
+
+  const select = async (partyId: string) => {
+    if (partyId === party?.id || pending) return;
+    setPending(partyId);
+    setError("");
+    try {
+      await requestJson("/api/parties/select", { partyId });
+      router.replace("/dashboard");
+      router.refresh();
+    } catch {
+      setError("파티를 전환하지 못했어요. 잠시 후 다시 시도해 주세요");
+      setPending(null);
+    }
+  };
+
   return (
-    <div className="flex flex-wrap items-center gap-2 text-meta">
-      <label htmlFor="active-party" className="sr-only">
-        현재 파티
-      </label>
-      <Select.Root
-        value={party?.id ?? ""}
-        disabled={pending}
-        onValueChange={async (partyId) => {
-          setPending(true);
-          setError("");
-          try {
-            await requestJson("/api/parties/select", {
-              partyId,
-            });
-            router.replace("/dashboard");
-            router.refresh();
-          } catch {
-            setError("파티를 전환하지 못했어요");
-          } finally {
-            setPending(false);
-          }
-        }}
-      >
-        <Select.Trigger id="active-party" className="input flex w-auto items-center gap-2" aria-label="현재 파티">
-          <Select.Value />
-          <Select.Icon><CaretDown aria-hidden /></Select.Icon>
-        </Select.Trigger>
-        <Select.Portal>
-          <Select.Content position="popper" side="bottom" align="start" sideOffset={6} avoidCollisions={false} className="z-50 min-w-[var(--radix-select-trigger-width)] rounded-md border border-divider bg-surface p-1 shadow-lg">
-            <Select.Viewport className="max-h-[min(18rem,var(--radix-select-content-available-height))] overflow-y-auto">
-              {parties.map((p) => (
-                <Select.Item key={p.id} value={p.id} className="relative cursor-pointer rounded-sm py-2 pr-8 pl-3 text-meta outline-none data-[highlighted]:bg-accent-900">
-                  <Select.ItemText>{p.name}</Select.ItemText>
-                  <Select.ItemIndicator className="absolute right-2 top-1/2 -translate-y-1/2"><Check aria-hidden /></Select.ItemIndicator>
-                </Select.Item>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
-      <Button variant="secondary" onClick={copyInvite}>
-        초대 링크 복사
-      </Button>
+    <fieldset className="m-0 flex flex-col gap-2 border-0 p-0" disabled={Boolean(pending)}>
+      <legend className="sr-only">현재 파티</legend>
+      {parties.map((p) => {
+        const active = p.id === party?.id;
+        return (
+          <label
+            key={p.id}
+            className={cn("radio card flex-row gap-3 p-3.5", active ? "shadow-ring-accent" : "elev-sm")}
+          >
+            <input
+              type="radio"
+              name="active-party"
+              value={p.id}
+              checked={active}
+              onChange={() => select(p.id)}
+            />
+            <span className="dot" />
+            <span className="min-w-0 flex-1 truncate">{p.name}</span>
+            {pending === p.id ? (
+              <span className="text-label text-muted">전환하는 중…</span>
+            ) : (
+              active && <span className="tag tag-accent">지금 파티</span>
+            )}
+          </label>
+        );
+      })}
+      {error && (
+        <p role="alert" className="m-0 text-meta text-muted">
+          {error}
+        </p>
+      )}
+    </fieldset>
+  );
+}
+
+/** 새 파티 만들기 — 다이얼로그(모바일은 바텀시트)로 기존 생성 폼을 연다 */
+export function NewPartyButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
       <Button variant="ghost" onClick={() => setOpen(true)}>
-        새 파티
+        새 파티 만들기
       </Button>
-      {error && <span role="alert">{error}</span>}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent closeLabel="닫기">
           <DialogTitle>파티 만들기</DialogTitle>
           <CreatePartyForm />
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

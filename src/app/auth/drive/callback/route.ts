@@ -10,7 +10,8 @@ import {
 export async function GET(request: NextRequest) {
   const { origin, searchParams } = request.nextUrl;
   const finish = (status: string) => {
-    const url = new URL("/dashboard", origin);
+    // 연결 결과 안내(NOTICES)는 Drive 설정이 있는 내 메뉴에서 보여 준다
+    const url = new URL("/me", origin);
     url.searchParams.set("drive", status);
     const response = NextResponse.redirect(url);
     response.cookies.set(DRIVE_STATE_COOKIE, "", {

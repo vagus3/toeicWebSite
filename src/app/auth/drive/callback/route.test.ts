@@ -20,7 +20,7 @@ beforeEach(() => {
 describe("Drive callback", () => {
   it("returns connected and clears the one-time state cookie", async () => {
     const response = await GET(request());
-    expect(response.headers.get("location")).toBe("https://app.test/dashboard?drive=connected");
+    expect(response.headers.get("location")).toBe("https://app.test/me?drive=connected");
     expect(response.cookies.get(DRIVE_STATE_COOKIE)?.value).toBe("");
     expect(mocks.connect).toHaveBeenCalledWith("user", "private-code", "https://app.test/auth/drive/callback");
   });
@@ -34,7 +34,7 @@ describe("Drive callback", () => {
     try {
       mocks.connect.mockRejectedValue({ message: "private-token", response: { data: { error: { details: [{ reason: "SERVICE_DISABLED" }] } } } });
       const response = await GET(request());
-      expect(response.headers.get("location")).toBe("https://app.test/dashboard?drive=api_disabled");
+      expect(response.headers.get("location")).toBe("https://app.test/me?drive=api_disabled");
       expect(log).toHaveBeenCalledExactlyOnceWith("drive_connection_failed", { reason: "api_disabled" });
     } finally { log.mockRestore(); }
   });

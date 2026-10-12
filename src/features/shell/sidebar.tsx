@@ -14,7 +14,7 @@ import { BrandMark } from "@/components/shared/brand-mark";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { usePartySummary } from "@/features/party/use-party";
-
+import { ROUTES } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useStudyStore } from "@/stores/study-store";
 import { isActive, NAV_ITEMS, type NavItem } from "./nav-items";
@@ -119,10 +119,21 @@ export function Sidebar() {
         iconClassName="text-icon"
       />
 
-      <div className="flex items-center gap-2.5 px-2.5 pt-3">
-        <Avatar initial={me.initial} size="sm" me />
-        <span className="flex-1 text-meta">{me.name}</span>
-        <span className="tag tag-accent">{me.track}</span>
+      <div className="flex items-center gap-1 pt-3">
+        {/* 프로필 줄을 누르면 내 메뉴(파티 전환·Drive·알림·로그아웃)로 간다 */}
+        <Link
+          href={ROUTES.me}
+          title="내 메뉴"
+          aria-current={pathname === ROUTES.me ? "page" : undefined}
+          className={cn(
+            "btn min-w-0 flex-1 justify-start gap-2.5 px-2.5 py-1.5 text-meta",
+            pathname === ROUTES.me ? "bg-accent-900 text-accent-200" : "text-text",
+          )}
+        >
+          <Avatar initial={me.initial} size="sm" me />
+          <span className="min-w-0 flex-1 truncate text-left">{me.name}</span>
+          <span className="tag tag-accent">{me.track}</span>
+        </Link>
         <Button
           size="icon"
           className="size-7"

@@ -8,10 +8,10 @@ import { UploadDialog } from "@/features/study/upload-dialog";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { StudyProvider } from "@/features/party/study-provider";
-import { PartyControls, PartySetup } from "@/features/party/party-setup";
+import { PartySetup } from "@/features/party/party-setup";
 import { demoSnapshot, loadStudyCore } from "@/lib/study-server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { DriveControls } from "@/features/study/drive-controls";
+import { DriveBanner } from "@/features/study/drive-banner";
 
 export default async function MainLayout({
   children,
@@ -61,8 +61,7 @@ export default async function MainLayout({
         <Sidebar />
         <MainFrame>
           <MobileHeader />
-          <PartyControls />
-          <DriveControls />
+          <DriveBanner />
           {children}
         </MainFrame>
         <MobileTabBar />

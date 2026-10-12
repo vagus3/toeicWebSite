@@ -3,9 +3,8 @@
 import { Camera, ChatTeardropText } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Avatar } from "@/components/shared/avatar";
 import { IconLink } from "@/components/shared/icon-link";
-import { ThemeToggle } from "@/components/shared/theme-toggle";
-import { PushToggle } from "@/features/chat/push-toggle";
 import { usePartySummary } from "@/features/party/use-party";
 import { useStudyStore } from "@/stores/study-store";
 import { ROUTES } from "@/lib/routes";
@@ -18,23 +17,37 @@ function useIsFullscreenRoute() {
   return isFullscreenPath(usePathname());
 }
 
-/** 모바일 상단 — 파티 이름 + 화면 모드 + 채팅 + 알림 */
+/** 모바일 상단 — 파티 이름 + 채팅 + 내 메뉴(아바타). 화면 모드·알림 설정은 내 메뉴에 있다 */
 export function MobileHeader() {
+  const pathname = usePathname();
   const party = usePartySummary();
   const activeParty = useStudyStore((s) => s.party);
-  if (useIsFullscreenRoute()) return null;
+  const me = useStudyStore((s) => s.me);
+  if (isFullscreenPath(pathname)) return null;
+  const onMe = pathname === ROUTES.me;
 
   return (
-    <header className="pt-safe flex items-center justify-between md:hidden">
-      <span className="text-base font-medium">{party.name}</span>
-      <span className="flex items-center gap-1">
-        <ThemeToggle label="icon" />
+    <header className="pt-safe flex items-center justify-between gap-3 md:hidden">
+      <span className="min-w-0 truncate text-base font-medium">{party.name}</span>
+      <span className="flex shrink-0 items-center gap-1">
         <IconLink
           href={ROUTES.chat(activeParty?.id, activeParty?.defaultChatRoomId)}
           label="파티 채팅"
           icon={ChatTeardropText}
         />
-        <PushToggle compact />
+        <Link
+          href={ROUTES.me}
+          aria-label="내 메뉴"
+          aria-current={onMe ? "page" : undefined}
+          className="grid size-control-lg place-items-center rounded-full"
+        >
+          <Avatar
+            initial={me.initial}
+            size="sm"
+            me
+            className={onMe ? "shadow-ring-accent" : undefined}
+          />
+        </Link>
       </span>
     </header>
   );

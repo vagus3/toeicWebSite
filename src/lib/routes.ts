@@ -14,6 +14,8 @@ export const ROUTES = {
   review: "/quizzes/review",
   qna: "/qna",
   upload: "/study/upload",
+  /** 내 메뉴 — 프로필·파티·Drive·알림·화면·로그아웃 */
+  me: "/me",
   chat: (partyId: string = PARTY.id, roomId: string = PARTY.defaultChatRoomId) =>
     `/party/${partyId}/chat/${roomId}`,
 } as const;
